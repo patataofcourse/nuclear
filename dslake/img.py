@@ -1,4 +1,4 @@
-import ndspy
+from ._file import parse_header
 
 
 class NDSSpriteSheet:
@@ -9,18 +9,42 @@ class NSCR:
     pass
 
 
+class NCGR:
+    pass
+
+
 class NCLR:
     '''
     Nintendo DS palette format
     '''
 
     def __init__(self, data):
+        #Magic - RCLN
         pass
+
+
+class _NCLR_PLTT:
+    '''
+    NCLR - palette data section
+    '''
+
+    def __init__(self, data):
+        self.bit_depth = 3
+        self.colors = []
+
+
+class _NCLR_PMCP:
+    '''
+    NCLR - palette count map section
+    '''
+
+    def __init__(self, data):
+        self.palettes = {}
 
 
 class _NDSColor:
     '''
-    A single color in BRG555 format (that is, one color in NTPF)
+    NTFP/BGR555 format for a single color
     '''
 
     def __init__(self, b, g, r, x=False):
@@ -29,9 +53,9 @@ class _NDSColor:
         self.b = b
         self.x = x
 
-    def from_bin(bin):
+    def from_bin(data):
         self = _NDSColor(0, 0, 0)
-        col = int.from_bytes(bin, "little")
+        col = int.from_bytes(data, "little")
         self.b = (col >> 10 & 0x1f)
         self.g = (col >> 5 & 0x1f)
         self.r = (col & 0x1f)
