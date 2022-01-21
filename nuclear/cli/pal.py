@@ -1,5 +1,6 @@
 import click
 from nuclear import img
+import os
 
 @click.group(help="NCLR/palette format", options_metavar="")
 def pal():
@@ -23,6 +24,6 @@ def extract(**kwargs):
     except:
         print("Warning: target directory already exists")
     for file in outfiles:
-        out = open(f"{out}/{file}", "wb")
-        out.write(imgs[file])
-        out.close()
+        o = open(f"{out}/{file}", "wb")
+        o.write(outfiles[file])
+        o.close()
