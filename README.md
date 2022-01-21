@@ -22,7 +22,7 @@ Currently this isn't very advanced, the only thing it can do is open palette fil
 ## Credits
 * Contributors: me! (patataofcourse)
 * Documentation on file formats:
-    - [this](https://www.romhacking.net/documents/%255b469%255dnds_formats.htm) document in romhacking.net
+    - [This](https://www.romhacking.net/documents/%255b469%255dnds_formats.htm) document in romhacking.net
     - [Tinke](https://www.github.com/pleonex/tinke) source code
 * RoadrunnerWMC for ndspy
 * ThePurpleAnon for the very cool name idea
