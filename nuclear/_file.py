@@ -21,9 +21,10 @@ def parse_header(data):
     # Header
 
     magic = str(data[:4], encoding="ascii")
-    # 4:8 should always be 0xFFFE0001 LE
-    # 8:0xC should be full filesize in LE
-    # 0xC:0xE should always be 0x10 LE
+    # 4:6 should always be 0xFFFE in whichever endian (BOM) #TODO: manage Big Endian
+    # 6:8 is apparently always 0x01
+    # 8:0xC should be full filesize
+    # 0xC:0xE should always be 0x10
     num_sections = int.from_bytes(data[0xE:0x10], "little")
 
     # Sections

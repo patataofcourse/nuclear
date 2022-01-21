@@ -23,20 +23,27 @@ class NCLR:
         if file.magic != "RLCN":
             raise ValueError("Not a NCLR file")
 
-        palettes = []
+        paldata = None
         ids = []
         for section in file.sections:
             match section.magic:
                 case "TTLP":
-                    palettes.append(_NCLR_PLTT(section.content))
+                    paldata; paldata = _NCLR_PLTT(section.content)
                 case "PMCP":
                     ids; ids = _NCLR_PCMP(section.content)
                 case _:
                     raise ValueError(f"Invalid NCLR section magic '{section.magic}'")
-        ids = list(range(len(palettes))) #TODO: remove when ids are properly read
+        self.is_8_bit = paldata.is_8_bit
+        ids = list(range(len(paldata.palettes))) #TODO: remove when ids are properly read
         self.palettes = {}
         for i in range(len(ids)):
-            self.palettes[ids[i]] = palettes[i]
+            self.palettes[ids[i]] = paldata.palettes[i]
+    
+    def serialize(self):
+        palettes = {}
+        for id in self.palettes:
+            palettes[id] = self.palettes[id].serialize()
+        return {"palettes": palettes}
 
 
 class _NCLR_PLTT:
@@ -50,21 +57,34 @@ class _NCLR_PLTT:
 
         self.is_8_bit = int.from_bytes(data[:4], "little") == 4 # 3 is 4 bit, 4 is 8 bit
         # 4-8 is 4 bits of padding (0x00)
-        # 8-0xC is size of the palette data in LE 
+        data_size = int.from_bytes(data[8:0xC], "little")
         color_amt = int.from_bytes(data[0xC:0x10], "little")
-        colors = []
 
         # Palette data
-        #TODO: multipalette
 
         pos = 0
         data = data[0x10:]
-        for i in range(color_amt):
-            colors.append(_NDSColor.from_bin(data[pos:pos+2]))
-            pos += 2
+        palettes = []
+        colors = []
+        while pos < data_size:
+            for i in range(color_amt):
+                colors.append(_NDSColor.from_bin(data[pos:pos+2]))
+                pos += 2
+            palettes.append(_NDSPalette(colors))
+            colors = []
 
+        self.palettes = palettes
+
+
+class _NDSPalette:
+    def __init__(self, colors):
         self.colors = colors
-
+    
+    def serialize(self):
+        colors = []
+        for color in self.colors:
+            colors.append(color.serialize())
+        return colors
 
 class _NCLR_PCMP:
     '''
@@ -123,3 +143,11 @@ class _NDSColor:
 
     def __repr__(self):
         return f"NDSColor({self.b},{self.g},{self.r},{self.x})"
+    
+    def serialize(self):
+        return {
+            "b": self.b,
+            "r": self.r,
+            "g": self.g,
+            "x": self.x
+        }
