@@ -1,5 +1,6 @@
 from ._file import parse_header
-
+from PIL import Image
+import io
 
 class NDSSpriteSheet:
     pass
@@ -34,7 +35,6 @@ class NCLR:
                 case _:
                     raise ValueError(f"Invalid NCLR section magic '{section.magic}'")
         self.is_8_bit = paldata.is_8_bit
-        ids = list(range(len(paldata.palettes))) #TODO: remove when ids are properly read
         self.palettes = {}
         for i in range(len(ids)):
             self.palettes[ids[i]] = paldata.palettes[i]
@@ -44,6 +44,18 @@ class NCLR:
         for id in self.palettes:
             palettes[id] = self.palettes[id].serialize()
         return {"palettes": palettes}
+
+    def export(self):
+        palettes = {}
+        palettes["mode"] = b"4" if self.is_8_bit else b"3"
+        for id in self.palettes:
+            size = (16, 16) if self.is_8_bit else (16, 1)
+            buffer = self.palettes[id].to_rgb_bin()
+            img = Image.frombytes("RGB", size, buffer)
+            a = io.BytesIO(b"")
+            img.save(a, format="png")
+            palettes[f"{id}.png"] = a.getbuffer()
+        return palettes
 
 
 class _NCLR_PLTT:
@@ -85,6 +97,12 @@ class _NDSPalette:
         for color in self.colors:
             colors.append(color.serialize())
         return colors
+    
+    def to_rgb_bin(self):
+        buffer = b""
+        for color in self.colors:
+            buffer += bytes(color.to_rgb888())
+        return buffer
 
 class _NCLR_PCMP:
     '''

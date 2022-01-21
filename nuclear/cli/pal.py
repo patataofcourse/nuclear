@@ -17,3 +17,4 @@ def extract(**kwargs):
     out = kwargs["out"]
 
     nclr = img.NCLR(open(in_, "rb").read())
+    #TODO: finish

@@ -41,3 +41,7 @@ def parse_header(data):
         section_count += 1
 
     return SectionedDSFile(magic, sections)
+
+
+def build_file(magic, sections, endian="little"):
+    pass
