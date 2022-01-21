@@ -93,7 +93,16 @@ class _NCLR_PCMP:
 
     def __new__(self, data):
         ids = []
-        #TODO
+        
+        pal_count = int.from_bytes(data[:2], "little")
+        # 2:8 is 6 bytes of unknown data: 0xEFBE080000
+
+        data = data[8:]
+        pos = 0
+        for i in range(pal_count):
+            ids.append(int.from_bytes(data[pos:pos+2], "little"))
+            pos += 2
+
         return ids
 
 
