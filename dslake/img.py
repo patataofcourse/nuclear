@@ -19,8 +19,24 @@ class NCLR:
     '''
 
     def __init__(self, data):
-        #Magic - RCLN
-        pass
+        file = parse_header(data)
+        if file.magic != "RLCN":
+            raise ValueError("Not a NCLR file")
+
+        palettes = []
+        ids = []
+        for section in file.sections:
+            match section.magic:
+                case "TTLP":
+                    palettes.append(_NCLR_PLTT(section.content))
+                case "PMCP":
+                    ids; ids = _NCLR_PCMP(section.content)
+                case _:
+                    raise ValueError(f"Invalid NCLR section magic '{section.magic}'")
+        ids = list(range(len(palettes))) #TODO: remove when ids are properly read
+        self.palettes = {}
+        for i in range(len(ids)):
+            self.palettes[ids[i]] = palettes[i]
 
 
 class _NCLR_PLTT:
@@ -29,17 +45,36 @@ class _NCLR_PLTT:
     '''
 
     def __init__(self, data):
-        self.bit_depth = 3
-        self.colors = []
+        
+        # Header
+
+        self.is_8_bit = int.from_bytes(data[:4], "little") == 4 # 3 is 4 bit, 4 is 8 bit
+        # 4-8 is 4 bits of padding (0x00)
+        # 8-0xC is size of the palette data in LE 
+        color_amt = int.from_bytes(data[0xC:0x10], "little")
+        colors = []
+
+        # Palette data
+        #TODO: multipalette
+
+        pos = 0
+        data = data[0x10:]
+        for i in range(color_amt):
+            colors.append(_NDSColor.from_bin(data[pos:pos+2]))
+            pos += 2
+
+        self.colors = colors
 
 
-class _NCLR_PMCP:
+class _NCLR_PCMP:
     '''
     NCLR - palette count map section
     '''
 
-    def __init__(self, data):
-        self.palettes = {}
+    def __new__(self, data):
+        ids = []
+        #TODO
+        return ids
 
 
 class _NDSColor:

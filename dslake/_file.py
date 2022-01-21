@@ -24,7 +24,7 @@ def parse_header(data):
     # 4:8 should always be 0xFFFE0001 LE
     # 8:0xC should be full filesize in LE
     # 0xC:0xE should always be 0x10 LE
-    num_sections = int.from_bytes(data[0xE:0x10], little)
+    num_sections = int.from_bytes(data[0xE:0x10], "little")
 
     # Sections
 
@@ -32,10 +32,10 @@ def parse_header(data):
     section_count = 0
     sections = []
     while section_count < num_sections:
-        magic = str(data[pos:pos+4], "ascii")
+        magic_ = str(data[pos:pos+4], "ascii")
         size = int.from_bytes(data[pos+4:pos+8], "little")
-        content = str(data[pos+8:pos+size])
-        sections.append(Section(magic, content))
+        content = data[pos+8:pos+size]
+        sections.append(Section(magic_, content))
         pos += size
         section_count += 1
 

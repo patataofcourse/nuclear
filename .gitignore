@@ -2,3 +2,5 @@
 **/*.pyc
 
 *.vscode*
+
+test_files
