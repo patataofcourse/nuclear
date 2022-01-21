@@ -7,7 +7,7 @@ def pal():
 
 @pal.command(
                 name = "extract",
-                help= "Extracts a palette into an easily editable PNG file",
+                help= "Extracts a palette into a folder of PNG files",
                 no_args_is_help = True
             )
 @click.argument("in")
@@ -17,4 +17,12 @@ def extract(**kwargs):
     out = kwargs["out"]
 
     nclr = img.NCLR(open(in_, "rb").read())
-    #TODO: finish
+    outfiles = nclr.export()
+    try:
+        os.mkdir(out)
+    except:
+        print("Warning: target directory already exists")
+    for file in outfiles:
+        out = open(f"{out}/{file}", "wb")
+        out.write(imgs[file])
+        out.close()
