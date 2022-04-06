@@ -25,13 +25,13 @@ pub struct NCLR {
 
 impl NCLR {
     /// Creates a NCLR struct from the NDSFile given
-    pub fn from_ndsfile(file: NDSFile) -> Result<Self> {
+    pub fn from_ndsfile(file: &NDSFile) -> Result<Self> {
         if file.magic != "RLCN" {
             Err(Error::WrongFileKind {
                 file: file.fname.clone(),
                 ftype: Some("NCLR/NDS palette".to_string()),
                 expected: "RLCN".to_string(),
-                got: file.magic,
+                got: file.magic.clone(),
             })?
         }
 
@@ -41,7 +41,7 @@ impl NCLR {
         let mut is_8_bit = false;
         let o = file.byteorder;
 
-        for section in file.sections {
+        for section in &file.sections {
             let mut data: &[u8] = &section.contents;
             match section.magic.deref() {
                 "TTLP" => {

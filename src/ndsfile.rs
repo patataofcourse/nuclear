@@ -1,8 +1,8 @@
 use crate::error::Result;
-use bytestream::{ByteOrder, StreamReader};
+use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use std::{
     fmt::{self, Debug, Formatter},
-    io::Read,
+    io::{Read, Seek, SeekFrom, Write},
 };
 
 #[derive(Clone)]
@@ -59,6 +59,31 @@ impl NDSFile {
             sections,
             byteorder: o,
         })
+    }
+
+    pub fn to_file<F: Write + Seek>(&self, f: &mut F) -> Result<()> {
+        f.write(self.magic.as_bytes())?;
+        f.write(match self.byteorder {
+            ByteOrder::BigEndian => &[0xFE, 0xFF],
+            ByteOrder::LittleEndian => &[0xFF, 0xFE],
+        })?;
+
+        1u16.write_to(f, self.byteorder)?;
+        0u32.write_to(f, self.byteorder)?; // This will be written later with the entire filesize
+        0x10u16.write_to(f, self.byteorder)?;
+        (self.sections.len() as u16).write_to(f, self.byteorder)?; // Section count
+
+        for section in &self.sections {
+            f.write(section.magic.as_bytes())?;
+            (section.contents.len() as u32 + 0x8).write_to(f, self.byteorder)?;
+            f.write(&section.contents)?;
+        }
+
+        let file_size = f.stream_position()? as u32;
+        f.seek(SeekFrom::Start(0x8))?;
+        file_size.write_to(f, self.byteorder)?;
+
+        Ok(())
     }
 }
 
