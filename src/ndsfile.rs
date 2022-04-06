@@ -1,3 +1,4 @@
+use crate::error::Result;
 use bytestream::{ByteOrder, StreamReader};
 use std::{
     fmt::{self, Debug, Formatter},
@@ -5,29 +6,19 @@ use std::{
 };
 
 pub struct NDSFile {
-    pub magic: [u8; 4],
+    pub magic: String,
     pub byteorder: ByteOrder,
     pub sections: Vec<Section>,
 }
 
 #[derive(Debug)]
-pub enum Section {
-    RawSection { magic: [u8; 4], contents: Vec<u8> },
-    ParsedSection(Box<dyn SectionType>),
-}
-
-pub trait SectionType: Debug {
-    fn magic() -> [u8; 4]
-    where
-        Self: Sized;
-    fn to_raw_section(&self) -> Vec<u8>;
-    fn from_raw_section(raw: Vec<u8>) -> Self
-    where
-        Self: Sized;
+pub struct Section {
+    magic: String,
+    contents: Vec<u8>,
 }
 
 impl NDSFile {
-    pub fn from_file<F: Read>(f: &mut F) -> IOResult<Self> {
+    pub fn from_file<F: Read>(f: &mut F) -> Result<Self> {
         let mut magic = [0u8; 4];
         f.read(&mut magic)?;
 
@@ -49,19 +40,19 @@ impl NDSFile {
         for _ in 0..section_count {
             let mut s_magic = [0u8; 4];
             f.read(&mut s_magic)?;
-            let size = u32::read_from(f, o)?;
+            let size = u32::read_from(f, o)? - 0x08;
             let mut s_contents = vec![];
             for _ in 0..size {
                 s_contents.push(u8::read_from(f, o)?)
             }
-            sections.push(Section::RawSection {
-                magic: s_magic,
+            sections.push(Section {
+                magic: String::from_utf8(s_magic.into()).unwrap(),
                 contents: s_contents,
             });
         }
 
         Ok(Self {
-            magic,
+            magic: String::from_utf8(magic.into()).unwrap(),
             sections,
             byteorder: o,
         })

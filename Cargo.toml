@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 bytestream = "0.4"
+thiserror = "1.0"
