@@ -12,6 +12,12 @@ pub struct ColorBGR555 {
     pub x: bool,
 }
 
+impl ColorBGR555 {
+    pub fn to_rgb888(&self) -> [u8; 3] {
+        [self.r * 0x8, self.g * 0x8, self.b * 0x8]
+    }
+}
+
 impl StreamReader for ColorBGR555 {
     fn read_from<R: io::Read>(f: &mut R, o: ByteOrder) -> io::Result<Self> {
         let num = u16::read_from(f, o)?;

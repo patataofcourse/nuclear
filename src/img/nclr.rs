@@ -5,7 +5,15 @@ use crate::{
 };
 
 use bytestream::StreamReader;
-use std::{collections::HashMap, io::Read, ops::Deref};
+use png::{BitDepth, ColorType, Encoder};
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    io::{BufWriter, Read},
+    ops::Deref,
+    path::PathBuf,
+    str::FromStr,
+};
 
 #[derive(Debug, Clone)]
 /// NCLR (Nintendo CoLoR) palette format
@@ -16,7 +24,7 @@ pub struct NCLR {
 }
 
 impl NCLR {
-    //TODO
+    /// Creates a NCLR struct from the NDSFile given
     pub fn from_ndsfile(file: NDSFile) -> Result<Self> {
         if file.magic != "RLCN" {
             Err(Error::WrongFileKind {
@@ -97,5 +105,41 @@ impl NCLR {
             pcmp_unk,
             palettes: palette_map,
         })
+    }
+
+    ///Exports a folder with all the palettes in it, in PNG format
+    pub fn to_dir(&self, dir: PathBuf) -> Result<()> {
+        fs::create_dir_all(&dir)?;
+        let height = if self.is_8_bit { 16 } else { 1 };
+        let depth = if self.is_8_bit {
+            BitDepth::Eight
+        } else {
+            BitDepth::Four
+        };
+        for (id, palette) in &self.palettes {
+            let mut fpath = dir.clone();
+            fpath.push(PathBuf::from_str(&format!("{}.png", id))?);
+            let f = File::create(fpath)?;
+
+            let ref mut w = BufWriter::new(f);
+            let mut encoder = Encoder::new(w, 16, height);
+            encoder.set_color(ColorType::Indexed);
+            encoder.set_depth(depth);
+            let mut pal = vec![];
+            for color in palette {
+                pal.extend(color.to_rgb888());
+            }
+            encoder.set_palette(pal);
+            let mut writer = encoder.write_header()?;
+            let data_8bit = (0..=0xFFu8).collect::<Vec<u8>>();
+            let data_4bit = vec![0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF];
+            writer.write_image_data(if self.is_8_bit {
+                &data_8bit
+            } else {
+                &data_4bit
+            })?;
+            writer.finish()?;
+        }
+        Ok(())
     }
 }

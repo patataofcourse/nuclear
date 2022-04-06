@@ -2,7 +2,7 @@ use crate::error::Result;
 use bytestream::{ByteOrder, StreamReader};
 use std::{
     fmt::{self, Debug, Formatter},
-    io::{Read, Result as IOResult},
+    io::Read,
 };
 
 #[derive(Clone)]
