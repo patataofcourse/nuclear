@@ -34,8 +34,8 @@ impl NDSFile {
         let mut bom = [0u8; 2];
         f.read(&mut bom)?;
         let o = match bom {
-            [0xFF, 0xFE] => ByteOrder::BigEndian,
-            [0xFE, 0xFF] => ByteOrder::LittleEndian,
+            [0xFF, 0xFE] => ByteOrder::LittleEndian,
+            [0xFE, 0xFF] => ByteOrder::BigEndian,
             _ => panic!("Incorrect Byte Order Mark"),
         };
         drop(bom);
