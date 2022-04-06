@@ -2,7 +2,9 @@ use std::fs::File;
 
 fn main() -> nuclear::error::Result<()> {
     let mut f = File::open("test_files/pause.NCLR")?;
-    let a = nuclear::ndsfile::NDSFile::from_file(&mut f)?;
-    println!("{:?}", a);
+    let nds = nuclear::ndsfile::NDSFile::from_file("pause.NCLR", &mut f)?;
+    //println!("{:?}", nds);
+    let clr = nuclear::img::nclr::NCLR::from_ndsfile(nds)?;
+    println!("{:?}", clr);
     Ok(())
 }

@@ -5,20 +5,22 @@ use std::{
     io::{Read, Result as IOResult},
 };
 
+#[derive(Clone)]
 pub struct NDSFile {
+    pub fname: String,
     pub magic: String,
     pub byteorder: ByteOrder,
     pub sections: Vec<Section>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Section {
-    magic: String,
-    contents: Vec<u8>,
+    pub magic: String,
+    pub contents: Vec<u8>,
 }
 
 impl NDSFile {
-    pub fn from_file<F: Read>(f: &mut F) -> Result<Self> {
+    pub fn from_file<F: Read>(fname: &str, f: &mut F) -> Result<Self> {
         let mut magic = [0u8; 4];
         f.read(&mut magic)?;
 
@@ -52,6 +54,7 @@ impl NDSFile {
         }
 
         Ok(Self {
+            fname: fname.to_string(),
             magic: String::from_utf8(magic.into()).unwrap(),
             sections,
             byteorder: o,

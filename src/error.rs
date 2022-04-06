@@ -2,6 +2,7 @@ use std::io;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum Error {
     #[error("System error: {0}")]
     IOError(io::Error),
@@ -22,6 +23,8 @@ pub enum Error {
     MissingRequiredSection { file: String, s_name: String },
     #[error("File {file} was given section {s_name}, which it doesn't recognize")]
     UnknownSection { file: String, s_name: String },
+    #[error("Data in file {file} is invalid")]
+    MalformedData { file: String },
 }
 
 impl From<io::Error> for Error {
