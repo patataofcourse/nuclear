@@ -8,8 +8,8 @@ pub enum Error {
     #[error(
         "Expected file {file}{} to have magic {expected}, got {got}",
         match ftype {
-            Some(c) => &format!(" ({})", c),
-            None => "",
+            Some(c) => format!(" ({})", c),
+            None => String::new(),
         }
     )]
     WrongFileKind {
