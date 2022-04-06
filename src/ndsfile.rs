@@ -1,5 +1,8 @@
 use bytestream::{ByteOrder, StreamReader};
-use std::io::{Read, Result as IOResult};
+use std::{
+    fmt::{self, Debug, Formatter},
+    io::{Read, Result as IOResult},
+};
 
 pub struct NDSFile {
     pub magic: [u8; 4],
@@ -7,12 +10,13 @@ pub struct NDSFile {
     pub sections: Vec<Section>,
 }
 
+#[derive(Debug)]
 pub enum Section {
     RawSection { magic: [u8; 4], contents: Vec<u8> },
     ParsedSection(Box<dyn SectionType>),
 }
 
-pub trait SectionType {
+pub trait SectionType: Debug {
     fn magic() -> [u8; 4]
     where
         Self: Sized;
@@ -61,5 +65,21 @@ impl NDSFile {
             sections,
             byteorder: o,
         })
+    }
+}
+
+impl Debug for NDSFile {
+    fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {
+        fmt.debug_struct("NDSFile")
+            .field("magic", &self.magic)
+            .field(
+                "byteorder",
+                match self.byteorder {
+                    ByteOrder::BigEndian => &"big",
+                    ByteOrder::LittleEndian => &"little",
+                },
+            )
+            .field("sections", &self.sections)
+            .finish()
     }
 }
