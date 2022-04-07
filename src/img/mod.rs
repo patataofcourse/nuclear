@@ -1,7 +1,12 @@
 use bytestream::{ByteOrder, StreamReader};
 use std::io;
 
+pub mod ncgr;
 pub mod nclr;
+pub mod renderer;
+
+pub use ncgr::NCGR;
+pub use nclr::NCLR;
 
 #[derive(Debug, Clone)]
 /// Color format the Nintendo DS uses (BGR555)

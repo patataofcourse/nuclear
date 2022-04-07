@@ -16,7 +16,7 @@ use std::{
 };
 
 #[derive(Debug, Clone)]
-/// NCLR (Nintendo CoLoR) palette format
+/// NCLR (Nintendo CoLor Resource) palette format
 pub struct NCLR {
     pub palettes: HashMap<u16, Vec<ColorBGR555>>,
     pub pcmp_unk: [u8; 6],
@@ -107,7 +107,8 @@ impl NCLR {
         })
     }
 
-    ///Exports a folder with all the palettes in it, in PNG format
+    /// Exports a folder with all the palettes in it, in PNG format
+    /// (Will later be replaced by [Renderer::export_palettes](crate::img::renderer::Renderer::export_palettes))
     pub fn to_dir(&self, dir: PathBuf) -> Result<()> {
         fs::create_dir_all(&dir)?;
         let height = if self.is_8_bit { 16 } else { 1 };

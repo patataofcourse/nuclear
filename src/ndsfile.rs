@@ -35,7 +35,7 @@ impl NDSFile {
 
         u16::read_from(f, o)?; // 0x0001
         u32::read_from(f, o)?; // Full filesize, we can discard it here
-        u16::read_from(f, o)?; // 0x0010
+        u16::read_from(f, o)?; // Header size, always 0x10
 
         let section_count = u16::read_from(f, o)?;
         let mut sections = vec![];
