@@ -2,12 +2,14 @@ use crate::{
     error::{Error, Result},
     ndsfile::NDSFile,
 };
+use bytestream::StreamReader;
+
+pub type Tile = Vec<u8>;
 
 #[derive(Debug, Clone)]
 pub struct NCGR {
     pub is_8_bit: bool,
-    pub unk: u32,
-    pub tiles: Vec<Vec<u8>>,
+    pub tiles: Vec<Tile>,
 }
 
 impl NCGR {
@@ -20,7 +22,62 @@ impl NCGR {
                 got: file.magic.to_string(),
             })?
         }
-        unimplemented!();
+
+        let mut is_8_bit = false;
+        let mut has_cpos = false;
+        let mut tiles: Option<Vec<Tile>> = None;
+        let o = file.byteorder;
+
+        for section in &file.sections {
+            let mut data: &[u8] = &section.contents;
+            match section.magic.as_ref() {
+                "CHAR" => {
+                    let num_tiles = u16::read_from(&mut data, o)?;
+                    u16::read_from(&mut data, o)?; // Tile size, always 0x20 in 4bit and 0x40 in 8bit
+                    is_8_bit = u32::read_from(&mut data, o)? == 4;
+
+                    u64::read_from(&mut data, o)?; // Padding
+                    u32::read_from(&mut data, o)?; // Tile data size, unneeded since it's tile_size * num_tiles
+                    u32::read_from(&mut data, o)?; // Unknown, always 0x24
+
+                    tiles = Some(vec![]);
+                    let tilesvec = tiles.as_mut().unwrap();
+                    if is_8_bit {
+                        for _ in 0..num_tiles {
+                            let mut tile = vec![];
+                            for _ in 0..0x40 {
+                                tile.push(u8::read_from(&mut data, o)?);
+                            }
+                            tilesvec.push(tile);
+                        }
+                    } else {
+                        for _ in 0..num_tiles {
+                            let mut tile = vec![];
+                            for _ in 0..0x20 {
+                                let eightbit = u8::read_from(&mut data, o)?;
+                                tile.push(eightbit & 0xF);
+                                tile.push(eightbit >> 4);
+                            }
+                            tilesvec.push(tile);
+                        }
+                    }
+                }
+                "CPOS" => has_cpos = true, //This section contains nothing of interest
+                c => Err(Error::UnknownSection {
+                    file: file.fname.clone(),
+                    s_name: c.to_string(),
+                })?,
+            }
+        }
+
+        if let Some(c) = tiles {
+            Ok(Self { tiles: c, is_8_bit })
+        } else {
+            Err(Error::MissingRequiredSection {
+                file: file.fname.clone(),
+                s_name: "CHAR".to_string(),
+            })?
+        }
     }
 }
 

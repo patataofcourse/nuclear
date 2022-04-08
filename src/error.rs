@@ -3,7 +3,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 #[non_exhaustive]
-/// Error type for nuclear, doubles as a wrapper for std::io Errors
+/// Error type for nuclear, doubles as a wrapper for other libraries' Error types
 pub enum Error {
     #[error("System error: {0}")]
     IOError(io::Error),
