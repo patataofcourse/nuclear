@@ -1,10 +1,10 @@
 use super::ColorBGR555;
 use crate::{
     error::{Error, Result},
-    ndsfile::NDSFile,
+    ndsfile::{NDSFile, Section},
 };
 
-use bytestream::StreamReader;
+use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use png::{BitDepth, ColorType, Encoder};
 use std::{
     collections::HashMap,
@@ -19,7 +19,6 @@ use std::{
 /// NCLR (Nintendo CoLor Resource) palette format
 pub struct NCLR {
     pub palettes: HashMap<u16, Vec<ColorBGR555>>,
-    pub pcmp_unk: [u8; 6],
     pub is_8_bit: bool,
 }
 
@@ -36,8 +35,7 @@ impl NCLR {
         }
 
         let mut palettes = None;
-        let mut ids: Option<Vec<u16>> = None; //TODO: Remove type param
-        let mut pcmp_unk = [0u8; 6];
+        let mut ids = None;
         let mut is_8_bit = false;
         let o = file.byteorder;
 
@@ -66,7 +64,11 @@ impl NCLR {
                 "PMCP" => {
                     ids = Some(vec![]);
                     let pal_count = u16::read_from(&mut data, o)?;
+
+                    // Unknown 6 bytes
+                    let mut pcmp_unk = [0u8; 6];
                     data.read(&mut pcmp_unk)?;
+
                     for _ in 0..pal_count {
                         ids.as_mut().unwrap().push(u16::read_from(&mut data, o)?);
                     }
@@ -102,9 +104,16 @@ impl NCLR {
         }
         Ok(Self {
             is_8_bit,
-            pcmp_unk,
             palettes: palette_map,
         })
+    }
+
+    /// Exports an NDSFile struct from an NCLR struct
+    pub fn to_ndsfile(&self, fname: String, byteorder: ByteOrder) -> Result<NDSFile> {
+        let pltt_buffer: &mut &mut [u8] = &mut vec![].as_mut();
+        let pcmp_buffer: &mut &mut [u8] = &mut vec![].as_mut();
+        if self.is_8_bit { 4u32 } else { 3u32 }.write_to(pltt_buffer, byteorder)?;
+        unimplemented!();
     }
 
     /// Exports a folder with all the palettes in it, in PNG format
