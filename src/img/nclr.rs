@@ -110,8 +110,10 @@ impl NCLR {
 
     /// Exports an NDSFile struct from an NCLR struct
     pub fn to_ndsfile(&self, fname: String, byteorder: ByteOrder) -> Result<NDSFile> {
-        let pltt_buffer: &mut &mut [u8] = &mut vec![].as_mut();
-        let pcmp_buffer: &mut &mut [u8] = &mut vec![].as_mut();
+        let mut vec0 = vec![];
+        let mut vec1 = vec![];
+        let pltt_buffer: &mut &mut [u8] = &mut vec0.as_mut();
+        let pcmp_buffer: &mut &mut [u8] = &mut vec1.as_mut();
         if self.is_8_bit { 4u32 } else { 3u32 }.write_to(pltt_buffer, byteorder)?;
         unimplemented!();
     }
