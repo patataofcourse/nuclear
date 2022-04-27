@@ -1,7 +1,7 @@
 use super::ColorBGR555;
 use crate::{
     error::{Error, Result},
-    ndsfile::{NDSFile},
+    ndsfile::{NDSFile, Section},
 };
 
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
@@ -9,7 +9,7 @@ use png::{BitDepth, ColorType, Encoder};
 use std::{
     collections::HashMap,
     fs::{self, File},
-    io::{BufWriter, Read},
+    io::{BufWriter, Read, Write},
     ops::Deref,
     path::PathBuf,
     str::FromStr,
@@ -20,6 +20,7 @@ use std::{
 pub struct NCLR {
     pub palettes: HashMap<u16, Vec<ColorBGR555>>,
     pub is_8_bit: bool,
+    pub color_amt: u32,
 }
 
 impl NCLR {
@@ -43,7 +44,7 @@ impl NCLR {
             let mut data: &[u8] = &section.contents;
             match section.magic.deref() {
                 "TTLP" => {
-                    palettes = Some(vec![]);
+                    let mut palette_vec = vec![];
 
                     is_8_bit = u32::read_from(&mut data, o)? == 4;
                     u32::read_from(&mut data, o)?; //padding
@@ -57,9 +58,10 @@ impl NCLR {
                             palette.push(ColorBGR555::read_from(&mut data, o)?);
                             pos += 2;
                         }
-                        palettes.as_mut().unwrap().push(palette);
+                        palette_vec.push(palette);
                         palette = vec![];
                     }
+                    palettes = Some((palette_vec, color_amt));
                 }
                 "PMCP" => {
                     ids = Some(vec![]);
@@ -80,7 +82,8 @@ impl NCLR {
             }
         }
         let mut palette_map = HashMap::<u16, Vec<ColorBGR555>>::new();
-        if let Some(pal) = palettes {
+        let mut color_amt = 0;
+        if let Some((pal, amt)) = palettes {
             if let Some(id) = ids {
                 if id.len() > pal.len() {
                     Err(Error::MalformedData {
@@ -90,32 +93,63 @@ impl NCLR {
                 for i in 0..id.len() {
                     palette_map.insert(id[i], pal.get(i).unwrap().to_vec());
                 }
+                color_amt = amt;
             } else {
                 Err(Error::MissingRequiredSection {
                     file: file.fname.clone(),
-                    s_name: "TTLP".to_string(),
+                    s_name: "PCMP".to_string(),
                 })?
             }
         } else {
             Err(Error::MissingRequiredSection {
                 file: file.fname.clone(),
-                s_name: "TTLP".to_string(),
+                s_name: "PLTT".to_string(),
             })?
         }
         Ok(Self {
             is_8_bit,
             palettes: palette_map,
+            color_amt,
         })
     }
 
     /// Exports an NDSFile struct from an NCLR struct
     pub fn to_ndsfile(&self, fname: String, byteorder: ByteOrder) -> Result<NDSFile> {
-        let mut vec0 = vec![];
-        let mut vec1 = vec![];
-        let pltt_buffer: &mut &mut [u8] = &mut vec0.as_mut();
-        let pcmp_buffer: &mut &mut [u8] = &mut vec1.as_mut();
-        if self.is_8_bit { 4u32 } else { 3u32 }.write_to(pltt_buffer, byteorder)?;
-        unimplemented!();
+        let mut pltt_buffer = vec![];
+        let mut pcmp_buffer = vec![];
+
+        //PLTT header
+        if self.is_8_bit { 4u32 } else { 3u32 }.write_to(&mut pltt_buffer, byteorder)?;
+        0u32.write_to(&mut pltt_buffer, byteorder)?;
+        (self.palettes.len() as u32 * self.color_amt * 2).write_to(&mut pltt_buffer, byteorder)?;
+        self.color_amt.write_to(&mut pltt_buffer, byteorder)?;
+
+        //PCMP header
+        (self.palettes.len() as u16).write_to(&mut pcmp_buffer, byteorder)?;
+        let pcmp_unk = [0xEFu8, 0xBE, 0x08, 0x00, 0x00, 0x00];
+        pcmp_buffer.write(&pcmp_unk)?;
+
+        for (id, palette) in &self.palettes {
+            id.write_to(&mut pcmp_buffer, byteorder)?;
+            for color in palette {
+                color.write_to(&mut pltt_buffer, byteorder)?;
+            }
+        }
+        Ok(NDSFile {
+            byteorder,
+            magic: "RLCN".to_string(),
+            fname,
+            sections: vec![
+                Section {
+                    magic: "TTLP".to_string(),
+                    contents: pltt_buffer,
+                },
+                Section {
+                    magic: "PMCP".to_string(),
+                    contents: pcmp_buffer,
+                },
+            ],
+        })
     }
 
     /// Exports a folder with all the palettes in it, in PNG format

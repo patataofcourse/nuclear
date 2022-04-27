@@ -1,4 +1,4 @@
-use bytestream::{ByteOrder, StreamReader};
+use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use std::io;
 
 pub mod ncgr;
@@ -32,5 +32,16 @@ impl StreamReader for ColorBGR555 {
             b: (num >> 10 & 0x1F) as u8,
             x: num >> 15 != 0,
         })
+    }
+}
+
+impl StreamWriter for ColorBGR555 {
+    #[rustfmt::skip]
+    fn write_to<W: io::Write>(&self, f: &mut W, o: ByteOrder) -> io::Result<()> {
+        let num = (self.r as u16 & 0x1F) +
+            ((self.g as u16 & 0x1F) << 5) +
+            ((self.b as u16 & 0x1F) << 10) +
+            if self.x { 1 << 15 } else { 0 };
+        num.write_to(f, o)
     }
 }
