@@ -1,7 +1,7 @@
 use std::fs::File;
 
 fn main() -> nuclear::error::Result<()> {
-    // Open NCLR file
+    /*/ Open NCLR file
     let mut f = File::open("test_files/pause.NCLR")?;
     let nds = nuclear::ndsfile::NDSFile::from_file("pause.NCLR", &mut f)?;
 
@@ -11,7 +11,12 @@ fn main() -> nuclear::error::Result<()> {
 
     // Re-export NCLR file
     let mut f_w = File::create("test_files/pause.out.NCLR")?;
-    nds.to_file(&mut f_w)?;
+    nds.to_file(&mut f_w)?;*/
 
+    let mut f = File::open("test_files/rocker.NCBR")?;
+    let nds = nuclear::ndsfile::NDSFile::from_file("rocker.NCBR", &mut f)?;
+
+    let cgr = nuclear::img::ncgr::NCGR::from_ndsfile(&nds)?;
+    println!("{}", cgr.tiles.len());
     Ok(())
 }

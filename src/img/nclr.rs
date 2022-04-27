@@ -1,7 +1,7 @@
 use super::ColorBGR555;
 use crate::{
     error::{Error, Result},
-    ndsfile::{NDSFile, Section},
+    ndsfile::{NDSFile},
 };
 
 use bytestream::{ByteOrder, StreamReader, StreamWriter};

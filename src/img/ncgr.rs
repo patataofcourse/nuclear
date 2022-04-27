@@ -7,9 +7,12 @@ use bytestream::StreamReader;
 pub type Tile = Vec<u8>;
 
 #[derive(Debug, Clone)]
+/// NCGR / NCBR tileset format
 pub struct NCGR {
     pub is_8_bit: bool,
     pub tiles: Vec<Tile>,
+    pub has_cpos: bool,
+    pub ncbr_ff: bool,
 }
 
 impl NCGR {
@@ -25,20 +28,27 @@ impl NCGR {
 
         let mut is_8_bit = false;
         let mut has_cpos = false;
+        let mut ncbr_ff = false;
         let mut tiles: Option<Vec<Tile>> = None;
         let o = file.byteorder;
 
         for section in &file.sections {
             let mut data: &[u8] = &section.contents;
             match section.magic.as_ref() {
-                "CHAR" => {
-                    let num_tiles = u16::read_from(&mut data, o)?;
+                "RAHC" => {
+                    let mut num_tiles = u16::read_from(&mut data, o)?;
                     u16::read_from(&mut data, o)?; // Tile size, always 0x20 in 4bit and 0x40 in 8bit
                     is_8_bit = u32::read_from(&mut data, o)? == 4;
 
                     u64::read_from(&mut data, o)?; // Padding
-                    u32::read_from(&mut data, o)?; // Tile data size, unneeded since it's tile_size * num_tiles
+                    let tile_data_size = u32::read_from(&mut data, o)?;
                     u32::read_from(&mut data, o)?; // Unknown, always 0x24
+
+                    // For some reason some files do this - maybe only NCBR files?
+                    if num_tiles == 0xFFFF {
+                        ncbr_ff = true;
+                        num_tiles = (tile_data_size / if is_8_bit { 0x40 } else { 0x20 }) as u16;
+                    }
 
                     tiles = Some(vec![]);
                     let tilesvec = tiles.as_mut().unwrap();
@@ -62,7 +72,7 @@ impl NCGR {
                         }
                     }
                 }
-                "CPOS" => has_cpos = true, //This section contains nothing of interest
+                "SOPC" => has_cpos = true, //This section contains nothing of interest
                 c => Err(Error::UnknownSection {
                     file: file.fname.clone(),
                     s_name: c.to_string(),
@@ -71,7 +81,12 @@ impl NCGR {
         }
 
         if let Some(c) = tiles {
-            Ok(Self { tiles: c, is_8_bit })
+            Ok(Self {
+                tiles: c,
+                is_8_bit,
+                has_cpos,
+                ncbr_ff,
+            })
         } else {
             Err(Error::MissingRequiredSection {
                 file: file.fname.clone(),
