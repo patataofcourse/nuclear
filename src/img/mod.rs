@@ -5,7 +5,7 @@ pub mod ncgr;
 pub mod nclr;
 pub mod renderer;
 
-pub use ncgr::NCGR;
+pub use ncgr::{Tile, NCGR};
 pub use nclr::NCLR;
 
 #[derive(Debug, Clone)]
