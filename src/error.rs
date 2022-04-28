@@ -26,8 +26,8 @@ pub enum Error {
     UnknownSection { file: String, s_name: String },
     #[error("Data in file {file} is invalid")]
     MalformedData { file: String },
-    #[error("PNG format error - an input image may not be a valid PNG image")]
-    PngFormatError,
+    #[error("PNG format error - {0}")]
+    PngFormatError(String),
     #[error("Something went wrong with the PNG library: {0}")]
     PngError(png::ParameterError),
     #[error("PNG format error - image data exceeded limits of image")]
@@ -50,7 +50,7 @@ impl From<png::EncodingError> for Error {
     fn from(error: png::EncodingError) -> Self {
         match error {
             png::EncodingError::IoError(c) => Self::IOError(c),
-            png::EncodingError::Format(_) => Self::PngFormatError,
+            png::EncodingError::Format(c) => Self::PngFormatError(c.to_string()),
             png::EncodingError::Parameter(c) => Self::PngError(c),
             png::EncodingError::LimitsExceeded => Self::PngLimitError,
         }

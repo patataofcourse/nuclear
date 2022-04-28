@@ -11,7 +11,11 @@ use crate::{
     error::Result,
     img::{ColorBGR555, Tile, NCGR, NCLR},
 };
-use std::{io::Write, path::PathBuf};
+use png::{BitDepth, ColorType, Encoder};
+use std::{
+    io::{BufWriter, Write},
+    path::PathBuf,
+};
 
 pub struct Renderer;
 
@@ -42,22 +46,28 @@ impl Renderer {
         for i in 0..tiles.len() {
             let tile = &tiles[i];
             for j in 0..8 {
-                if is_8_bit {
-                    let row = &tile[j * 8..(j + 1) * 8];
-                    current_scanlines[j].write(row)?;
-                } else {
-                    for k in 0..4 {
-                        let byte = tile[4 * j + k];
-                        current_scanlines[j].push((byte & 0xF0) >> 4);
-                        current_scanlines[j].push(byte & 0x0F);
-                    }
-                }
+                let row = &tile[j * 8..(j + 1) * 8];
+                current_scanlines[j].write(row)?;
             }
 
             if i % width == width - 1 {
-                for scanline in &current_scanlines {
+                for scanline in &mut current_scanlines {
                     imgdata.write(&scanline)?;
+                    *scanline = vec![];
                 }
+            }
+        }
+        if tiles.len() % width != 0 {
+            for _ in 0..width - (tiles.len() % width) {
+                for scanline in &mut current_scanlines {
+                    for j in 0..8 {
+                        scanline.push(0)
+                    }
+                }
+            }
+            for scanline in &mut current_scanlines {
+                imgdata.write(&scanline)?;
+                *scanline = vec![];
             }
         }
         Ok(imgdata)
@@ -66,9 +76,31 @@ impl Renderer {
     pub fn export_tilesheet<W: Write>(
         &self,
         f: &mut W,
-        pal: Vec<ColorBGR555>,
-        tiles: NCGR,
+        pal: &Vec<ColorBGR555>,
+        tiles: &NCGR,
+        width: usize,
     ) -> Result<()> {
-        unimplemented!()
+        let height = ((tiles.tiles.len() / width) as u32
+            + if tiles.tiles.len() % width != 0 { 1 } else { 0 })
+            * 8;
+
+        let ref mut w = BufWriter::new(f);
+        let mut encoder = Encoder::new(w, width as u32 * 8, height);
+
+        encoder.set_color(ColorType::Indexed);
+        encoder.set_depth(BitDepth::Eight);
+
+        let mut palette = vec![];
+        for color in pal {
+            palette.extend(color.to_rgb888());
+        }
+        encoder.set_palette(palette);
+        let mut writer = encoder.write_header()?;
+
+        let img_data = self.tiles_to_image_data(&tiles.tiles, tiles.is_8_bit, width)?;
+
+        writer.write_image_data(&img_data)?;
+        writer.finish()?;
+        Ok(())
     }
 }

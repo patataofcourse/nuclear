@@ -18,7 +18,8 @@ fn main() -> nuclear::error::Result<()> {
     let mut f = File::open("test_files/rocker.NCBR")?;
     let nds = nuclear::ndsfile::NDSFile::from_file("rocker.NCBR", &mut f)?;
 
+    let ref mut f_w = File::create("test_files/rocker.tiles.png")?;
     let cgr = nuclear::img::ncgr::NCGR::from_ndsfile(&nds)?;
-    println!("{}", cgr.tiles.len());
+    nuclear::img::renderer::Renderer.export_tilesheet(f_w, &clr.palettes[&2], &cgr, 32)?;
     Ok(())
 }

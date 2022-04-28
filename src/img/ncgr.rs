@@ -13,6 +13,7 @@ pub struct NCGR {
     pub tiles: Vec<Tile>,
     pub has_cpos: bool,
     pub ncbr_ff: bool,
+    pub lineal_mode: bool,
 }
 
 impl NCGR {
@@ -29,6 +30,7 @@ impl NCGR {
         let mut is_8_bit = false;
         let mut has_cpos = false;
         let mut ncbr_ff = false;
+        let mut lineal_mode = false;
         let mut tiles: Option<Vec<Tile>> = None;
         let o = file.byteorder;
 
@@ -40,7 +42,8 @@ impl NCGR {
                     u16::read_from(&mut data, o)?; // Tile size, always 0x20 in 4bit and 0x40 in 8bit
                     is_8_bit = u32::read_from(&mut data, o)? == 4;
 
-                    u64::read_from(&mut data, o)?; // Padding
+                    u32::read_from(&mut data, o)?; // Padding
+                    lineal_mode = u32::read_from(&mut data, o)? & 0xFF != 0;
                     let tile_data_size = u32::read_from(&mut data, o)?;
                     u32::read_from(&mut data, o)?; // Unknown, always 0x24
 
@@ -86,6 +89,7 @@ impl NCGR {
                 is_8_bit,
                 has_cpos,
                 ncbr_ff,
+                lineal_mode,
             })
         } else {
             Err(Error::MissingRequiredSection {
