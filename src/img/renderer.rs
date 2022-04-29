@@ -27,7 +27,6 @@ impl Renderer {
     pub fn tiles_to_image_data(
         &self,
         tiles: &Vec<Tile>,
-        is_8_bit: bool,
         width: usize, // width IN TILES!!!
     ) -> Result<Vec<u8>> {
         let mut imgdata = vec![];
@@ -60,7 +59,7 @@ impl Renderer {
         if tiles.len() % width != 0 {
             for _ in 0..width - (tiles.len() % width) {
                 for scanline in &mut current_scanlines {
-                    for j in 0..8 {
+                    for _ in 0..8 {
                         scanline.push(0)
                     }
                 }
@@ -80,8 +79,13 @@ impl Renderer {
         tiles: &NCGR,
         width: usize,
     ) -> Result<()> {
-        let height = ((tiles.tiles.len() / width) as u32
-            + if tiles.tiles.len() % width != 0 { 1 } else { 0 })
+        let rendered_tiles = tiles.tiles.render_tiles(tiles.is_8_bit, None, 2);
+        let height = ((rendered_tiles.len() / width) as u32
+            + if rendered_tiles.len() % width != 0 {
+                1
+            } else {
+                0
+            })
             * 8;
 
         let ref mut w = BufWriter::new(f);
@@ -97,7 +101,7 @@ impl Renderer {
         encoder.set_palette(palette);
         let mut writer = encoder.write_header()?;
 
-        let img_data = self.tiles_to_image_data(&tiles.tiles, tiles.is_8_bit, width)?;
+        let img_data = self.tiles_to_image_data(&rendered_tiles, width)?;
 
         writer.write_image_data(&img_data)?;
         writer.finish()?;
