@@ -47,18 +47,21 @@ impl NCGR {
             match section.magic.as_ref() {
                 "RAHC" => {
                     num_tiles = u16::read_from(&mut data, o)?;
-                    u16::read_from(&mut data, o)?; // Tile size, always 0x20 in 4bit and 0x40 in 8bit
+                    let num_tiles_2 = u16::read_from(&mut data, o)?;
                     is_8_bit = u32::read_from(&mut data, o)? == 4;
 
                     u32::read_from(&mut data, o)?; // Padding
                     lineal_mode = u32::read_from(&mut data, o)? & 0xFF != 0;
                     let tile_data_size = u32::read_from(&mut data, o)?;
+                    println!("{}", tile_data_size);
                     u32::read_from(&mut data, o)?; // Unknown, always 0x24
 
                     // For some reason some files do this - maybe only NCBR files?
                     if num_tiles == 0xFFFF {
                         ncbr_ff = true;
                         num_tiles = (tile_data_size / if is_8_bit { 0x40 } else { 0x20 }) as u16;
+                    } else {
+                        num_tiles *= num_tiles_2
                     }
 
                     tiles = Some(vec![]);
