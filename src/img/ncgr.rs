@@ -5,25 +5,34 @@ use crate::{
 use bytestream::{ByteOrder, StreamReader};
 use std::ops::Range;
 
+/// Represents an NDS tile
 pub type Tile = Vec<u8>;
 
 #[derive(Debug, Clone)]
-/// NCGR / NCBR tileset format
+/// NCGR (Nintendo Character Graphics Resource) / NCBR (Nintendo Character Basic Resource) tileset format
 pub struct NCGR {
-    pub is_8_bit: bool,
+    /// Enum containing tile data
     pub tiles: NCGRTiles,
+    /// Indicates whether the file uses 8-bit color (true) or 4-bit color (false)
+    pub is_8_bit: bool,
+    /// Indicates whether the file has a CPOS section
     pub has_cpos: bool,
+    /// Indicates whether the file's tile amount was set to 0xFFFF - believed to happen only in NCBR files
     pub ncbr_ff: bool,
 }
 
 #[derive(Debug, Clone)]
-#[non_exhaustive] // because
+/// Contains raw tile data. Names extracted from Tinke
 pub enum NCGRTiles {
+    /// Format in which gfx data isn't split into tiles per se
+    /// TODO: explain format better
     Lineal(Vec<u8>),
+    /// Format in which gfx data is split into 8x8 tiles
     Horizontal(Vec<Tile>),
 }
 
 impl NCGR {
+    /// Creates an NCGR struct from the NDSFile given
     pub fn from_ndsfile(file: &NDSFile) -> Result<Self> {
         if file.magic != "RGCN" {
             Err(Error::WrongFileKind {
@@ -53,7 +62,6 @@ impl NCGR {
                     u32::read_from(&mut data, o)?; // Padding
                     lineal_mode = u32::read_from(&mut data, o)? & 0xFF != 0;
                     let tile_data_size = u32::read_from(&mut data, o)?;
-                    println!("{}", tile_data_size);
                     u32::read_from(&mut data, o)?; // Unknown, always 0x24
 
                     // For some reason some files do this - maybe only NCBR files?
@@ -100,6 +108,7 @@ impl NCGR {
 }
 
 impl NCGRTiles {
+    /// Parses NCGR tile data into an NCGRTiles
     pub fn from_tile_data(
         data: &mut &[u8],
         num_tiles: usize,
@@ -133,6 +142,12 @@ impl NCGRTiles {
         }
     }
 
+    /// Converts the NCGRTiles into a vector of tiles to be referred by NSCR
+    pub fn to_tiles(&self) -> Vec<Tile> {
+        todo!()
+    }
+
+    /// Converts the NCGRTiles into image data to be displayed
     pub fn render(
         &self,
         is_8_bit: bool,

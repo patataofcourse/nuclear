@@ -3,9 +3,10 @@ use std::io;
 
 pub mod ncgr;
 pub mod nclr;
+pub mod nscr;
 pub mod renderer;
 
-pub use ncgr::NCGR;
+pub use ncgr::{Tile, NCGR};
 pub use nclr::NCLR;
 
 #[derive(Debug, Clone)]
@@ -18,6 +19,7 @@ pub struct ColorBGR555 {
 }
 
 impl ColorBGR555 {
+    /// Converts the color to the RGB888 format, aka 24-bit color
     pub fn to_rgb888(&self) -> [u8; 3] {
         [self.r * 0x8, self.g * 0x8, self.b * 0x8]
     }

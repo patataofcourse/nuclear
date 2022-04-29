@@ -21,7 +21,7 @@ pub struct Renderer;
 
 impl Renderer {
     pub fn export_palettes(&self, pal: NCLR, dir: PathBuf) -> Result<()> {
-        unimplemented!();
+        todo!();
     }
 
     pub fn export_tilesheet<W: Write>(
