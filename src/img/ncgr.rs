@@ -52,6 +52,7 @@ impl NCGR {
 
                     u32::read_from(&mut data, o)?; // Padding
                     lineal_mode = u32::read_from(&mut data, o)? & 0xFF != 0;
+                    lineal_mode = false; //TODO: remove
                     let tile_data_size = u32::read_from(&mut data, o)?;
                     u32::read_from(&mut data, o)?; // Unknown, always 0x24
 
@@ -82,7 +83,7 @@ impl NCGR {
                     num_tiles as usize,
                     lineal_mode,
                     is_8_bit,
-                )?,
+                ),
                 is_8_bit,
                 has_cpos,
                 ncbr_ff,
@@ -102,16 +103,16 @@ impl NCGRTiles {
         num_tiles: usize,
         is_lineal: bool,
         is_8_bit: bool,
-    ) -> Result<Self> {
+    ) -> Self {
         if is_lineal {
-            Ok(Self::Lineal(data.to_vec()))
+            Self::Lineal(data.to_vec())
         } else {
             let mut tilesvec = vec![];
             if is_8_bit {
                 for _ in 0..num_tiles {
                     let mut tile = vec![];
                     for _ in 0..0x40 {
-                        tile.push(u8::read_from(data, ByteOrder::LittleEndian)?);
+                        tile.push(u8::read_from(data, ByteOrder::LittleEndian).unwrap());
                     }
                     tilesvec.push(tile);
                 }
@@ -119,36 +120,76 @@ impl NCGRTiles {
                 for _ in 0..num_tiles {
                     let mut tile = vec![];
                     for _ in 0..0x20 {
-                        let eightbit = u8::read_from(data, ByteOrder::LittleEndian)?;
+                        let eightbit = u8::read_from(data, ByteOrder::LittleEndian).unwrap();
                         tile.push(eightbit & 0xF);
                         tile.push(eightbit >> 4);
                     }
                     tilesvec.push(tile);
                 }
             }
-            Ok(Self::Horizontal(tilesvec))
+            Self::Horizontal(tilesvec)
         }
     }
 
-    pub fn render_tiles(
+    pub fn render(
         &self,
         is_8_bit: bool,
         range: Option<Range<usize>>,
         render_width: usize,
-    ) -> Vec<Tile> {
+    ) -> Vec<u8> {
         match self {
             Self::Horizontal(c) => {
                 let tiles = match range {
                     Some(d) => &c[d],
                     None => &c,
                 };
-                tiles.to_vec()
+                let mut imgdata: Vec<u8> = vec![];
+
+                let mut current_scanlines = [
+                    vec![],
+                    vec![],
+                    vec![],
+                    vec![],
+                    vec![],
+                    vec![],
+                    vec![],
+                    vec![],
+                ];
+
+                for i in 0..tiles.len() {
+                    let tile = &tiles[i];
+                    for j in 0..8 {
+                        let row = &tile[j * 8..(j + 1) * 8];
+                        current_scanlines[j].extend(row);
+                    }
+
+                    if i % render_width == render_width - 1 {
+                        for scanline in &mut current_scanlines {
+                            imgdata.extend(scanline.to_vec());
+                            *scanline = vec![];
+                        }
+                    }
+                }
+                if tiles.len() % render_width != 0 {
+                    for _ in 0..render_width - (tiles.len() % render_width) {
+                        for scanline in &mut current_scanlines {
+                            for _ in 0..8 {
+                                scanline.push(0)
+                            }
+                        }
+                    }
+                    for scanline in &mut current_scanlines {
+                        imgdata.extend(scanline.to_vec());
+                        *scanline = vec![];
+                    }
+                }
+                imgdata
             }
             Self::Lineal(c) => {
                 let tile_size = if is_8_bit { 0x40 } else { 0x20 };
                 let tile_data = match range {
-                    Some(c) => {}
-                    None => {}
+                    Some(d) => &c[d.start * tile_size..d.end * tile_size],
+                    None => &c,
                 };
                 unimplemented!();
             }
