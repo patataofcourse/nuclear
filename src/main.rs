@@ -23,5 +23,11 @@ fn main() -> nuclear::error::Result<()> {
     let ref mut f_w = File::create("test_files/rocker_bg.tiles.png")?;
     let cgr = nuclear::img::ncgr::NCGR::from_ndsfile(&nds)?;
     nuclear::img::renderer::Renderer.export_tilesheet(f_w, &clr.palettes[&3], &cgr, 32, true)?;
+
+    // Open NSCR file
+    let mut f = File::open("test_files/rocker_bg.NSCR")?;
+    let nds = nuclear::ndsfile::NDSFile::from_file("rocker_bg.NSCR", &mut f)?;
+
+    let scr = nuclear::img::nscr::NSCR::from_ndsfile(&nds);
     Ok(())
 }
