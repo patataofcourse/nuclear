@@ -20,6 +20,6 @@ fn main() -> nuclear::error::Result<()> {
 
     let ref mut f_w = File::create("test_files/rocker.tiles.png")?;
     let cgr = nuclear::img::ncgr::NCGR::from_ndsfile(&nds)?;
-    nuclear::img::renderer::Renderer.export_tilesheet(f_w, &clr.palettes[&2], &cgr, 32)?;
+    nuclear::img::renderer::Renderer.export_tilesheet(f_w, &clr.palettes[&3], &cgr, 8, true)?;
     Ok(())
 }

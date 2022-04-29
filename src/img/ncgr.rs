@@ -52,7 +52,6 @@ impl NCGR {
 
                     u32::read_from(&mut data, o)?; // Padding
                     lineal_mode = u32::read_from(&mut data, o)? & 0xFF != 0;
-                    lineal_mode = false; //TODO: remove
                     let tile_data_size = u32::read_from(&mut data, o)?;
                     u32::read_from(&mut data, o)?; // Unknown, always 0x24
 
@@ -191,7 +190,16 @@ impl NCGRTiles {
                     Some(d) => &c[d.start * tile_size..d.end * tile_size],
                     None => &c,
                 };
-                unimplemented!();
+                if is_8_bit {
+                    tile_data.to_vec()
+                } else {
+                    let mut out = vec![];
+                    for byte in tile_data {
+                        out.push(byte & 0xF);
+                        out.push(byte >> 4);
+                    }
+                    out
+                }
             }
         }
     }

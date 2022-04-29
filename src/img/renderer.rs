@@ -30,18 +30,21 @@ impl Renderer {
         pal: &Vec<ColorBGR555>,
         tiles: &NCGR,
         width: usize,
+        transparency: bool,
     ) -> Result<()> {
         let img_data = tiles.tiles.render(tiles.is_8_bit, None, width);
-        let height = ((img_data.len() / 0x40 / width) as u32
-            + if (img_data.len() / 0x40) % width != 0 {
-                1
-            } else {
-                0
-            })
-            * 8;
+        let height = (img_data.len() / 0x8 / width) as u32;
 
         let ref mut w = BufWriter::new(f);
         let mut encoder = Encoder::new(w, width as u32 * 8, height);
+
+        if transparency {
+            let mut trns = vec![0];
+            for _ in 0..pal.len() - 1 {
+                trns.push(255);
+            }
+            encoder.set_trns(trns);
+        }
 
         encoder.set_color(ColorType::Indexed);
         encoder.set_depth(BitDepth::Eight);
