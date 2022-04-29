@@ -22,9 +22,10 @@ pub struct NCGR {
 }
 
 #[derive(Debug, Clone)]
-/// Contains raw tile data. Names extracted from Tinke
+/// Contains raw tile data (names extracted from Tinke)
 pub enum NCGRTiles {
     /// Format in which gfx data isn't split into tiles per se
+    ///
     /// TODO: explain format better
     Lineal(Vec<u8>),
     /// Format in which gfx data is split into 8x8 tiles

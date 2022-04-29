@@ -20,7 +20,7 @@ use std::{
 pub struct NCLR {
     /// The palettes themselves, in BGR555 format
     pub palettes: HashMap<u16, Vec<ColorBGR555>>,
-    // Indicates whether the file uses 8-bit color (true) or 4-bit color (false)
+    /// Indicates whether the file uses 8-bit color (true) or 4-bit color (false)
     pub is_8_bit: bool,
     /// The amount of colors in each palette
     pub color_amt: u32,
