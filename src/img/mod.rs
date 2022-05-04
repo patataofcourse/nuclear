@@ -8,6 +8,7 @@ pub mod renderer;
 
 pub use ncgr::{Tile, NCGR};
 pub use nclr::NCLR;
+pub use nscr::NSCR;
 
 #[derive(Debug, Clone)]
 /// Color format the Nintendo DS uses (BGR555)

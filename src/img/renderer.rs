@@ -9,7 +9,7 @@ To eventually be added to Renderer struct
 
 use crate::{
     error::Result,
-    img::{ColorBGR555, Tile, NCGR, NCLR},
+    img::{ColorBGR555, Tile, NCGR, NCLR, NSCR},
 };
 use png::{BitDepth, ColorType, Encoder};
 use std::{
@@ -59,5 +59,15 @@ impl Renderer {
         writer.write_image_data(&img_data)?;
         writer.finish()?;
         Ok(())
+    }
+
+    pub fn export_tilemap<W: Write>(
+        &self,
+        f: &mut W,
+        pal: &NCLR,
+        tiles: &NCGR,
+        map: &NSCR,
+    ) -> Result<()> {
+        todo!();
     }
 }

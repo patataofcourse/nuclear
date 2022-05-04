@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    img::Tile,
+    img::{Tile, NCGR, NCLR},
     ndsfile::NDSFile,
 };
 use bytestream::StreamReader;
@@ -91,5 +91,10 @@ impl NSCR {
                 s_name: "SCRN".to_string(),
             })?
         }
+    }
+
+    /// Renders the NSCR to truecolor 24bit image data
+    pub fn render(&self, nclr: &NCLR, ncgr: &NCGR) -> Vec<u8> {
+        todo!();
     }
 }

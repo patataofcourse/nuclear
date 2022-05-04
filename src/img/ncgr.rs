@@ -196,7 +196,7 @@ impl NCGRTiles {
         }
     }
 
-    /// Converts a vector of [Tile] into image data to be displayed
+    /// Converts a vector of [Tile] into indexed image data to be displayed
     pub fn render_tiles(
         tiles: &Vec<Tile>,
         range: Option<Range<usize>>,
