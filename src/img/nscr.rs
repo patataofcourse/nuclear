@@ -1,5 +1,6 @@
 use crate::{
     error::{Error, Result},
+    img::Tile,
     ndsfile::NDSFile,
 };
 use bytestream::StreamReader;
@@ -19,6 +20,15 @@ pub struct TileRef {
     pub flip_x: bool,
     pub flip_y: bool,
     pub palette: u8,
+}
+
+#[derive(Debug, Clone)]
+/// A variant of [nuclear::img::NCGR] with horizontal mode forced, for NSCR referencing use
+pub struct TilesForNSCR {
+    /// Tile data
+    pub tiles: Vec<Tile>,
+    /// Indicates whether the file uses 8-bit color (true) or 4-bit color (false)
+    pub is_8_bit: bool,
 }
 
 impl NSCR {

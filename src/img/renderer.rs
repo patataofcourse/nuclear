@@ -9,7 +9,7 @@ To eventually be added to Renderer struct
 
 use crate::{
     error::Result,
-    img::{ColorBGR555, NCGR, NCLR},
+    img::{ColorBGR555, Tile, NCGR, NCLR},
 };
 use png::{BitDepth, ColorType, Encoder};
 use std::{

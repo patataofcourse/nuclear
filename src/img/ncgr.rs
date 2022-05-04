@@ -144,8 +144,27 @@ impl NCGRTiles {
     }
 
     /// Converts the NCGRTiles into a vector of tiles to be referred by NSCR
-    pub fn to_tiles(&self) -> Vec<Tile> {
-        todo!()
+    pub fn to_tiles(&self, is_8_bit: bool) -> Vec<Tile> {
+        match self {
+            NCGRTiles::Horizontal(c) => c.to_vec(),
+            NCGRTiles::Lineal(_) => {
+                let imgdata = self.render(is_8_bit, None, 32);
+                let height = imgdata.len() / 256 / 8;
+                let mut tiles = vec![];
+                for i in 0..height {
+                    for j in 0..32 {
+                        let mut tile = vec![];
+                        for k in 0..8 {
+                            tile.extend(
+                                &imgdata[(i * 8 + k) * 256 + j * 8..(i * 8 + k) * 256 + j * 8 + 7],
+                            );
+                        }
+                        tiles.push(tile);
+                    }
+                }
+                tiles
+            }
+        }
     }
 
     /// Converts the NCGRTiles into image data to be displayed
@@ -156,53 +175,7 @@ impl NCGRTiles {
         render_width: usize,
     ) -> Vec<u8> {
         match self {
-            Self::Horizontal(c) => {
-                let tiles = match range {
-                    Some(d) => &c[d],
-                    None => &c,
-                };
-                let mut imgdata: Vec<u8> = vec![];
-
-                let mut current_scanlines = [
-                    vec![],
-                    vec![],
-                    vec![],
-                    vec![],
-                    vec![],
-                    vec![],
-                    vec![],
-                    vec![],
-                ];
-
-                for i in 0..tiles.len() {
-                    let tile = &tiles[i];
-                    for j in 0..8 {
-                        let row = &tile[j * 8..(j + 1) * 8];
-                        current_scanlines[j].extend(row);
-                    }
-
-                    if i % render_width == render_width - 1 {
-                        for scanline in &mut current_scanlines {
-                            imgdata.extend(scanline.to_vec());
-                            *scanline = vec![];
-                        }
-                    }
-                }
-                if tiles.len() % render_width != 0 {
-                    for _ in 0..render_width - (tiles.len() % render_width) {
-                        for scanline in &mut current_scanlines {
-                            for _ in 0..8 {
-                                scanline.push(0)
-                            }
-                        }
-                    }
-                    for scanline in &mut current_scanlines {
-                        imgdata.extend(scanline.to_vec());
-                        *scanline = vec![];
-                    }
-                }
-                imgdata
-            }
+            Self::Horizontal(c) => Self::render_tiles(c, range, render_width),
             Self::Lineal(c) => {
                 let tile_size = if is_8_bit { 0x40 } else { 0x20 };
                 let tile_data = match range {
@@ -221,5 +194,58 @@ impl NCGRTiles {
                 }
             }
         }
+    }
+
+    /// Converts a vector of [Tile] into image data to be displayed
+    pub fn render_tiles(
+        tiles: &Vec<Tile>,
+        range: Option<Range<usize>>,
+        render_width: usize,
+    ) -> Vec<u8> {
+        let tiles = match range {
+            Some(d) => &tiles[d],
+            None => &tiles,
+        };
+        let mut imgdata: Vec<u8> = vec![];
+
+        let mut current_scanlines = [
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        ];
+
+        for i in 0..tiles.len() {
+            let tile = &tiles[i];
+            for j in 0..8 {
+                let row = &tile[j * 8..(j + 1) * 8];
+                current_scanlines[j].extend(row);
+            }
+
+            if i % render_width == render_width - 1 {
+                for scanline in &mut current_scanlines {
+                    imgdata.extend(scanline.to_vec());
+                    *scanline = vec![];
+                }
+            }
+        }
+        if tiles.len() % render_width != 0 {
+            for _ in 0..render_width - (tiles.len() % render_width) {
+                for scanline in &mut current_scanlines {
+                    for _ in 0..8 {
+                        scanline.push(0)
+                    }
+                }
+            }
+            for scanline in &mut current_scanlines {
+                imgdata.extend(scanline.to_vec());
+                *scanline = vec![];
+            }
+        }
+        imgdata
     }
 }
