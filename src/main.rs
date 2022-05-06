@@ -28,6 +28,8 @@ fn main() -> nuclear::error::Result<()> {
     let mut f = File::open("test_files/rocker_bg.NSCR")?;
     let nds = nuclear::ndsfile::NDSFile::from_file("rocker_bg.NSCR", &mut f)?;
 
-    let scr = nuclear::img::nscr::NSCR::from_ndsfile(&nds);
+    let scr = nuclear::img::nscr::NSCR::from_ndsfile(&nds)?;
+    nuclear::img::renderer::Renderer.export_tilemap(f_w, &clr, &cgr, &scr)?;
+
     Ok(())
 }
