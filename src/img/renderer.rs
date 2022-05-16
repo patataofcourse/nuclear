@@ -9,7 +9,7 @@ To eventually be added to Renderer struct
 
 use crate::{
     error::Result,
-    img::{ColorBGR555, Tile, NCGR, NCLR, NSCR},
+    img::{ColorBGR555, NCGR, NCLR, NSCR},
 };
 use png::{BitDepth, ColorType, Encoder};
 use std::{
@@ -71,7 +71,6 @@ impl Renderer {
         let data = map.render(pal, tiles);
 
         let ref mut w = BufWriter::new(f);
-        println!("{} {}", map.width, map.height);
         let mut encoder = Encoder::new(w, map.width as u32, map.height as u32);
 
         encoder.set_color(ColorType::Rgb);

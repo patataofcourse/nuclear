@@ -60,8 +60,8 @@ impl NSCR {
                     for _ in 0..data_size / 2 {
                         let int = u16::read_from(&mut data, o)?;
                         let tile = int & 0x3FF;
-                        let flip_x = int & 0x400 != 0;
-                        let flip_y = int & 0x800 != 0;
+                        let flip_x = (int & 0x400) != 0;
+                        let flip_y = (int & 0x800) != 0;
                         let palette = (int >> 12) as u8;
                         tile_vec.push(TileRef {
                             tile,
@@ -117,17 +117,14 @@ impl NSCR {
             let flip_y = tile.flip_y;
             let tile = &tiles.tiles[tile.tile as usize];
             for j in 0..8 {
+                let j_ = if flip_y { 7 - j } else { j };
                 for i in 0..8 {
-                    rows[j].extend(palette[tile[j * 8 + i] as usize].to_rgb888());
+                    let i = if flip_x { 7 - i } else { i };
+                    rows[j].extend(palette[tile[j_ * 8 + i] as usize].to_rgb888());
                 }
             }
-            println!("... {} {}", rows[0].len() / 8, self.width);
             if rows[0].len() / 3 == self.width.into() {
-                for i in 0..8 {
-                    let row = &mut rows[if flip_y { 7 - i } else { i }];
-                    if flip_x {
-                        row.reverse();
-                    }
+                for row in &mut rows {
                     data.append(row);
                 }
             }
