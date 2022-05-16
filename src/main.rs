@@ -22,7 +22,7 @@ fn main() -> nuclear::error::Result<()> {
     // Export NCGR to tilesheet
     let ref mut f_w = File::create("test_files/rocker_bg.tiles.png")?;
     let cgr = nuclear::img::ncgr::NCGR::from_ndsfile(&nds)?;
-    nuclear::img::renderer::Renderer.export_tilesheet(f_w, &clr.palettes[&3], &cgr, 32, true)?;
+    nuclear::img::renderer::Renderer.export_tilesheet(f_w, &clr.palettes[&0], &cgr, 32, false)?;
 
     // Open NSCR file
     let mut f = File::open("test_files/rocker_bg.NSCR")?;
