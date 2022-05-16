@@ -143,7 +143,7 @@ impl NCGRTiles {
         }
     }
 
-    /// Converts the NCGRTiles into a vector of tiles to be referred by NSCR
+    /// Converts the NCGRTiles into a [Vec<Tile>] to be referred by NSCR
     pub fn to_tiles(&self, is_8_bit: bool) -> Vec<Tile> {
         match self {
             NCGRTiles::Horizontal(c) => c.to_vec(),

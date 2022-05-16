@@ -95,6 +95,44 @@ impl NSCR {
 
     /// Renders the NSCR to truecolor 24bit image data
     pub fn render(&self, nclr: &NCLR, ncgr: &NCGR) -> Vec<u8> {
-        todo!();
+        let tiles = TilesForNSCR {
+            tiles: ncgr.tiles.to_tiles(ncgr.is_8_bit),
+            is_8_bit: ncgr.is_8_bit,
+        };
+        let mut data = vec![];
+        let mut rows = [
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        ];
+
+        for tile in &self.tiles {
+            let palette = &nclr.palettes[&(tile.palette as u16)];
+            let flip_x = tile.flip_x;
+            let flip_y = tile.flip_y;
+            let tile = &tiles.tiles[tile.tile as usize];
+            for j in 0..8 {
+                for i in 0..8 {
+                    rows[j].extend(palette[tile[j * 8 + i] as usize].to_rgb888());
+                }
+            }
+            println!("... {} {}", rows[0].len() / 8, self.width);
+            if rows[0].len() / 3 == self.width.into() {
+                for i in 0..8 {
+                    let row = &mut rows[if flip_y { 7 - i } else { i }];
+                    if flip_x {
+                        row.reverse();
+                    }
+                    data.append(row);
+                }
+            }
+        }
+
+        data
     }
 }

@@ -68,6 +68,17 @@ impl Renderer {
         tiles: &NCGR,
         map: &NSCR,
     ) -> Result<()> {
-        todo!();
+        let data = map.render(pal, tiles);
+
+        let ref mut w = BufWriter::new(f);
+        println!("{} {}", map.width, map.height);
+        let mut encoder = Encoder::new(w, map.width as u32, map.height as u32);
+
+        encoder.set_color(ColorType::Rgb);
+
+        let mut writer = encoder.write_header()?;
+        writer.write_image_data(&data)?;
+
+        Ok(())
     }
 }
