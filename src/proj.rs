@@ -11,6 +11,7 @@ pub struct NCGRWrapper {
     pub tiles: PathBuf,
     pub has_cpos: bool,
     pub is_8_bit: bool,
+    pub ncbr_ff: bool,
 }
 
 pub struct NSCRWrapper {

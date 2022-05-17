@@ -2,7 +2,7 @@ use crate::{
     error::{Error, Result},
     ndsfile::NDSFile,
 };
-use bytestream::{ByteOrder, StreamReader};
+use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use std::ops::Range;
 
 /// Represents an NDS tile
@@ -105,6 +105,19 @@ impl NCGR {
                 s_name: "CHAR".to_string(),
             })?
         }
+    }
+
+    /// Creates an NDSFile from the NCGR struct gives
+    pub fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
+        let ref mut char_buff: Vec<u8> = vec![];
+        if self.ncbr_ff {
+            (-1i32).write_to(char_buff, o)?;
+        } else {
+            (self.tiles.len(self.is_8_bit) as u16).write_to(char_buff, o)?;
+            if self.is_8_bit { 0x40u16 } else { 0x20 }.write_to(char_buff, o)?;
+        }
+        if self.is_8_bit { 4u32 } else { 3u32 }.write_to(char_buff, o)?;
+        todo!();
     }
 }
 
@@ -247,5 +260,13 @@ impl NCGRTiles {
             }
         }
         imgdata
+    }
+
+    /// Obtain number of tiles
+    pub fn len(&self, is_8_bit: bool) -> usize {
+        match self {
+            Self::Horizontal(c) => c.len(),
+            Self::Lineal(c) => c.len() / if is_8_bit { 0x40 } else { 0x20 },
+        }
     }
 }
