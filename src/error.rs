@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, path::PathBuf};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -43,6 +43,8 @@ pub enum Error {
     #[error("Saving or loading JSON file failed: {0}")]
     /// JSON Serialization error
     SerdeError(serde_json::Error),
+    #[error("Error when reading {0}: {1}")]
+    FileFormatWrong(PathBuf, String),
 }
 
 impl From<io::Error> for Error {
