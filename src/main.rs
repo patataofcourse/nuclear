@@ -1,6 +1,7 @@
 use bytestream::ByteOrder;
 use std::{fs::File, path::PathBuf};
 
+/*
 fn main() -> nuclear::error::Result<()> {
     let mut proj = nuclear::proj::NuclearProject::new(
         "the super cool project",
@@ -17,8 +18,8 @@ fn main() -> nuclear::error::Result<()> {
 
     Ok(())
 }
+*/
 
-/*
 fn main() -> nuclear::error::Result<()> {
     // Open NCLR file
     let mut f = File::open("test_files/rocker_bg.NCLR")?;
@@ -42,6 +43,11 @@ fn main() -> nuclear::error::Result<()> {
     let cgr = nuclear::img::ncgr::NCGR::from_ndsfile(&nds)?;
     nuclear::img::renderer::Renderer.export_tilesheet(f_w, &clr.palettes[&0], &cgr, 32, false)?;
 
+    // Re-export NCGR file
+    let nds = cgr.to_ndsfile("rocker_bg.NCGR".to_string(), ByteOrder::LittleEndian)?;
+    let mut f_w = File::create("test_files/rocker_bg.out.NCGR")?;
+    nds.to_file(&mut f_w)?;
+
     // Open NSCR file
     let mut f = File::open("test_files/rocker_bg.NSCR")?;
     let nds = nuclear::ndsfile::NDSFile::from_file("rocker_bg.NSCR", &mut f)?;
@@ -53,4 +59,3 @@ fn main() -> nuclear::error::Result<()> {
 
     Ok(())
 }
-*/

@@ -1,9 +1,9 @@
 use crate::{
     error::{Error, Result},
-    ndsfile::NDSFile,
+    ndsfile::{NDSFile, Section},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
-use std::ops::Range;
+use std::{io::Write, ops::Range};
 
 /// Represents an NDS tile
 pub type Tile = Vec<u8>;
@@ -63,7 +63,7 @@ impl NCGR {
                     u32::read_from(&mut data, o)?; // Padding
                     lineal_mode = u32::read_from(&mut data, o)? & 0xFF != 0;
                     let tile_data_size = u32::read_from(&mut data, o)?;
-                    u32::read_from(&mut data, o)?; // Unknown, always 0x24
+                    u32::read_from(&mut data, o)?; // Unknown, always 0x18
 
                     // For some reason some files do this - maybe only NCBR files?
                     if num_tiles == 0xFFFF {
@@ -109,6 +109,7 @@ impl NCGR {
 
     /// Creates an NDSFile from the NCGR struct gives
     pub fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
+        // CHAR section
         let ref mut char_buff: Vec<u8> = vec![];
         if self.ncbr_ff {
             (-1i32).write_to(char_buff, o)?;
@@ -117,7 +118,57 @@ impl NCGR {
             if self.is_8_bit { 0x40u16 } else { 0x20 }.write_to(char_buff, o)?;
         }
         if self.is_8_bit { 4u32 } else { 3u32 }.write_to(char_buff, o)?;
-        todo!();
+        0u32.write_to(char_buff, o)?;
+        let tile_data_size;
+        match &self.tiles {
+            NCGRTiles::Horizontal(c) => {
+                0u32.write_to(char_buff, o)?;
+                tile_data_size = c.len() as u32 * if self.is_8_bit { 0x40 } else { 0x20 };
+                tile_data_size.write_to(char_buff, o)?;
+                0x18u32.write_to(char_buff, o)?;
+                if self.is_8_bit {
+                    for tile in c {
+                        char_buff.write(tile)?;
+                    }
+                } else {
+                    for tile in c {
+                        for i in 0..0x20 {
+                            let eightbit = (tile[i * 2 + 1] << 4) + tile[i * 2];
+                            eightbit.write_to(char_buff, o)?;
+                        }
+                    }
+                }
+            }
+            NCGRTiles::Lineal(c) => {
+                1u32.write_to(char_buff, o)?;
+                tile_data_size = c.len() as u32;
+                tile_data_size.write_to(char_buff, o)?;
+                0x18u32.write_to(char_buff, o)?;
+                char_buff.write(c)?;
+            }
+        }
+
+        // CPOS section
+        let ref mut cpos_buff: Vec<u8> = vec![];
+        0u32.write_to(cpos_buff, o)?;
+        if self.is_8_bit { 0x40u16 } else { 0x20 }.write_to(cpos_buff, o)?;
+        tile_data_size.write_to(cpos_buff, o)?;
+
+        Ok(NDSFile {
+            byteorder: o,
+            magic: "RGCN".to_string(),
+            fname,
+            sections: vec![
+                Section {
+                    magic: "RAHC".to_string(),
+                    contents: char_buff.clone(),
+                },
+                Section {
+                    magic: "SOPC".to_string(),
+                    contents: cpos_buff.clone(),
+                },
+            ],
+        })
     }
 }
 
