@@ -154,21 +154,24 @@ impl NCGR {
         if self.is_8_bit { 0x40u16 } else { 0x20 }.write_to(cpos_buff, o)?;
         tile_data_size.write_to(cpos_buff, o)?;
 
-        Ok(NDSFile {
+        let mut out = NDSFile {
             byteorder: o,
             magic: "RGCN".to_string(),
             fname,
-            sections: vec![
-                Section {
-                    magic: "RAHC".to_string(),
-                    contents: char_buff.clone(),
-                },
-                Section {
-                    magic: "SOPC".to_string(),
-                    contents: cpos_buff.clone(),
-                },
-            ],
-        })
+            sections: vec![Section {
+                magic: "RAHC".to_string(),
+                contents: char_buff.clone(),
+            }],
+        };
+
+        if self.has_cpos {
+            out.sections.push(Section {
+                magic: "SOPC".to_string(),
+                contents: cpos_buff.clone(),
+            })
+        }
+
+        Ok(out)
     }
 }
 

@@ -57,5 +57,10 @@ fn main() -> nuclear::error::Result<()> {
     let scr = nuclear::img::nscr::NSCR::from_ndsfile(&nds)?;
     nuclear::img::renderer::Renderer.export_tilemap(f_w, &clr, &cgr, &scr)?;
 
+    // Re-export NSCR file
+    let nds = scr.to_ndsfile("rocker_bg.NSCR".to_string(), ByteOrder::LittleEndian)?;
+    let mut f_w = File::create("test_files/rocker_bg.out.NSCR")?;
+    nds.to_file(&mut f_w)?;
+
     Ok(())
 }

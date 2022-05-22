@@ -1,9 +1,9 @@
 use crate::{
     error::{Error, Result},
     img::{Tile, NCGR, NCLR},
-    ndsfile::NDSFile,
+    ndsfile::{NDSFile, Section},
 };
-use bytestream::StreamReader;
+use bytestream::{ByteOrder, StreamReader, StreamWriter};
 
 #[derive(Debug, Clone)]
 /// NSCR (Nintendo SCreen Resource) tile image format
@@ -91,6 +91,34 @@ impl NSCR {
                 s_name: "SCRN".to_string(),
             })?
         }
+    }
+
+    pub fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
+        let ref mut scrn_buffer = vec![];
+        self.width.write_to(scrn_buffer, o)?;
+        self.height.write_to(scrn_buffer, o)?;
+        0u32.write_to(scrn_buffer, o)?;
+        (self.tiles.len() as u32 * 2).write_to(scrn_buffer, o)?;
+        for tile_ref in &self.tiles {
+            let mut int = tile_ref.tile;
+            if tile_ref.flip_x {
+                int += 0x400
+            }
+            if tile_ref.flip_y {
+                int += 0x800
+            }
+            int += (tile_ref.palette as u16) << 12;
+            int.write_to(scrn_buffer, o)?;
+        }
+        Ok(NDSFile {
+            byteorder: o,
+            magic: "RCSN".to_string(),
+            fname,
+            sections: vec![Section {
+                magic: "NRCS".to_string(),
+                contents: scrn_buffer.to_vec(),
+            }],
+        })
     }
 
     /// Renders the NSCR to truecolor 24bit image data
