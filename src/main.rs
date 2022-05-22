@@ -1,6 +1,12 @@
 use bytestream::ByteOrder;
-use std::fs::File;
+use std::{fs::File, path::PathBuf};
 
+fn main() -> nuclear::error::Result<()> {
+    let proj = nuclear::proj::NuclearProject::new("the super cool project", "patataofcourse", PathBuf::from("test_files/rockers"))?;
+    Ok(())
+}
+
+/*
 fn main() -> nuclear::error::Result<()> {
     // Open NCLR file
     let mut f = File::open("test_files/rocker_bg.NCLR")?;
@@ -35,3 +41,4 @@ fn main() -> nuclear::error::Result<()> {
 
     Ok(())
 }
+*/

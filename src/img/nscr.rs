@@ -123,7 +123,7 @@ impl NSCR {
                     rows[j].extend(palette[tile[j_ * 8 + i] as usize].to_rgb888());
                 }
             }
-            if rows[0].len() / 3 == self.width.into() {
+            if rows[0].len() / 3 == self.width as usize {
                 for row in &mut rows {
                     data.append(row);
                 }

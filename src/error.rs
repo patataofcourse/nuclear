@@ -40,6 +40,9 @@ pub enum Error {
     #[error("PNG format error - image data exceeded limits of image")]
     /// Wrapper for [png::EncodingError::LimitsExceeded]
     PngLimitError,
+    #[error("Saving or loading JSON file failed: {0}")]
+    /// JSON Serialization error
+    SerdeError(serde_json::Error),
 }
 
 impl From<io::Error> for Error {
@@ -62,6 +65,12 @@ impl From<png::EncodingError> for Error {
             png::EncodingError::Parameter(c) => Self::PngError(c),
             png::EncodingError::LimitsExceeded => Self::PngLimitError,
         }
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(error: serde_json::Error) -> Self {
+        Self::SerdeError(error)
     }
 }
 
