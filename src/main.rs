@@ -2,7 +2,18 @@ use bytestream::ByteOrder;
 use std::{fs::File, path::PathBuf};
 
 fn main() -> nuclear::error::Result<()> {
-    let proj = nuclear::proj::NuclearProject::new("the super cool project", "patataofcourse", PathBuf::from("test_files/rockers"))?;
+    let proj = nuclear::proj::NuclearProject::new(
+        "the super cool project",
+        "patataofcourse",
+        PathBuf::from("test_files/rockers"),
+    )?;
+
+    let mut f = File::open("test_files/rocker_bg.NCLR")?;
+    let nds = nuclear::ndsfile::NDSFile::from_file("rocker_bg.NCLR", &mut f)?;
+    let clr = nuclear::img::nclr::NCLR::from_ndsfile(&nds)?;
+
+    proj.add_nclr("rocker_bg", &clr)?;
+
     Ok(())
 }
 
