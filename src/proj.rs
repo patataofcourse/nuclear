@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    img::{ColorBGR555, NCGR, NCLR, NSCR},
+    img::{ncgr::NCGRTiles, ColorBGR555, NCGR, NCLR, NSCR},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
@@ -26,6 +26,7 @@ pub struct NCGRWrapper {
     pub has_cpos: bool,
     pub is_8_bit: bool,
     pub ncbr_ff: bool,
+    pub lineal_mode: bool,
     #[serde(skip, default)]
     pub bin: Vec<u8>, // to be loaded at project load
 }
@@ -102,7 +103,7 @@ impl NuclearProject {
     }
 
     /// Adds a NCLR file to the project. If it already exists, it replaces the previous version.
-    /// Will reset the palette file directories to their original positions!!
+    /// Will reset the palette files to their original positions!!
     pub fn insert_nclr(&mut self, name: &str, nclr: &NCLR) -> Result<()> {
         let mut path = self.path.clone();
         path.extend(&PathBuf::from(format!("pal/{}", name)));
@@ -137,6 +138,7 @@ impl NuclearProject {
         Ok(())
     }
 
+    /// Gets the specified NCLR file from the project
     pub fn get_nclr(&self, name: &str) -> Result<Option<NCLR>> {
         let wrapper = match self.palette_sets.get(name) {
             Some(c) => c,
@@ -170,6 +172,71 @@ impl NuclearProject {
             palettes,
             is_8_bit: wrapper.is_8_bit,
             color_amt: color_amt as u32,
+        }))
+    }
+
+    /// Adds a NCGR file to the project. If it already exists, it replaces the previous version.
+    /// Will reset the tile file to its original position!!
+    pub fn insert_ncgr(&mut self, name: &str, ncgr: &NCGR) -> Result<()> {
+        let mut path = self.path.clone();
+        path.extend(&PathBuf::from("img"));
+        fs::create_dir_all(&path)?;
+        path.extend(&PathBuf::from(format!("tile_{}.bin", name)));
+
+        let binary: Vec<u8>;
+        let lineal_mode: bool;
+        match &ncgr.tiles {
+            NCGRTiles::Horizontal(c) => {
+                lineal_mode = false;
+                let mut bin: Vec<u8> = vec![];
+                for tile in c {
+                    bin.extend(tile);
+                }
+                binary = bin;
+            }
+            NCGRTiles::Lineal(c) => {
+                lineal_mode = true;
+                binary = c.clone();
+            }
+        }
+
+        let mut file = File::create(&path)?;
+        file.write(&binary)?;
+
+        self.tilesets.insert(
+            name.to_string(),
+            NCGRWrapper {
+                is_8_bit: ncgr.is_8_bit,
+                ncbr_ff: ncgr.ncbr_ff,
+                lineal_mode,
+                has_cpos: ncgr.has_cpos,
+                tiles: path,
+                bin: binary,
+            },
+        );
+        self.write_meta()?;
+        Ok(())
+    }
+
+    /// Gets the specified NCGR file from the project
+    pub fn get_ncgr(&self, name: &str) -> Result<Option<NCGR>> {
+        let wrapper = match self.tilesets.get(name) {
+            Some(c) => c,
+            None => return Ok(None),
+        };
+
+        let tiles = NCGRTiles::from_tile_data(
+            &mut wrapper.bin.as_ref(),
+            wrapper.bin.len() / if wrapper.is_8_bit { 0x40 } else { 0x20 },
+            wrapper.lineal_mode,
+            true,
+        );
+
+        Ok(Some(NCGR {
+            tiles,
+            has_cpos: wrapper.has_cpos,
+            is_8_bit: wrapper.is_8_bit,
+            ncbr_ff: wrapper.ncbr_ff,
         }))
     }
 }

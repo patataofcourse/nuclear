@@ -1,7 +1,6 @@
 use bytestream::ByteOrder;
 use std::{fs::File, path::PathBuf};
 
-/*
 fn main() -> nuclear::error::Result<()> {
     let mut proj = nuclear::proj::NuclearProject::new(
         "the super cool project",
@@ -11,15 +10,37 @@ fn main() -> nuclear::error::Result<()> {
 
     let mut f = File::open("test_files/rocker_bg.NCLR")?;
     let nds = nuclear::ndsfile::NDSFile::from_file("rocker_bg.NCLR", &mut f)?;
-    let clr = nuclear::img::nclr::NCLR::from_ndsfile(&nds)?;
+    let clr = nuclear::img::NCLR::from_ndsfile(&nds)?;
+
+    let mut f = File::open("test_files/rocker_bg.NCGR")?;
+    let nds = nuclear::ndsfile::NDSFile::from_file("rocker_bg.NCGR", &mut f)?;
+    let cgr = nuclear::img::NCGR::from_ndsfile(&nds)?;
 
     proj.insert_nclr("rocker_bg", &clr)?;
-    //println!("{:?}", proj.get_nclr("rocker_bg")?);
+    proj.insert_ncgr("rocker_bg", &cgr)?;
+
+    let mut f = File::open("test_files/rocker.NCLR")?;
+    let nds = nuclear::ndsfile::NDSFile::from_file("rocker.NCLR", &mut f)?;
+    let clr = nuclear::img::NCLR::from_ndsfile(&nds)?;
+
+    let mut f = File::open("test_files/rocker.NCBR")?;
+    let nds = nuclear::ndsfile::NDSFile::from_file("rocker.NCBR", &mut f)?;
+    let cgr = nuclear::img::NCGR::from_ndsfile(&nds)?;
+
+    proj.insert_nclr("rocker", &clr)?;
+    proj.insert_ncgr("rocker", &cgr)?;
+
+    let nds = proj
+        .get_ncgr("rocker")?
+        .unwrap()
+        .to_ndsfile("rocker.NCBR".to_string(), ByteOrder::LittleEndian)?;
+    let ref mut f_w = File::create("test_files/rocker.proj.NCBR")?;
+    nds.to_file(f_w)?;
 
     Ok(())
 }
-*/
 
+/*
 fn main() -> nuclear::error::Result<()> {
     // Open NCLR file
     let mut f = File::open("test_files/rocker_bg.NCLR")?;
@@ -64,3 +85,4 @@ fn main() -> nuclear::error::Result<()> {
 
     Ok(())
 }
+*/
