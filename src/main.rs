@@ -16,8 +16,13 @@ fn main() -> nuclear::error::Result<()> {
     let nds = nuclear::ndsfile::NDSFile::from_file("rocker_bg.NCGR", &mut f)?;
     let cgr = nuclear::img::NCGR::from_ndsfile(&nds)?;
 
+    let mut f = File::open("test_files/rocker_bg.NSCR")?;
+    let nds = nuclear::ndsfile::NDSFile::from_file("rocker_bg.NSCR", &mut f)?;
+    let scr = nuclear::img::NSCR::from_ndsfile(&nds)?;
+
     proj.insert_nclr("rocker_bg", &clr)?;
     proj.insert_ncgr("rocker_bg", &cgr)?;
+    proj.insert_nscr("rocker_bg", &scr)?;
 
     let mut f = File::open("test_files/rocker.NCLR")?;
     let nds = nuclear::ndsfile::NDSFile::from_file("rocker.NCLR", &mut f)?;
@@ -31,10 +36,10 @@ fn main() -> nuclear::error::Result<()> {
     proj.insert_ncgr("rocker", &cgr)?;
 
     let nds = proj
-        .get_ncgr("rocker")?
+        .get_nscr("rocker_bg")?
         .unwrap()
-        .to_ndsfile("rocker.NCBR".to_string(), ByteOrder::LittleEndian)?;
-    let ref mut f_w = File::create("test_files/rocker.proj.NCBR")?;
+        .to_ndsfile("rocker_bg.NSCR".to_string(), ByteOrder::LittleEndian)?;
+    let ref mut f_w = File::create("test_files/rocker_bg.proj.NSCR")?;
     nds.to_file(f_w)?;
 
     Ok(())

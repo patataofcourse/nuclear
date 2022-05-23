@@ -6,7 +6,7 @@ Rust library and tool for opening various graphics-related Nintendo DS files
 - File format support
     - [x] NCLR
     - [x] NCGR / NCBR
-    - [ ] NSCR [partial]
+    - [x] NSCR
     - [ ] NCER
     - [ ] NANR
 - Project format

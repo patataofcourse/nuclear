@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    img::{ncgr::NCGRTiles, ColorBGR555, NCGR, NCLR, NSCR},
+    img::{ncgr::NCGRTiles, nscr::TileRef, ColorBGR555, NCGR, NCLR, NSCR},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
@@ -237,6 +237,64 @@ impl NuclearProject {
             has_cpos: wrapper.has_cpos,
             is_8_bit: wrapper.is_8_bit,
             ncbr_ff: wrapper.ncbr_ff,
+        }))
+    }
+
+    /// Adds a NSCR file to the project. If it already exists, it replaces the previous version.
+    /// Will reset the tilemap file to its original position!!
+    pub fn insert_nscr(&mut self, name: &str, nscr: &NSCR) -> Result<()> {
+        let mut path = self.path.clone();
+        path.extend(&PathBuf::from("map"));
+        fs::create_dir_all(&path)?;
+        path.extend(&PathBuf::from(format!("map_{}.bin", name)));
+
+        let mut binary = vec![];
+        for tile in &nscr.tiles {
+            tile.tile.write_to(&mut binary, ByteOrder::LittleEndian)?;
+            tile.flip_x.write_to(&mut binary, ByteOrder::LittleEndian)?;
+            tile.flip_y.write_to(&mut binary, ByteOrder::LittleEndian)?;
+            #[rustfmt::skip]
+            tile.palette.write_to(&mut binary, ByteOrder::LittleEndian)?;
+        }
+
+        let mut file = File::create(&path)?;
+        file.write(&binary)?;
+
+        self.tilemaps.insert(
+            name.to_string(),
+            NSCRWrapper {
+                map: path,
+                width: nscr.width,
+                height: nscr.height,
+                bin: binary,
+            },
+        );
+        self.write_meta()?;
+        Ok(())
+    }
+
+    /// Gets the specified NSCR file from the project
+    pub fn get_nscr(&self, name: &str) -> Result<Option<NSCR>> {
+        let wrapper = match self.tilemaps.get(name) {
+            Some(c) => c,
+            None => return Ok(None),
+        };
+
+        let mut tiles = vec![];
+        let mut bin: &[u8] = &wrapper.bin;
+        while bin.len() != 0 {
+            tiles.push(TileRef {
+                tile: u16::read_from(&mut bin, ByteOrder::LittleEndian)?,
+                flip_x: bool::read_from(&mut bin, ByteOrder::LittleEndian)?,
+                flip_y: bool::read_from(&mut bin, ByteOrder::LittleEndian)?,
+                palette: u8::read_from(&mut bin, ByteOrder::LittleEndian)?,
+            })
+        }
+
+        Ok(Some(NSCR {
+            tiles,
+            width: wrapper.width,
+            height: wrapper.height,
         }))
     }
 }
