@@ -4,15 +4,15 @@ Rust library and tool for opening various graphics-related Nintendo DS files
 
 ## Roadmap
 - File format support
-    - [v] NCLR
-    - [v] NCGR / NCBR
+    - [x] NCLR
+    - [x] NCGR / NCBR
     - [ ] NSCR [partial]
     - [ ] NCER
     - [ ] NANR
 - Project format
-    - [v] Saving files to project
+    - [x] Saving files to project
     - [ ] Loading project from files
-    - [v] Exporting files from project
+    - [x] Exporting files from project
     - [ ] Importing files to project
 - Animation editor
     - [ ] Export NCER to a spritesheet
