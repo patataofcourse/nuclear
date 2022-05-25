@@ -102,6 +102,19 @@ impl NuclearProject {
         Ok(())
     }
 
+    pub fn load_from_file(path: PathBuf) -> Result<Self> {
+        let mut meta_path = path.clone();
+        meta_path.extend(&PathBuf::from("nuclear_meta.json"));
+        let mut meta = File::open(meta_path)?;
+
+        let mut json = String::new();
+        meta.read_to_string(&mut json)?;
+
+        let project: NuclearProject = serde_json::from_str(&json)?;
+
+        todo!();
+    }
+
     /// Adds a NCLR file to the project. If it already exists, it replaces the previous version.
     /// Will reset the palette files to their original positions!!
     pub fn insert_nclr(&mut self, name: &str, nclr: &NCLR) -> Result<()> {
