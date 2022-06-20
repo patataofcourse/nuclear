@@ -11,3 +11,17 @@ thiserror = "1.0"
 png = "0.17"
 serde = {version = "1.0", features = ["derive"]}
 serde_json = "1.0"
+
+egui = { version = "0.18.1", optional = true }
+
+[features]
+gui = ["egui"]
+
+[[bin]]
+name = "nuclear-egui"
+path = "src/main.rs"
+required-features = ["gui"]
+default-features = ["gui"]
+
+[[example]]
+name = "test"
