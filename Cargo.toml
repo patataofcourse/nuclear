@@ -24,3 +24,6 @@ required-features = ["gui"]
 
 [[example]]
 name = "test"
+
+[[example]]
+name = "projtest"
