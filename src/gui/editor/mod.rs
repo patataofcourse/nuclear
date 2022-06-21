@@ -1,3 +1,6 @@
+use eframe::egui::{Color32, Frame, InnerResponse, Style, Ui};
+use std::fmt::Display;
+
 pub mod nclr;
 
 pub enum EditorType {
@@ -8,15 +11,37 @@ pub enum EditorType {
     Animation,
 }
 
-impl ToString for EditorType {
+impl Display for EditorType {
     //TODO: localization
-    fn to_string(&self) -> String {
-        match self {
-            Self::Palette => String::from("Palette"),
-            Self::Tileset => String::from("Tileset"),
-            Self::Tilemap => String::from("Tilemap"),
-            Self::Frame => String::from("Frame"),
-            Self::Animation => String::from("Animation"),
-        }
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            fmt,
+            "{}",
+            match self {
+                Self::Palette => "Palette",
+                Self::Tileset => "Tileset",
+                Self::Tilemap => "Tilemap",
+                Self::Frame => "Frames",
+                Self::Animation => "Animations",
+            }
+        )
     }
+}
+
+pub fn render_tab(ui: &mut Ui, tab: &(String, EditorType), selected: bool) -> InnerResponse<()> {
+    let mut frame = Frame::group(&Style::default());
+    if selected {
+        frame = frame.fill(if ui.visuals().dark_mode {
+            Color32::from_white_alpha(15)
+        } else {
+            Color32::LIGHT_GRAY
+        });
+    }
+    frame.show(ui, |ui| {
+        ui.horizontal(|ui| {
+            ui.visuals_mut();
+            ui.label(format!("{} ({})", tab.0, tab.1));
+            ui.button("X");
+        });
+    })
 }

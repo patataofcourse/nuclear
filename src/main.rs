@@ -5,6 +5,6 @@ fn main() {
     eframe::run_native(
         "nuclear",
         options,
-        Box::new(|_cc| Box::new(NuclearApp::default())),
+        Box::new(|_cc| Box::new(NuclearApp::test())),
     );
 }

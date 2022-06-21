@@ -1,6 +1,4 @@
-use eframe::egui::{
-    containers::Frame, menu, CentralPanel, Color32, Context, SidePanel, Style, TopBottomPanel, Ui,
-};
+use eframe::egui::{menu, widgets, CentralPanel, Context, SidePanel, TopBottomPanel, Ui};
 
 pub mod editor;
 
@@ -8,6 +6,18 @@ use self::editor::EditorType;
 
 pub struct NuclearApp {
     pub tabs: Vec<(String, EditorType)>,
+}
+
+impl NuclearApp {
+    pub fn test() -> Self {
+        Self {
+            tabs: vec![
+                ("rocker".to_string(), EditorType::Frame),
+                ("rocker".to_string(), EditorType::Animation),
+                ("rocker".to_string(), EditorType::Tileset),
+            ],
+        }
+    }
 }
 
 impl Default for NuclearApp {
@@ -25,7 +35,7 @@ pub fn menu_bar(ctx: &Context) {
                     ui.label("gad");
                 });
             });
-            ui.button("THE BUTTON WILL SURVIVE!!!!!");
+            ui.button("button!!!");
         });
     });
 }
@@ -56,31 +66,14 @@ pub fn side_panel(ctx: &Context) {
 pub fn tab_bar(tabs: &Vec<(String, EditorType)>, ui: &mut Ui) {
     // File selector
     ui.horizontal(|ui| {
-        Frame::group(&Style::default())
-            .fill(Color32::LIGHT_GRAY)
-            .show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.visuals_mut();
-                    ui.label("rocker (Frames)");
-                    ui.button("X");
-                });
-            });
-        ui.separator();
-        Frame::group(&Style::default()).show(ui, |ui| {
-            ui.horizontal(|ui| {
-                ui.visuals_mut();
-                ui.label("rocker (Animation)");
-                ui.button("X");
-            });
-        });
-        ui.separator();
-        Frame::group(&Style::default()).show(ui, |ui| {
-            ui.horizontal(|ui| {
-                ui.visuals_mut();
-                ui.label("rocker (Tileset)");
-                ui.button("X");
-            });
-        });
+        let mut c = 0;
+        for tab in tabs {
+            editor::render_tab(ui, tab, c == 0); //todo: use response
+            if c != tabs.len() - 1 {
+                ui.separator();
+            }
+            c += 1;
+        }
     });
 }
 
@@ -99,6 +92,7 @@ impl eframe::App for NuclearApp {
             // Actual workspace
             ui.heading("me when i nuclear");
             ui.label("Hello world!");
+            widgets::global_dark_light_mode_switch(ui);
         });
     }
 }
