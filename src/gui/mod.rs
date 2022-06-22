@@ -1,4 +1,4 @@
-use eframe::egui::{menu, widgets, CentralPanel, Context, SidePanel, TopBottomPanel, Ui};
+use eframe::egui::{menu, widgets, CentralPanel, Context, Layout, SidePanel, TopBottomPanel, Ui};
 
 pub mod editor;
 
@@ -36,6 +36,10 @@ pub fn menu_bar(ctx: &Context) {
                 });
             });
             ui.button("button!!!");
+            ui.with_layout(Layout::right_to_left(), |ui| {
+                widgets::global_dark_light_mode_switch(ui);
+                ui.label("Toggle dark mode");
+            });
         });
     });
 }
@@ -92,7 +96,6 @@ impl eframe::App for NuclearApp {
             // Actual workspace
             ui.heading("me when i nuclear");
             ui.label("Hello world!");
-            widgets::global_dark_light_mode_switch(ui);
         });
     }
 }

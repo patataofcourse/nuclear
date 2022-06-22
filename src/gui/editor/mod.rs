@@ -1,7 +1,9 @@
-use eframe::egui::{Color32, Frame, InnerResponse, Style, Ui};
 use std::fmt::Display;
 
 pub mod nclr;
+pub mod tab;
+
+pub use self::tab::render_tab;
 
 pub enum EditorType {
     Palette,
@@ -26,22 +28,4 @@ impl Display for EditorType {
             }
         )
     }
-}
-
-pub fn render_tab(ui: &mut Ui, tab: &(String, EditorType), selected: bool) -> InnerResponse<()> {
-    let mut frame = Frame::group(&Style::default());
-    if selected {
-        frame = frame.fill(if ui.visuals().dark_mode {
-            Color32::from_white_alpha(15)
-        } else {
-            Color32::LIGHT_GRAY
-        });
-    }
-    frame.show(ui, |ui| {
-        ui.horizontal(|ui| {
-            ui.visuals_mut();
-            ui.label(format!("{} ({})", tab.0, tab.1));
-            ui.button("X");
-        });
-    })
 }
