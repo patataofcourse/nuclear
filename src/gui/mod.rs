@@ -96,6 +96,18 @@ impl eframe::App for NuclearApp {
             // Actual workspace
             ui.heading("me when i nuclear");
             ui.label("Hello world!");
+            ui.horizontal(|ui| {
+                ui.add(editor::tab::Tab {
+                    name: "a",
+                    editor_type: EditorType::Frame,
+                    selected: true,
+                });
+                ui.add(editor::tab::Tab {
+                    name: "b",
+                    editor_type: EditorType::Frame,
+                    selected: false,
+                });
+            });
         });
     }
 }
