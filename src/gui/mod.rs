@@ -72,7 +72,11 @@ pub fn tab_bar(tabs: &Vec<(String, EditorType)>, ui: &mut Ui) {
     ui.horizontal(|ui| {
         let mut c = 0;
         for tab in tabs {
-            editor::render_tab(ui, tab, c == 0); //todo: use response
+            ui.add(editor::tab::Tab {
+                name: tab.0.as_str(),
+                editor_type: tab.1,
+                selected: c == 0,
+            });
             if c != tabs.len() - 1 {
                 ui.separator();
             }
@@ -96,18 +100,8 @@ impl eframe::App for NuclearApp {
             // Actual workspace
             ui.heading("me when i nuclear");
             ui.label("Hello world!");
-            ui.horizontal(|ui| {
-                ui.add(editor::tab::Tab {
-                    name: "a",
-                    editor_type: EditorType::Frame,
-                    selected: true,
-                });
-                ui.add(editor::tab::Tab {
-                    name: "b",
-                    editor_type: EditorType::Frame,
-                    selected: false,
-                });
-            });
+            ui.button("here's a useless button");
+            ui.label("fuck");
         });
     }
 }

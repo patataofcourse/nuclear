@@ -3,8 +3,7 @@ use std::fmt::Display;
 pub mod nclr;
 pub mod tab;
 
-pub use self::tab::render_tab;
-
+#[derive(Clone, Copy)]
 pub enum EditorType {
     Palette,
     Tileset,
