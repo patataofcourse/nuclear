@@ -82,12 +82,10 @@ pub fn tab_bar(tabs: &Vec<(String, EditorType)>, ui: &mut Ui) -> TabBarResponse 
                 selected: c == 0,
             });
 
-            if out != TabBarResponse::None {
-                if response.changed() {
-                    out = TabBarResponse::Close(c);
-                } else if response.clicked() {
-                    out = TabBarResponse::Select(c);
-                }
+            if response.changed() {
+                out = TabBarResponse::Close(c);
+            } else if response.clicked() {
+                out = TabBarResponse::Select(c);
             }
 
             if c != tabs.len() - 1 {
@@ -109,7 +107,11 @@ impl eframe::App for NuclearApp {
 
         //Main workspace
         CentralPanel::default().show(ctx, |ui| {
-            tab_bar(&self.tabs, ui);
+            match tab_bar(&self.tabs, ui) {
+                TabBarResponse::Select(c) => println!("Selected {}", c),
+                TabBarResponse::Close(c) => println!("Closed {}", c),
+                _ => {}
+            }
             ui.separator();
 
             // Actual workspace

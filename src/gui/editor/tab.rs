@@ -1,6 +1,6 @@
 use super::EditorType;
 use eframe::egui::{
-    self, style::Margin, Color32, FontSelection, Rect, Response, Sense, Ui, Vec2, Widget,
+    self, style::Margin, Color32, FontSelection, Id, Rect, Response, Sense, Ui, Vec2, Widget,
     WidgetText,
 };
 
@@ -54,11 +54,18 @@ impl Widget for Tab<'_> {
                 min: rect.min + button_offset,
                 max: rect.min + button_offset + button_size,
             };
-            let button_response = ui.allocate_rect(button_rect, Sense::click());
+            let button_response = ui.interact(
+                button_rect,
+                Id::new(format!("tab_button_{}_{}", self.name, self.editor_type)),
+                Sense::click(),
+            );
 
             // 3. Interact: Time to check for clicks!
-            if button_response.clicked() {
-                response.mark_changed(); // report back that the value changed
+            if (!button_response.clicked_elsewhere()
+                && button_response.ctx.input().pointer.any_click())
+            // because button_response.clicked() doesn't seem to work
+            {
+                response.mark_changed();
             }
             // Attach some meta-data to the response which can be used by screen readers:
             response.widget_info(|| {
