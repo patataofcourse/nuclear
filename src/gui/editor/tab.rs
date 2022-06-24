@@ -4,6 +4,13 @@ use eframe::egui::{
     WidgetText,
 };
 
+#[derive(Clone, PartialEq, Debug)]
+pub enum TabBarResponse {
+    None,
+    Select(usize),
+    Close(usize),
+}
+
 pub struct Tab<'a> {
     pub name: &'a str,
     pub editor_type: EditorType,
@@ -73,7 +80,7 @@ impl Widget for Tab<'_> {
 
                 // text
                 if ui.visuals().dark_mode && self.selected {
-                    visuals.fg_stroke.color = Color32::BLACK;
+                    visuals.fg_stroke.color = Color32::LIGHT_GRAY;
                 }
 
                 text.paint_with_visuals(

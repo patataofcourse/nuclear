@@ -2,7 +2,10 @@ use eframe::egui::{menu, widgets, CentralPanel, Context, Layout, SidePanel, TopB
 
 pub mod editor;
 
-use self::editor::EditorType;
+use self::editor::{
+    tab::{Tab, TabBarResponse},
+    EditorType,
+};
 
 pub struct NuclearApp {
     pub tabs: Vec<(String, EditorType)>,
@@ -67,22 +70,34 @@ pub fn side_panel(ctx: &Context) {
     });
 }
 
-pub fn tab_bar(tabs: &Vec<(String, EditorType)>, ui: &mut Ui) {
-    // File selector
+pub fn tab_bar(tabs: &Vec<(String, EditorType)>, ui: &mut Ui) -> TabBarResponse {
+    let mut out = TabBarResponse::None;
+
     ui.horizontal(|ui| {
         let mut c = 0;
         for tab in tabs {
-            ui.add(editor::tab::Tab {
+            let response = ui.add(Tab {
                 name: tab.0.as_str(),
                 editor_type: tab.1,
                 selected: c == 0,
             });
+
+            if out != TabBarResponse::None {
+                if response.changed() {
+                    out = TabBarResponse::Close(c);
+                } else if response.clicked() {
+                    out = TabBarResponse::Select(c);
+                }
+            }
+
             if c != tabs.len() - 1 {
                 ui.separator();
             }
             c += 1;
         }
     });
+
+    out
 }
 
 //TODO: separate into functions

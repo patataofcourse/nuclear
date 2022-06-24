@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-pub mod nclr;
+pub mod pal;
 pub mod tab;
 
 #[derive(Clone, Copy)]
@@ -10,6 +10,10 @@ pub enum EditorType {
     Tilemap,
     Frame,
     Animation,
+}
+#[derive(Clone, Debug)]
+pub enum Editor {
+    Palette(pal::PaletteEditor),
 }
 
 impl Display for EditorType {
