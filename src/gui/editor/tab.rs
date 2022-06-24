@@ -15,7 +15,6 @@ pub struct Tab<'a> {
     pub name: &'a str,
     pub editor_type: EditorType,
     pub selected: bool,
-    //TODO: editor inside the tab
 }
 
 impl Tab<'_> {

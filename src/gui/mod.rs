@@ -107,7 +107,6 @@ pub fn tab_bar(
     out
 }
 
-//TODO: separate into functions
 impl eframe::App for NuclearApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         menu_bar(ctx);
