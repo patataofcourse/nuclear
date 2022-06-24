@@ -9,6 +9,7 @@ use self::editor::{
 
 pub struct NuclearApp {
     pub tabs: Vec<(String, EditorType)>,
+    pub selected_tab: usize,
 }
 
 impl NuclearApp {
@@ -19,13 +20,17 @@ impl NuclearApp {
                 ("rocker".to_string(), EditorType::Animation),
                 ("rocker".to_string(), EditorType::Tileset),
             ],
+            selected_tab: 0,
         }
     }
 }
 
 impl Default for NuclearApp {
     fn default() -> Self {
-        Self { tabs: vec![] }
+        Self {
+            tabs: vec![],
+            selected_tab: 0,
+        }
     }
 }
 
@@ -70,7 +75,11 @@ pub fn side_panel(ctx: &Context) {
     });
 }
 
-pub fn tab_bar(tabs: &Vec<(String, EditorType)>, ui: &mut Ui) -> TabBarResponse {
+pub fn tab_bar(
+    tabs: &Vec<(String, EditorType)>,
+    ui: &mut Ui,
+    selected_tab: usize,
+) -> TabBarResponse {
     let mut out = TabBarResponse::None;
 
     ui.horizontal(|ui| {
@@ -79,7 +88,7 @@ pub fn tab_bar(tabs: &Vec<(String, EditorType)>, ui: &mut Ui) -> TabBarResponse 
             let response = ui.add(Tab {
                 name: tab.0.as_str(),
                 editor_type: tab.1,
-                selected: c == 0,
+                selected: c == selected_tab,
             });
 
             if response.changed() {
@@ -107,9 +116,16 @@ impl eframe::App for NuclearApp {
 
         //Main workspace
         CentralPanel::default().show(ctx, |ui| {
-            match tab_bar(&self.tabs, ui) {
-                TabBarResponse::Select(c) => println!("Selected {}", c),
-                TabBarResponse::Close(c) => println!("Closed {}", c),
+            match tab_bar(&self.tabs, ui, self.selected_tab) {
+                TabBarResponse::Select(c) => {
+                    self.selected_tab = c;
+                }
+                TabBarResponse::Close(c) => {
+                    if self.selected_tab >= c && self.selected_tab != 0 {
+                        self.selected_tab -= 1;
+                    }
+                    self.tabs.remove(c);
+                }
                 _ => {}
             }
             ui.separator();
