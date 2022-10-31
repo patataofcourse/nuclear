@@ -5,9 +5,10 @@ use thiserror::Error;
 #[non_exhaustive]
 /// Error type for nuclear, doubles as a wrapper for other libraries' Error types
 pub enum Error {
-    #[error("System error: {0}")]
-    /// Wrapper for [std::io::Error]
-    IOError(io::Error),
+    //
+    // Generic errors
+    //
+    /// Wrong magic for file
     #[error(
         "Expected file {file}{} to have magic {expected}, got {got}",
         match ftype {
@@ -15,36 +16,55 @@ pub enum Error {
             None => String::new(),
         }
     )]
-    /// Wrong magic for file
     WrongFileKind {
         file: String,
         ftype: Option<String>,
         expected: String,
         got: String,
     },
-    #[error("File {file} doesn't have section {s_name}, which is essential for it to work")]
+
     /// File is missing a section essential for its completeness
+    #[error("File {file} doesn't have section {s_name}, which is essential for it to work")]
     MissingRequiredSection { file: String, s_name: String },
-    #[error("File {file} was given section {s_name}, which it doesn't recognize")]
+
     /// File has a section that the program doesn't recognize
+    #[error("File {file} was given section {s_name}, which it doesn't recognize")]
     UnknownSection { file: String, s_name: String },
+
+    /// Binary (Nintendo) file has invalid data
     #[error("Data in file {file} is invalid")]
-    /// File has invalid data
     MalformedData { file: String },
-    #[error("PNG format error - {0}")]
-    /// Wrapper for [png::EncodingError::Format]
-    PngFormatError(String),
-    #[error("Something went wrong with the PNG library: {0}")]
-    /// Wrapper for [png::ParameterError]
-    PngError(png::ParameterError),
-    #[error("PNG format error - image data exceeded limits of image")]
-    /// Wrapper for [png::EncodingError::LimitsExceeded]
-    PngLimitError,
-    #[error("Saving or loading JSON file failed: {0}")]
-    /// JSON Serialization error
-    SerdeError(serde_json::Error),
+
+    /// Error when loading project files
     #[error("Error when reading {0}: {1}")]
     FileFormatWrong(PathBuf, String),
+
+    //
+    // Wrappers
+    //
+    /// Wrapper for custom errors through String (good for one-off errors)
+    #[error("{0}")]
+    Generic(String),
+
+    /// Wrapper for [std::io::Error]
+    #[error("System error: {0}")]
+    IOError(io::Error),
+
+    /// Wrapper for [png::EncodingError::Format]
+    #[error("PNG format error - {0}")]
+    PngFormatError(String),
+
+    /// Wrapper for [png::ParameterError]
+    #[error("Something went wrong with the PNG library: {0}")]
+    PngError(png::ParameterError),
+
+    /// Wrapper for [png::EncodingError::LimitsExceeded]
+    #[error("PNG format error - image data exceeded limits of image")]
+    PngLimitError,
+
+    /// Wrapper for [serde_json::Error]
+    #[error("Saving or loading JSON file failed: {0}")]
+    SerdeError(serde_json::Error),
 }
 
 impl From<io::Error> for Error {

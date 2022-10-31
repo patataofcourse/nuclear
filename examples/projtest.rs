@@ -35,12 +35,10 @@ fn main() -> nuclear::error::Result<()> {
     proj.insert_nclr("rocker", &clr)?;
     proj.insert_ncgr("rocker", &cgr)?;
 
-    let nds = proj
+    let _nds = proj
         .get_nscr("rocker_bg")?
         .unwrap()
         .to_ndsfile("rocker_bg.NSCR".to_string(), ByteOrder::LittleEndian)?;
-    let ref mut f_w = File::create("test_files/rocker_bg.proj.NSCR")?;
-    nds.to_file(f_w)?;
 
     Ok(())
 }

@@ -1,6 +1,7 @@
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use std::io;
 
+pub mod ncer;
 pub mod ncgr;
 pub mod nclr;
 pub mod nscr;
