@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    ndsfile::{NDSFile, Section},
+    ndsfile::NDSFile,
 };
 
 #[derive(Debug, Clone)]
@@ -27,11 +27,11 @@ pub struct CellInternals {
     pub x_coord: u8,
     pub y_coord: u8,
     pub disable: bool,
-    pub mode: u8,           // 2-bit
+    pub mode: u8, // 2-bit
     pub mosaic: bool,
     pub is_8_bit: bool,
-    pub shape: CellShape,   // 2-bit + 2-bit
-    pub unused_attr1: u8,   // 3-bit
+    pub shape: CellShape, // 2-bit + 2-bit
+    pub unused_attr1: u8, // 3-bit
     pub flip_x: bool,
     pub flip_y: bool,
 }
@@ -72,8 +72,12 @@ impl NCER {
                 "KBEC" => {
                     todo!("CEBK section")
                 }
-                "LBAL" => {todo!("LABL section")}
-                "TXEU" => {todo!("UEXT section")}
+                "LBAL" => {
+                    todo!("LABL section")
+                }
+                "TXEU" => {
+                    todo!("UEXT section")
+                }
                 c => Err(Error::UnknownSection {
                     file: file.fname.clone(),
                     s_name: c.to_string(),
@@ -82,7 +86,6 @@ impl NCER {
         }
 
         todo!();
-
     }
 }
 

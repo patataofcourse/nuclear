@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Error, Result};
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use std::{
     fmt::{self, Debug, Formatter},
@@ -29,7 +29,9 @@ impl NDSFile {
         let o = match bom {
             [0xFF, 0xFE] => ByteOrder::LittleEndian,
             [0xFE, 0xFF] => ByteOrder::BigEndian,
-            _ => panic!("Incorrect Byte Order Mark"),
+            _ => Err(Error::InvalidBOM {
+                file: fname.to_string(),
+            })?,
         };
         drop(bom);
 

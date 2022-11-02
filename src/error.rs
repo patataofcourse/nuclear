@@ -23,6 +23,10 @@ pub enum Error {
         got: String,
     },
 
+    /// Incorrect BOM
+    #[error("File {file} has invalid Byte Order Mark")]
+    InvalidBOM { file: String },
+
     /// File is missing a section essential for its completeness
     #[error("File {file} doesn't have section {s_name}, which is essential for it to work")]
     MissingRequiredSection { file: String, s_name: String },
