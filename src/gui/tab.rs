@@ -1,4 +1,3 @@
-use super::EditorType;
 use eframe::egui::{
     self, style::Margin, Color32, FontSelection, Id, Rect, Response, Sense, Ui, Vec2, Widget,
     WidgetText,
@@ -13,7 +12,7 @@ pub enum TabBarResponse {
 
 pub struct Tab<'a> {
     pub name: &'a str,
-    pub editor_type: EditorType,
+    pub editor_type: &'static str,
     pub selected: bool,
 }
 

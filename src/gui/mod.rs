@@ -1,14 +1,17 @@
-use eframe::egui::{menu, widgets, CentralPanel, Context, Layout, SidePanel, TopBottomPanel, Ui};
+use eframe::egui::{
+    menu, widgets, CentralPanel, Context, Layout, ScrollArea, SidePanel, TopBottomPanel, Ui,
+};
 
 pub mod editor;
+pub mod tab;
 
-use self::editor::{
+use self::{
+    editor::Editor,
     tab::{Tab, TabBarResponse},
-    EditorType,
 };
 
 pub struct NuclearApp {
-    pub tabs: Vec<(String, EditorType)>,
+    pub tabs: Vec<(String, Editor)>,
     pub selected_tab: usize,
 }
 
@@ -16,9 +19,11 @@ impl NuclearApp {
     pub fn test() -> Self {
         Self {
             tabs: vec![
-                ("rocker".to_string(), EditorType::Frame),
-                ("rocker".to_string(), EditorType::Animation),
-                ("rocker".to_string(), EditorType::Tileset),
+                ("rocker".to_string(), Editor::Palette {}),
+                ("rocker".to_string(), Editor::Tileset {}),
+                ("rocker".to_string(), Editor::Tilemap {}),
+                ("rocker".to_string(), Editor::Frames {}),
+                ("rocker".to_string(), Editor::Animation {}),
             ],
             selected_tab: 0,
         }
@@ -56,52 +61,50 @@ pub fn side_panel(ctx: &Context) {
     SidePanel::left("side_panel").show(ctx, |ui| {
         ui.heading("Project - Rockers");
         ui.collapsing("Palettes", |ui| {
-            ui.label("rocker_bg");
-            ui.label("rocker");
+            ui.link("rocker_bg");
+            ui.link("rocker");
         });
         ui.collapsing("Tilesets", |ui| {
-            ui.label("rocker_bg");
-            ui.label("rocker");
+            ui.link("rocker_bg");
+            ui.link("rocker");
         });
         ui.collapsing("Tilemaps", |ui| {
-            ui.label("rocker_bg");
+            ui.link("rocker_bg");
         });
         ui.collapsing("Animation frames", |ui| {
-            ui.label("rocker");
+            ui.link("rocker");
         });
         ui.collapsing("Animations", |ui| {
-            ui.label("rocker");
+            ui.link("rocker");
         });
     });
 }
 
-pub fn tab_bar(
-    tabs: &Vec<(String, EditorType)>,
-    ui: &mut Ui,
-    selected_tab: usize,
-) -> TabBarResponse {
+pub fn tab_bar(tabs: &Vec<(String, Editor)>, ui: &mut Ui, selected_tab: usize) -> TabBarResponse {
     let mut out = TabBarResponse::None;
 
-    ui.horizontal(|ui| {
-        let mut c = 0;
-        for tab in tabs {
-            let response = ui.add(Tab {
-                name: tab.0.as_str(),
-                editor_type: tab.1,
-                selected: c == selected_tab,
-            });
+    ScrollArea::horizontal().show(ui, |ui| {
+        ui.horizontal(|ui| {
+            let mut c = 0;
+            for tab in tabs {
+                let response = ui.add(Tab {
+                    name: tab.0.as_str(),
+                    editor_type: tab.1.editor_type(),
+                    selected: c == selected_tab,
+                });
 
-            if response.changed() {
-                out = TabBarResponse::Close(c);
-            } else if response.clicked() {
-                out = TabBarResponse::Select(c);
-            }
+                if response.changed() {
+                    out = TabBarResponse::Close(c);
+                } else if response.clicked() {
+                    out = TabBarResponse::Select(c);
+                }
 
-            if c != tabs.len() - 1 {
-                ui.separator();
+                if c != tabs.len() - 1 {
+                    ui.separator();
+                }
+                c += 1;
             }
-            c += 1;
-        }
+        })
     });
 
     out
@@ -113,7 +116,6 @@ impl eframe::App for NuclearApp {
 
         side_panel(ctx);
 
-        //Main workspace
         CentralPanel::default().show(ctx, |ui| {
             match tab_bar(&self.tabs, ui, self.selected_tab) {
                 TabBarResponse::Select(c) => {
@@ -130,10 +132,15 @@ impl eframe::App for NuclearApp {
             ui.separator();
 
             // Actual workspace
+            /*
             ui.heading("me when i nuclear");
             ui.label("Hello world!");
             ui.button("here's a useless button");
             ui.label("fuck");
+            */
+
+            //TODO: manage this
+            self.tabs[self.selected_tab].1.draw(ui);
         });
     }
 }
