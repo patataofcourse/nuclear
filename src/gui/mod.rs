@@ -19,7 +19,7 @@ impl NuclearApp {
     pub fn test() -> Self {
         Self {
             tabs: vec![
-                ("rocker".to_string(), Editor::Palette {}),
+                ("rocker".to_string(), Editor::palette()),
                 ("rocker".to_string(), Editor::Tileset {}),
                 ("rocker".to_string(), Editor::Tilemap {}),
                 ("rocker".to_string(), Editor::Frames {}),
@@ -104,7 +104,7 @@ pub fn tab_bar(tabs: &Vec<(String, Editor)>, ui: &mut Ui, selected_tab: usize) -
                 }
                 c += 1;
             }
-        })
+        });
     });
 
     out
@@ -117,30 +117,27 @@ impl eframe::App for NuclearApp {
         side_panel(ctx);
 
         CentralPanel::default().show(ctx, |ui| {
-            match tab_bar(&self.tabs, ui, self.selected_tab) {
-                TabBarResponse::Select(c) => {
-                    self.selected_tab = c;
-                }
-                TabBarResponse::Close(c) => {
-                    if self.selected_tab >= c && self.selected_tab != 0 {
-                        self.selected_tab -= 1;
+            if self.tabs.len() == 0 {
+                ui.heading("No files open!");
+                ui.label("Click one of the files on the sidebar to open it on the editor");
+            } else {
+                match tab_bar(&self.tabs, ui, self.selected_tab) {
+                    TabBarResponse::Select(c) => {
+                        self.selected_tab = c;
                     }
-                    self.tabs.remove(c);
+                    TabBarResponse::Close(c) => {
+                        if self.selected_tab >= c && self.selected_tab != 0 {
+                            self.selected_tab -= 1;
+                        }
+                        self.tabs.remove(c);
+                    }
+                    _ => {}
                 }
-                _ => {}
+                ui.separator();
+                if self.tabs.len() != 0 {
+                    self.tabs[self.selected_tab].1.draw(ui);
+                }
             }
-            ui.separator();
-
-            // Actual workspace
-            /*
-            ui.heading("me when i nuclear");
-            ui.label("Hello world!");
-            ui.button("here's a useless button");
-            ui.label("fuck");
-            */
-
-            //TODO: manage this
-            self.tabs[self.selected_tab].1.draw(ui);
         });
     }
 }

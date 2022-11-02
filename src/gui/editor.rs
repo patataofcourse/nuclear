@@ -2,16 +2,11 @@ use eframe::egui::{containers::Frame, InnerResponse, Response, Ui};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
-    Palette {},
+    Palette { transparency: bool },
     Tileset {},
     Tilemap {},
     Frames {},
     Animation {},
-}
-
-#[derive(Debug, Clone)]
-pub struct PaletteEditor {
-    pub name: String,
 }
 
 impl Editor {
@@ -24,23 +19,35 @@ impl Editor {
             Self::Animation { .. } => "Animation",
         }
     }
+    pub fn palette() -> Self {
+        Self::Palette {
+            transparency: false,
+        }
+    }
+}
 
-    pub fn draw(&self, ui: &mut Ui) -> InnerResponse<Response> {
+impl Editor {
+    pub fn draw(&mut self, ui: &mut Ui) -> InnerResponse<Response> {
         ui.vertical(|ui| {
             ui.heading(format!("{} editor", self.editor_type()));
-            match &self {
-                Self::Palette {} => {
+            match self {
+                Self::Palette { transparency } => {
                     ui.horizontal(|ui| {
                         Frame::group(ui.style()).show(ui, |ui| {
                             ui.set_width(200.0);
                             ui.set_height(200.0);
                             ui.vertical(|ui| {
+                                ui.label(format!(
+                                    "Transparency: {}",
+                                    if *transparency { "on" } else { "off" }
+                                ));
                                 ui.label("Palette 0");
                                 ui.label("Palette 1");
                                 //TODO
                             })
                         });
                         ui.vertical(|ui| {
+                            ui.checkbox(transparency, "Enable transparency");
                             ui.button("Import .pal file");
                             ui.button("Export .pal file");
                         })
@@ -60,15 +67,6 @@ impl Editor {
                 }
             }
             ui.label("")
-        })
-    }
-}
-
-impl PaletteEditor {
-    pub fn draw(&self, ui: &mut Ui) -> InnerResponse<Response> {
-        ui.vertical(|ui| {
-            ui.heading(format!("Palette {}", self.name));
-            ui.button("hehehe")
         })
     }
 }

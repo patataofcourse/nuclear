@@ -18,11 +18,12 @@ pub struct ColorBGR555 {
     pub r: u8,
     pub g: u8,
     pub b: u8,
+    /// Unused bit, kept just in case
     pub x: bool,
 }
 
 impl ColorBGR555 {
-    /// Converts the color to the RGB888 format, aka 24-bit color
+    /// Converts the color to the RGB888 (24-bit) format
     pub fn to_rgb888(&self) -> [u8; 3] {
         [self.r * 0x8, self.g * 0x8, self.b * 0x8]
     }
