@@ -1,4 +1,4 @@
-use eframe::egui::{InnerResponse, Response, Ui};
+use eframe::egui::{containers::Frame, InnerResponse, Response, Ui};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
@@ -29,12 +29,37 @@ impl Editor {
         ui.vertical(|ui| {
             ui.heading(format!("{} editor", self.editor_type()));
             match &self {
-                Self::Palette {} => ui.label("Not implemented"),
-                Self::Tileset {} => ui.label("Not implemented"),
-                Self::Tilemap {} => ui.label("Not implemented"),
-                Self::Frames {} => ui.label("Not implemented"),
-                Self::Animation {} => ui.label("Not implemented"),
+                Self::Palette {} => {
+                    ui.horizontal(|ui| {
+                        Frame::group(ui.style()).show(ui, |ui| {
+                            ui.set_width(200.0);
+                            ui.set_height(200.0);
+                            ui.vertical(|ui| {
+                                ui.label("Palette 0");
+                                ui.label("Palette 1");
+                                //TODO
+                            })
+                        });
+                        ui.vertical(|ui| {
+                            ui.button("Import .pal file");
+                            ui.button("Export .pal file");
+                        })
+                    });
+                }
+                Self::Tileset {} => {
+                    ui.label("Not implemented");
+                }
+                Self::Tilemap {} => {
+                    ui.label("Not implemented");
+                }
+                Self::Frames {} => {
+                    ui.label("Not implemented");
+                }
+                Self::Animation {} => {
+                    ui.label("Not implemented");
+                }
             }
+            ui.label("")
         })
     }
 }
