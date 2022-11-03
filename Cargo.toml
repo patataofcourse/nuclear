@@ -7,13 +7,14 @@ edition = "2021"
 bytestream = "0.4"
 thiserror = "1.0"
 png = "0.17"
-serde = {version = "1.0", features = ["derive"]}
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 eframe = { version = "0.19", optional = true }
+native-dialog = { version = "0.6", optional = true }
 
 [features]
-gui = ["eframe"]
+gui = ["eframe", "native-dialog"]
 
 [[bin]]
 name = "nuclear-egui"
