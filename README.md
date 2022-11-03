@@ -24,4 +24,5 @@ Rust library and tool for opening various graphics-related Nintendo DS files
 * Documentation on file formats:
     - [This](https://www.romhacking.net/documents/%5b469%5dnds_formats.htm) document in romhacking.net
     - [Tinke](https://www.github.com/pleonex/tinke) source code
+    - [gbatek](https://problemkaputt.de/gbatek.htm)
 * ThePurpleAnon for the very cool name idea

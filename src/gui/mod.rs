@@ -1,5 +1,5 @@
 use eframe::egui::{
-    menu, widgets, CentralPanel, Context, Layout, ScrollArea, SidePanel, TopBottomPanel, Ui,
+    menu, widgets, Align, CentralPanel, Context, Layout, ScrollArea, SidePanel, TopBottomPanel, Ui,
 };
 
 pub mod editor;
@@ -43,13 +43,33 @@ pub fn menu_bar(ctx: &Context) {
     TopBottomPanel::top("menu_bar").show(ctx, |ui| {
         menu::bar(ui, |ui| {
             ui.menu_button("File", |ui| {
+                ui.button("New");
                 ui.button("Open");
-                ui.menu_button("Test", |ui| {
-                    ui.label("gad");
+                ui.button("Save");
+                ui.button("Save as");
+                ui.separator();
+                ui.menu_button("Open recent", |ui| {
+                    ui.button("1. -");
+                    ui.button("2. -");
                 });
+                ui.button("Import portable project");
+                ui.button("Export portable project");
+                ui.separator();
+                ui.menu_button("Import", |ui| {
+                    ui.button("Nintendo files");
+                    ui.button("BNCAD");
+                });
+                ui.menu_button("Export", |ui| {
+                    ui.button("Nintendo files");
+                    ui.button("BNCAD");
+                })
+            });
+            ui.menu_button("Edit", |ui| {
+                ui.button("Undo");
+                ui.button("Redo");
             });
             ui.button("button!!!");
-            ui.with_layout(Layout::right_to_left(), |ui| {
+            ui.with_layout(Layout::right_to_left(Align::TOP), |ui| {
                 widgets::global_dark_light_mode_switch(ui);
                 ui.label("Toggle dark mode");
             });

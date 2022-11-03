@@ -1,7 +1,8 @@
 use nuclear::gui::NuclearApp;
 
 fn main() {
-    let options = eframe::NativeOptions::default();
+    let mut options = eframe::NativeOptions::default();
+    options.default_theme = eframe::Theme::Light; //TODO: setting
     eframe::run_native(
         "nuclear",
         options,
