@@ -1,6 +1,10 @@
 use crate::{
     error::{Error, Result},
-    img::{ncgr::NCGRTiles, nscr::TileRef, ColorBGR555, NCGR, NCLR, NSCR},
+    img::{
+        ncgr::{NCGRTiles, Tile},
+        nscr::TileRef,
+        ColorBGR555, NCGR, NCLR, NSCR,
+    },
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
@@ -12,15 +16,16 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct NCLRWrapper {
+    pub folder: PathBuf,
     pub palettes: HashMap<u16, PathBuf>,
     pub is_8_bit: bool,
     #[serde(skip, default)]
     pub bin: HashMap<u16, Vec<u8>>, // to be loaded at project load
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct NCGRWrapper {
     pub tiles: PathBuf,
     pub has_cpos: bool,
@@ -31,7 +36,7 @@ pub struct NCGRWrapper {
     pub bin: Vec<u8>, // to be loaded at project load
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct NSCRWrapper {
     pub map: PathBuf,
     pub width: u16,
@@ -40,13 +45,14 @@ pub struct NSCRWrapper {
     pub bin: Vec<u8>, // to be loaded at project load
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct NuclearProject {
     pub name: String,
     pub author: String,
     pub palette_sets: HashMap<String, NCLRWrapper>,
     pub tilesets: HashMap<String, NCGRWrapper>,
     pub tilemaps: HashMap<String, NSCRWrapper>,
+    //TODO: NCER, NANR
     #[serde(skip, default)]
     path: PathBuf,
 }
@@ -81,12 +87,12 @@ impl NuclearProject {
         Ok(())
     }
 
-    fn read_file(&self, path: &PathBuf) -> Result<Vec<u8>> {
-        let mut path_ = self.path.clone();
+    fn read_file(own_path: &PathBuf, path: &PathBuf) -> Result<Vec<u8>> {
+        let mut path_ = own_path.clone();
         path_.extend(path);
-        let mut file = File::open(path)?;
+        let mut file = File::open(path_)?;
         let mut buffer = vec![];
-        file.read(&mut buffer)?;
+        file.read_to_end(&mut buffer)?;
         Ok(buffer)
     }
 
@@ -102,17 +108,49 @@ impl NuclearProject {
         Ok(())
     }
 
-    pub fn load_from_file(path: PathBuf) -> Result<Self> {
-        let mut meta_path = path.clone();
-        meta_path.extend(&PathBuf::from("nuclear_meta.json"));
+    pub fn load_from_file(path: impl Into<PathBuf>) -> Result<Self> {
+        let path = path.into();
+        let meta_path = Self::proj_file_path(&path);
         let mut meta = File::open(meta_path)?;
 
         let mut json = String::new();
         meta.read_to_string(&mut json)?;
 
-        let project: NuclearProject = serde_json::from_str(&json)?;
+        let mut project: NuclearProject = serde_json::from_str(&json)?;
+        project.path = path;
 
-        todo!();
+        let path: PathBuf = "pal".into();
+        for pal in &mut project.palette_sets {
+            let pal = pal.1;
+            let mut path = path.clone();
+            path.extend(&pal.folder);
+            for palette in &pal.palettes {
+                let mut path = path.clone();
+                path.extend(palette.1);
+                pal.bin
+                    .insert(*palette.0, Self::read_file(&project.path, &path)?);
+            }
+        }
+
+        let path: PathBuf = "img".into();
+        for tiles in &mut project.tilesets {
+            let tiles = tiles.1;
+            let mut path = path.clone();
+            path.extend(&tiles.tiles);
+            tiles.bin = Self::read_file(&project.path, &path)?;
+        }
+
+        let path: PathBuf = "map".into();
+        for map in &mut project.tilemaps {
+            let map = map.1;
+            let mut path = path.clone();
+            path.extend(&map.map);
+            map.bin = Self::read_file(&project.path, &path)?;
+        }
+
+        //TODO: NCER, NANR
+
+        Ok(project)
     }
 
     /// Adds a NCLR file to the project. If it already exists, it replaces the previous version.
@@ -142,6 +180,7 @@ impl NuclearProject {
         self.palette_sets.insert(
             name.to_string(),
             NCLRWrapper {
+                folder: name.into(),
                 is_8_bit: nclr.is_8_bit,
                 palettes: files,
                 bin: binaries,
@@ -191,10 +230,12 @@ impl NuclearProject {
     /// Adds a NCGR file to the project. If it already exists, it replaces the previous version.
     /// Will reset the tile file to its original position!!
     pub fn insert_ncgr(&mut self, name: &str, ncgr: &NCGR) -> Result<()> {
+        let fname = PathBuf::from(format!("tile_{}.bin", name));
+
         let mut path = self.path.clone();
         path.extend(&PathBuf::from("img"));
         fs::create_dir_all(&path)?;
-        path.extend(&PathBuf::from(format!("tile_{}.bin", name)));
+        path.extend(&fname);
 
         let binary: Vec<u8>;
         let lineal_mode: bool;
@@ -223,7 +264,7 @@ impl NuclearProject {
                 ncbr_ff: ncgr.ncbr_ff,
                 lineal_mode,
                 has_cpos: ncgr.has_cpos,
-                tiles: path,
+                tiles: fname,
                 bin: binary,
             },
         );
@@ -238,12 +279,20 @@ impl NuclearProject {
             None => return Ok(None),
         };
 
-        let tiles = NCGRTiles::from_tile_data(
-            &mut wrapper.bin.as_ref(),
-            wrapper.bin.len() / if wrapper.is_8_bit { 0x40 } else { 0x20 },
-            wrapper.lineal_mode,
-            true,
-        );
+        let tiles = if wrapper.lineal_mode {
+            NCGRTiles::Lineal(wrapper.bin.clone())
+        } else {
+            let mut tiles: Vec<Tile> = vec![];
+            let mut f: &[u8] = &wrapper.bin;
+            for _ in 0..wrapper.bin.len() / 64 {
+                let t: Vec<u8>;
+                let mut tslice = [0u8; 64];
+                f.read(&mut tslice)?;
+                t = tslice.into();
+                tiles.push(t);
+            }
+            NCGRTiles::Horizontal(tiles)
+        };
 
         Ok(Some(NCGR {
             tiles,
@@ -256,10 +305,12 @@ impl NuclearProject {
     /// Adds a NSCR file to the project. If it already exists, it replaces the previous version.
     /// Will reset the tilemap file to its original position!!
     pub fn insert_nscr(&mut self, name: &str, nscr: &NSCR) -> Result<()> {
+        let fname = PathBuf::from(format!("map_{}.bin", name));
+
         let mut path = self.path.clone();
         path.extend(&PathBuf::from("map"));
         fs::create_dir_all(&path)?;
-        path.extend(&PathBuf::from(format!("map_{}.bin", name)));
+        path.extend(&fname);
 
         let mut binary = vec![];
         for tile in &nscr.tiles {
@@ -276,7 +327,7 @@ impl NuclearProject {
         self.tilemaps.insert(
             name.to_string(),
             NSCRWrapper {
-                map: path,
+                map: fname,
                 width: nscr.width,
                 height: nscr.height,
                 bin: binary,

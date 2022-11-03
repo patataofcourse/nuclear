@@ -25,3 +25,6 @@ name = "test"
 
 [[example]]
 name = "projtest"
+
+[[example]]
+name = "projload"
