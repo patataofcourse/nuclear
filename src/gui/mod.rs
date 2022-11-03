@@ -3,6 +3,7 @@ use eframe::egui::{
 };
 
 pub mod editor;
+pub mod message;
 pub mod tab;
 
 use self::{
