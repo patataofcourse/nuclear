@@ -1,5 +1,4 @@
-use native_dialog::{MessageDialog, MessageType};
-use nuclear::gui::NuclearApp;
+use nuclear::gui::{message, NuclearApp};
 use std::panic::{self, PanicInfo};
 
 fn main() {
@@ -40,16 +39,5 @@ fn panic_hook(info: &PanicInfo) {
         payload_text
     );
 
-    match MessageDialog::new()
-        .set_type(MessageType::Error)
-        .set_title("Error - panic!")
-        .set_text(&panic_text)
-        .show_alert()
-    {
-        Ok(_) => {}
-        Err(e) => println!(
-            "Failed to display panic window: {:?}\nOriginal contents:\n\n{}",
-            e, panic_text
-        ),
-    };
+    message::error("Error - panic!", &panic_text);
 }

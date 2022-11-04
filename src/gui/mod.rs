@@ -1,17 +1,19 @@
-use eframe::egui::{
-    menu, widgets, Align, CentralPanel, Context, Layout, ScrollArea, SidePanel, TopBottomPanel, Ui,
-};
+use crate::proj::NuclearProject;
+use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Ui};
 
 pub mod editor;
+pub mod menu_bar;
 pub mod message;
 pub mod tab;
 
 use self::{
     editor::Editor,
+    menu_bar::MenuBarResponse,
     tab::{Tab, TabBarResponse},
 };
 
 pub struct NuclearApp {
+    pub project: Option<NuclearProject>,
     pub tabs: Vec<(String, Editor)>,
     pub selected_tab: usize,
 }
@@ -27,6 +29,7 @@ impl NuclearApp {
                 ("rocker".to_string(), Editor::Animation {}),
             ],
             selected_tab: 0,
+            project: None,
         }
     }
 }
@@ -36,46 +39,9 @@ impl Default for NuclearApp {
         Self {
             tabs: vec![],
             selected_tab: 0,
+            project: None,
         }
     }
-}
-
-pub fn menu_bar(ctx: &Context) {
-    TopBottomPanel::top("menu_bar").show(ctx, |ui| {
-        menu::bar(ui, |ui| {
-            ui.menu_button("File", |ui| {
-                ui.button("New");
-                ui.button("Open");
-                ui.button("Save");
-                ui.button("Save as");
-                ui.separator();
-                ui.menu_button("Open recent", |ui| {
-                    ui.button("1. -");
-                    ui.button("2. -");
-                });
-                ui.button("Import portable project");
-                ui.button("Export portable project");
-                ui.separator();
-                ui.menu_button("Import", |ui| {
-                    ui.button("Nintendo files");
-                    ui.button("BNCAD");
-                });
-                ui.menu_button("Export", |ui| {
-                    ui.button("Nintendo files");
-                    ui.button("BNCAD");
-                })
-            });
-            ui.menu_button("Edit", |ui| {
-                ui.button("Undo");
-                ui.button("Redo");
-            });
-            ui.button("button!!!");
-            ui.with_layout(Layout::right_to_left(Align::TOP), |ui| {
-                widgets::global_dark_light_mode_switch(ui);
-                ui.label("Toggle dark mode");
-            });
-        });
-    });
 }
 
 pub fn side_panel(ctx: &Context) {
@@ -133,12 +99,18 @@ pub fn tab_bar(tabs: &Vec<(String, Editor)>, ui: &mut Ui, selected_tab: usize) -
 
 impl eframe::App for NuclearApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        menu_bar(ctx);
+        match menu_bar::menu_bar(ctx) {
+            MenuBarResponse::NewProj => message::info("thing", "make new project here"),
+            MenuBarResponse::None => {}
+        }
 
         side_panel(ctx);
 
         CentralPanel::default().show(ctx, |ui| {
-            if self.tabs.len() == 0 {
+            if let None = self.project {
+                ui.heading("No project open!");
+                ui.label("Use File > New to start a new project or File > Open to open one");
+            } else if self.tabs.len() == 0 {
                 ui.heading("No files open!");
                 ui.label("Click one of the files on the sidebar to open it on the editor");
             } else {

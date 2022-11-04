@@ -35,6 +35,17 @@ pub fn warning(title: &str, contents: &str) {
         Err(_) => println!("WARNING: {}\n{}\n\n", title, contents),
     };
 }
+pub fn error(title: &str, contents: &str) {
+    match MessageDialog::new()
+        .set_type(MessageType::Error)
+        .set_title(title)
+        .set_text(contents)
+        .show_alert()
+    {
+        Ok(_) => {}
+        Err(_) => println!("ERROR: {}\n{}\n\n", title, contents),
+    };
+}
 
 pub fn file_picker() {
     todo!();
