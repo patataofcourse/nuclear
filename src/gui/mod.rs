@@ -1,5 +1,5 @@
 use crate::{error::Error, proj::NuclearProject};
-use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Ui};
+use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
 use std::panic::PanicInfo;
 
 pub mod editor;
@@ -67,26 +67,43 @@ impl Default for NuclearApp {
     }
 }
 
-pub fn side_panel(ctx: &Context) {
+pub fn side_panel(ctx: &Context, app: &NuclearApp) {
     SidePanel::left("side_panel").show(ctx, |ui| {
-        ui.heading("Project - Rockers");
-        ui.collapsing("Palettes", |ui| {
-            ui.link("rocker_bg");
-            ui.link("rocker");
-        });
-        ui.collapsing("Tilesets", |ui| {
-            ui.link("rocker_bg");
-            ui.link("rocker");
-        });
-        ui.collapsing("Tilemaps", |ui| {
-            ui.link("rocker_bg");
-        });
-        ui.collapsing("Animation frames", |ui| {
-            ui.link("rocker");
-        });
-        ui.collapsing("Animations", |ui| {
-            ui.link("rocker");
-        });
+        if let Some(project) = &app.project {
+            ui.label(RichText::new(format!("Project - {}", project.name)).underline());
+            ui.collapsing("Palettes", |ui| {
+                if project.palette_sets.len() == 0 {
+                    ui.label("None");
+                }
+                for (name, set) in &project.palette_sets {
+                    ui.link(name);
+                }
+            });
+            ui.collapsing("Tilesets", |ui| {
+                if project.tilesets.len() == 0 {
+                    ui.label("None");
+                }
+                for (name, set) in &project.tilesets {
+                    ui.link(name);
+                }
+            });
+            ui.collapsing("Tilemaps", |ui| {
+                if project.tilemaps.len() == 0 {
+                    ui.label("None");
+                }
+                for (name, set) in &project.tilemaps {
+                    ui.link(name);
+                }
+            });
+            ui.collapsing("Animation frames", |ui| {
+                ui.label("Unimplemented");
+            });
+            ui.collapsing("Animations", |ui| {
+                ui.label("Unimplemented");
+            });
+        } else {
+            ui.label("No project loaded");
+        }
     });
 }
 
@@ -139,7 +156,7 @@ impl eframe::App for NuclearApp {
             MenuBarResponse::None => {}
         }
 
-        side_panel(ctx);
+        side_panel(ctx, self);
 
         CentralPanel::default().show(ctx, |ui| {
             if self.tabs.len() == 0 {
