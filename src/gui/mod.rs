@@ -1,4 +1,4 @@
-use crate::proj::NuclearProject;
+use crate::{error::Error, proj::NuclearProject};
 use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Ui};
 use std::panic::PanicInfo;
 
@@ -8,7 +8,7 @@ pub mod message;
 pub mod tab;
 
 use self::{
-    editor::Editor,
+    editor::{Editor, EditorResponse, MetadataResponse},
     menu_bar::MenuBarResponse,
     tab::{Tab, TabBarResponse},
 };
@@ -51,6 +51,7 @@ impl NuclearApp {
         todo!();
     }
 
+    /// Saves the contents of all opened editors
     pub fn save_project(&mut self) {
         todo!();
     }
@@ -162,11 +163,41 @@ impl eframe::App for NuclearApp {
                     }
                     _ => {}
                 }
+
                 ui.separator();
+
                 if self.tabs.len() != 0 {
-                    self.tabs[self.selected_tab].1.draw(ui);
+                    match self.tabs[self.selected_tab].1.draw(ui) {
+                        EditorResponse::Metadata(MetadataResponse::CreateProj) => {
+                            let Editor::Metadata { name, author, description, ..} =  &self.tabs[self.selected_tab].1 else {
+                                unreachable!();
+                            };
+
+                            let (name, author, description) = (name.to_string(), author.to_string(), description.to_string());
+
+                            if let Some(path) = message::open_folder("Choose empty folder for new project", &"".into()) {
+                                message::info(
+                                    "Project created!",
+                                    &format!("Successfully created project {}", name),
+                                );
+                                self.tabs.remove(self.selected_tab);
+
+                                if self.selected_tab != 0 {
+                                    self.selected_tab -= 1;
+                                }
+
+                                self.project =
+                                    Some(NuclearProject::new(&name, &author, &description, path)?);
+                            }
+                        }
+                        EditorResponse::Metadata(MetadataResponse::Save) => {
+                            todo!();
+                        }
+                        EditorResponse::None => {}
+                    }
                 }
             }
+            Ok::<(), Error>(())
         });
     }
 }

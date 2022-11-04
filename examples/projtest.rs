@@ -5,6 +5,7 @@ fn main() -> nuclear::error::Result<()> {
     let mut proj = nuclear::proj::NuclearProject::new(
         "the super cool project",
         "patataofcourse",
+        "",
         PathBuf::from("test_files/rockers"),
     )?;
 

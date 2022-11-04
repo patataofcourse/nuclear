@@ -49,6 +49,7 @@ pub struct NSCRWrapper {
 pub struct NuclearProject {
     pub name: String,
     pub author: String,
+    pub description: String,
     pub palette_sets: HashMap<String, NCLRWrapper>,
     pub tilesets: HashMap<String, NCGRWrapper>,
     pub tilemaps: HashMap<String, NSCRWrapper>,
@@ -59,12 +60,13 @@ pub struct NuclearProject {
 
 impl NuclearProject {
     /// Creates a new nuclear project on the specified path
-    pub fn new(name: &str, author: &str, path: PathBuf) -> Result<Self> {
+    pub fn new(name: &str, author: &str, description: &str, path: PathBuf) -> Result<Self> {
         fs::create_dir_all(&path)?;
 
         let out = Self {
             name: name.to_string(),
             author: author.to_string(),
+            description: description.to_string(),
             palette_sets: HashMap::new(),
             tilesets: HashMap::new(),
             tilemaps: HashMap::new(),
@@ -104,8 +106,7 @@ impl NuclearProject {
 
     /// Saves the entire project
     pub fn save(&self) -> Result<()> {
-        self.write_meta()?;
-        Ok(())
+        self.write_meta()
     }
 
     pub fn load_from_file(path: impl Into<PathBuf>) -> Result<Self> {

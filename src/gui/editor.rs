@@ -1,4 +1,5 @@
-use eframe::egui::{containers::Frame, InnerResponse, Response, Ui};
+use super::message;
+use eframe::egui::{containers::Frame, Ui};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
@@ -35,8 +36,20 @@ impl Editor {
     }
 }
 
+pub enum EditorResponse {
+    None,
+    Metadata(MetadataResponse),
+}
+
+pub enum MetadataResponse {
+    CreateProj,
+    Save,
+}
+
 impl Editor {
-    pub fn draw(&mut self, ui: &mut Ui) -> InnerResponse<Response> {
+    #[must_use]
+    pub fn draw(&mut self, ui: &mut Ui) -> EditorResponse {
+        let mut response = EditorResponse::None;
         ui.vertical(|ui| {
             ui.heading(format!("{} editor", self.editor_type()));
             match self {
@@ -80,33 +93,68 @@ impl Editor {
                     author,
                     description,
                 } => {
-                    if *proj_creation {
-                        ui.label("Fill in the following parameters to create your project:\n");
-                    }
-
-                    ui.horizontal(|ui| {
-                        ui.label("Project name: ");
-                        ui.text_edit_singleline(name);
-                    });
-
-                    ui.horizontal(|ui| {
-                        ui.label("Author(s): ");
-                        ui.text_edit_singleline(author);
-                    });
-
-                    ui.horizontal(|ui| {
-                        ui.label("Description");
-                        ui.text_edit_multiline(description);
-                    });
-
-                    ui.button(if *proj_creation {
-                        "Create project"
+                    response = if let Some(r) =
+                        Self::draw_metadata(ui, proj_creation, name, author, description)
+                    {
+                        EditorResponse::Metadata(r)
                     } else {
-                        "Save"
-                    });
+                        EditorResponse::None
+                    }
                 }
             }
-            ui.label("") //to get a Response
-        })
+        });
+        response
+    }
+
+    fn draw_metadata(
+        ui: &mut Ui,
+        proj_creation: &mut bool,
+        name: &mut String,
+        author: &mut String,
+        description: &mut String,
+    ) -> Option<MetadataResponse> {
+        {
+            if *proj_creation {
+                ui.label("Fill in the following parameters to create your project:\n");
+            }
+
+            ui.horizontal(|ui| {
+                ui.label("Project name (required): ");
+                ui.text_edit_singleline(name);
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Author(s) (required): ");
+                ui.text_edit_singleline(author);
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Description");
+                ui.text_edit_multiline(description);
+            });
+
+            ui.label("");
+
+            if ui
+                .button(if *proj_creation {
+                    "Create project"
+                } else {
+                    "Save"
+                })
+                .clicked()
+            {
+                if name == "" || author == "" {
+                    message::error("Metadata incomplete", "Project name and author required");
+                    return None;
+                }
+                Some(if *proj_creation {
+                    MetadataResponse::CreateProj
+                } else {
+                    MetadataResponse::Save
+                })
+            } else {
+                None
+            }
+        }
     }
 }
