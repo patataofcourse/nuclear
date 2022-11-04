@@ -4,4 +4,7 @@ pub mod ndsfile;
 pub mod proj;
 
 #[cfg(feature = "gui")]
-pub mod gui;
+pub(crate) mod gui;
+
+#[cfg(feature = "gui")]
+pub use gui::{panic_hook, NuclearApp};

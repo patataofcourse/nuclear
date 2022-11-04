@@ -1,5 +1,6 @@
 use crate::proj::NuclearProject;
 use eframe::egui::{CentralPanel, Context, ScrollArea, SidePanel, Ui};
+use std::panic::PanicInfo;
 
 pub mod editor;
 pub mod menu_bar;
@@ -100,7 +101,7 @@ pub fn tab_bar(tabs: &Vec<(String, Editor)>, ui: &mut Ui, selected_tab: usize) -
 impl eframe::App for NuclearApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         match menu_bar::menu_bar(ctx) {
-            MenuBarResponse::NewProj => message::info("thing", "make new project here"),
+            MenuBarResponse::NewProj => {}
             MenuBarResponse::None => {}
         }
 
@@ -133,4 +134,33 @@ impl eframe::App for NuclearApp {
             }
         });
     }
+}
+
+pub fn panic_hook(info: &PanicInfo) {
+    let location = info.location();
+    let payload = info.payload();
+    let payload_text = if let Some(s) = payload.downcast_ref::<&str>() {
+        format!("More details: {}", s)
+    } else if let Some(s) = payload.downcast_ref::<String>() {
+        format!("More details: {}", s)
+    } else {
+        "Could not get detailed panic information".to_string()
+    };
+
+    let panic_text = format!(
+        "Rust panic {}\n{}",
+        if let Some(location) = location {
+            format!(
+                "at {}:{}:{}",
+                location.file(),
+                location.line(),
+                location.column()
+            )
+        } else {
+            "".to_string()
+        },
+        payload_text
+    );
+
+    message::error("Error - panic!", &panic_text);
 }

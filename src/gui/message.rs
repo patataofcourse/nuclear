@@ -17,6 +17,4 @@ pub fn error(title: &str, contents: &str) {
     tinyfiledialogs::message_box_ok(title, contents, MessageBoxIcon::Error);
 }
 
-pub fn file_picker() -> Option<String> {
-    tinyfiledialogs::open_file_dialog("a", "/", None)
-}
+//TODO: file picker wrappers?
