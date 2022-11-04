@@ -33,6 +33,27 @@ impl NuclearApp {
             project: None,
         }
     }
+
+    pub fn close_project(&mut self) -> bool {
+        //TODO: check if unsaved
+
+        self.project = None;
+        self.tabs = vec![];
+        self.selected_tab = 0;
+        return true;
+    }
+
+    pub fn create_project(&mut self) {
+        todo!();
+    }
+
+    pub fn open_project(&mut self) {
+        todo!();
+    }
+
+    pub fn save_project(&mut self) {
+        todo!();
+    }
 }
 
 impl Default for NuclearApp {
@@ -101,19 +122,33 @@ pub fn tab_bar(tabs: &Vec<(String, Editor)>, ui: &mut Ui, selected_tab: usize) -
 impl eframe::App for NuclearApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         match menu_bar::menu_bar(ctx) {
-            MenuBarResponse::NewProj => {}
+            MenuBarResponse::NewProj => {
+                if self.close_project() {
+                    self.tabs.push((
+                        String::new(),
+                        Editor::Metadata {
+                            proj_creation: true,
+                            name: String::new(),
+                            author: String::new(),
+                            description: String::new(),
+                        },
+                    ))
+                }
+            }
             MenuBarResponse::None => {}
         }
 
         side_panel(ctx);
 
         CentralPanel::default().show(ctx, |ui| {
-            if let None = self.project {
-                ui.heading("No project open!");
-                ui.label("Use File > New to start a new project or File > Open to open one");
-            } else if self.tabs.len() == 0 {
-                ui.heading("No files open!");
-                ui.label("Click one of the files on the sidebar to open it on the editor");
+            if self.tabs.len() == 0 {
+                if let None = self.project {
+                    ui.heading("No project open!");
+                    ui.label("Use File > New to start a new project or File > Open to open one");
+                } else {
+                    ui.heading("No files open!");
+                    ui.label("Click one of the files on the sidebar to open it on the editor");
+                }
             } else {
                 match tab_bar(&self.tabs, ui, self.selected_tab) {
                     TabBarResponse::Select(c) => {

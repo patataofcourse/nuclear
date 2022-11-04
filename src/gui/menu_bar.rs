@@ -1,6 +1,5 @@
 use eframe::egui::{menu, widgets, Align, Context, Layout, TopBottomPanel};
 
-#[non_exhaustive]
 pub enum MenuBarResponse {
     NewProj,
     None,

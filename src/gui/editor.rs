@@ -2,11 +2,19 @@ use eframe::egui::{containers::Frame, InnerResponse, Response, Ui};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
-    Palette { transparency: bool },
+    Palette {
+        transparency: bool,
+    },
     Tileset {},
     Tilemap {},
     Frames {},
     Animation {},
+    Metadata {
+        proj_creation: bool,
+        name: String,
+        author: String,
+        description: String,
+    },
 }
 
 impl Editor {
@@ -17,6 +25,7 @@ impl Editor {
             Self::Tilemap { .. } => "Tilemap",
             Self::Frames { .. } => "Frames",
             Self::Animation { .. } => "Animation",
+            Self::Metadata { .. } => "Project metadata",
         }
     }
     pub fn palette() -> Self {
@@ -65,8 +74,39 @@ impl Editor {
                 Self::Animation {} => {
                     ui.label("Not implemented");
                 }
+                Self::Metadata {
+                    proj_creation,
+                    name,
+                    author,
+                    description,
+                } => {
+                    if *proj_creation {
+                        ui.label("Fill in the following parameters to create your project:\n");
+                    }
+
+                    ui.horizontal(|ui| {
+                        ui.label("Project name: ");
+                        ui.text_edit_singleline(name);
+                    });
+
+                    ui.horizontal(|ui| {
+                        ui.label("Author(s): ");
+                        ui.text_edit_singleline(author);
+                    });
+
+                    ui.horizontal(|ui| {
+                        ui.label("Description");
+                        ui.text_edit_multiline(description);
+                    });
+
+                    ui.button(if *proj_creation {
+                        "Create project"
+                    } else {
+                        "Save"
+                    });
+                }
             }
-            ui.label("")
+            ui.label("") //to get a Response
         })
     }
 }
