@@ -74,6 +74,7 @@ impl Editor {
                             ui.button("Export .pal file");
                         })
                     });
+                    ui.button("Save");
                 }
                 Self::Tileset {} => {
                     ui.label("Not implemented");

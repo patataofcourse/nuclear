@@ -2,6 +2,7 @@ use eframe::egui::{menu, widgets, Align, Context, Layout, TopBottomPanel};
 
 pub enum MenuBarResponse {
     NewProj,
+    OpenProj,
     None,
 }
 
@@ -22,8 +23,9 @@ pub fn menu_bar(ctx: &Context) -> MenuBarResponse {
                 if ui.button("New").clicked() {
                     response.set_if_none(MenuBarResponse::NewProj)
                 };
-                ui.button("Open");
-                ui.button("Save");
+                if ui.button("Open").clicked() {
+                    response.set_if_none(MenuBarResponse::OpenProj)
+                };
                 ui.button("Save as");
                 ui.separator();
                 ui.menu_button("Open recent", |ui| {

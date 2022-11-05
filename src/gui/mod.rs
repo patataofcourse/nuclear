@@ -43,14 +43,6 @@ impl NuclearApp {
         return true;
     }
 
-    pub fn create_project(&mut self) {
-        todo!();
-    }
-
-    pub fn open_project(&mut self) {
-        todo!();
-    }
-
     /// Saves the contents of all opened editors
     pub fn save_project(&mut self) {
         todo!();
@@ -69,41 +61,43 @@ impl Default for NuclearApp {
 
 pub fn side_panel(ctx: &Context, app: &NuclearApp) {
     SidePanel::left("side_panel").show(ctx, |ui| {
-        if let Some(project) = &app.project {
-            ui.label(RichText::new(format!("Project - {}", project.name)).underline());
-            ui.collapsing("Palettes", |ui| {
-                if project.palette_sets.len() == 0 {
-                    ui.label("None");
-                }
-                for (name, set) in &project.palette_sets {
-                    ui.link(name);
-                }
-            });
-            ui.collapsing("Tilesets", |ui| {
-                if project.tilesets.len() == 0 {
-                    ui.label("None");
-                }
-                for (name, set) in &project.tilesets {
-                    ui.link(name);
-                }
-            });
-            ui.collapsing("Tilemaps", |ui| {
-                if project.tilemaps.len() == 0 {
-                    ui.label("None");
-                }
-                for (name, set) in &project.tilemaps {
-                    ui.link(name);
-                }
-            });
-            ui.collapsing("Animation frames", |ui| {
-                ui.label("Unimplemented");
-            });
-            ui.collapsing("Animations", |ui| {
-                ui.label("Unimplemented");
-            });
-        } else {
-            ui.label("No project loaded");
-        }
+        ScrollArea::vertical().show(ui, |ui| {
+            if let Some(project) = &app.project {
+                ui.label(RichText::new(format!("Project - {}", project.name)).underline());
+                ui.collapsing("Palettes", |ui| {
+                    if project.palette_sets.len() == 0 {
+                        ui.label("None");
+                    }
+                    for (name, set) in &project.palette_sets {
+                        ui.link(name);
+                    }
+                });
+                ui.collapsing("Tilesets", |ui| {
+                    if project.tilesets.len() == 0 {
+                        ui.label("None");
+                    }
+                    for (name, set) in &project.tilesets {
+                        ui.link(name);
+                    }
+                });
+                ui.collapsing("Tilemaps", |ui| {
+                    if project.tilemaps.len() == 0 {
+                        ui.label("None");
+                    }
+                    for (name, set) in &project.tilemaps {
+                        ui.link(name);
+                    }
+                });
+                ui.collapsing("Animation frames", |ui| {
+                    ui.label("Unimplemented");
+                });
+                ui.collapsing("Animations", |ui| {
+                    ui.label("Unimplemented");
+                });
+            } else {
+                ui.label("No project loaded");
+            }
+        });
     });
 }
 
@@ -151,6 +145,23 @@ impl eframe::App for NuclearApp {
                             description: String::new(),
                         },
                     ))
+                }
+            }
+            MenuBarResponse::OpenProj => {
+                if let Some(path) = message::open_folder("Open project folder", &"".into()) {
+                    if self.close_project() {
+                        match NuclearProject::load_from_file(&path) {
+                            Ok(c) => self.project = Some(c),
+                            Err(e) => message::error(
+                                "Failed to open project",
+                                &format!(
+                                    "Project at {} could not be opened:\n{}",
+                                    path.display(),
+                                    e
+                                ),
+                            ),
+                        }
+                    }
                 }
             }
             MenuBarResponse::None => {}
