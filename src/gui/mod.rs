@@ -2,12 +2,14 @@ use crate::{error::Error, proj::NuclearProject};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
 use std::panic::PanicInfo;
 
+pub mod addon;
 pub mod editor;
 pub mod menu_bar;
 pub mod message;
 pub mod tab;
 
 use self::{
+    addon::NuclearResult,
     editor::{Editor, EditorResponse, MetadataResponse},
     menu_bar::MenuBarResponse,
     tab::{Tab, TabBarResponse},
@@ -20,20 +22,6 @@ pub struct NuclearApp {
 }
 
 impl NuclearApp {
-    pub fn test() -> Self {
-        Self {
-            tabs: vec![
-                ("rocker".to_string(), Editor::palette()),
-                ("rocker".to_string(), Editor::Tileset {}),
-                ("rocker".to_string(), Editor::Tilemap {}),
-                ("rocker".to_string(), Editor::Frames {}),
-                ("rocker".to_string(), Editor::Animation {}),
-            ],
-            selected_tab: 0,
-            project: None,
-        }
-    }
-
     pub fn close_project(&mut self) -> bool {
         //TODO: check if unsaved
 
@@ -59,7 +47,7 @@ impl Default for NuclearApp {
     }
 }
 
-pub fn side_panel(ctx: &Context, app: &NuclearApp) {
+pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
     SidePanel::left("side_panel").show(ctx, |ui| {
         ScrollArea::vertical().show(ui, |ui| {
             if let Some(project) = &app.project {
@@ -68,8 +56,16 @@ pub fn side_panel(ctx: &Context, app: &NuclearApp) {
                     if project.palette_sets.len() == 0 {
                         ui.label("None");
                     }
-                    for (name, set) in &project.palette_sets {
-                        ui.link(name);
+                    for (name, _) in &project.palette_sets {
+                        if ui.link(name).clicked() {
+                            //TODO: check if already open
+                            //TODO: add method to get directly from wrapper
+                            app.tabs.push((
+                                name.to_string(),
+                                Editor::palette(project.get_nclr(name).manage().unwrap()),
+                            ));
+                            app.selected_tab = app.tabs.len() - 1;
+                        }
                     }
                 });
                 ui.collapsing("Tilesets", |ui| {
@@ -84,7 +80,7 @@ pub fn side_panel(ctx: &Context, app: &NuclearApp) {
                     if project.tilemaps.len() == 0 {
                         ui.label("None");
                     }
-                    for (name, set) in &project.tilemaps {
+                    for (name, map) in &project.tilemaps {
                         ui.link(name);
                     }
                 });

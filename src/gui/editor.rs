@@ -1,10 +1,12 @@
 use super::message;
+use crate::img::NCLR;
 use eframe::egui::{containers::Frame, Ui};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
     Palette {
         transparency: bool,
+        contents: NCLR,
     },
     Tileset {},
     Tilemap {},
@@ -29,9 +31,10 @@ impl Editor {
             Self::Metadata { .. } => "Project metadata",
         }
     }
-    pub fn palette() -> Self {
+    pub fn palette(contents: NCLR) -> Self {
         Self::Palette {
             transparency: false,
+            contents,
         }
     }
 }
@@ -53,7 +56,10 @@ impl Editor {
         ui.vertical(|ui| {
             ui.heading(format!("{} editor", self.editor_type()));
             match self {
-                Self::Palette { transparency } => {
+                Self::Palette {
+                    transparency,
+                    contents,
+                } => {
                     ui.horizontal(|ui| {
                         Frame::group(ui.style()).show(ui, |ui| {
                             ui.set_width(200.0);
