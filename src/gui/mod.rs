@@ -10,7 +10,7 @@ pub mod tab;
 
 use self::{
     addon::NuclearResult,
-    editor::{Editor, EditorResponse, MetadataResponse},
+    editor::{Editor, EditorResponse},
     menu_bar::MenuBarResponse,
     tab::{Tab, TabBarResponse},
 };
@@ -163,7 +163,8 @@ impl eframe::App for NuclearApp {
                     name: proj.name.clone(),
                     author: proj.author.clone(),
                     description: proj.description.clone(),
-                })
+                });
+                self.selected_tab = self.editors.len() - 1;
             }
             MenuBarResponse::None => {}
         }
@@ -197,7 +198,7 @@ impl eframe::App for NuclearApp {
 
                 if self.editors.len() != 0 {
                     match self.editors[self.selected_tab].draw(ui) {
-                        EditorResponse::Metadata(MetadataResponse::CreateProj) => {
+                        EditorResponse::CreateProj => {
                             let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
                                 unreachable!();
                             };
@@ -219,7 +220,7 @@ impl eframe::App for NuclearApp {
                                     Some(NuclearProject::new(&name, &author, &description, path)?);
                             }
                         }
-                        EditorResponse::Metadata(MetadataResponse::Save) => {
+                        EditorResponse::SaveMetadata => {
                             let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
                                 unreachable!();
                             };
@@ -228,6 +229,10 @@ impl eframe::App for NuclearApp {
                             project.author = author.to_string();
                             project.description = description.to_string();
                             message::info("Project metadata", "Saved project metadata!");
+                        }
+                        EditorResponse::SavePalette => {
+                            let todo = 0;
+                            todo!();
                         }
                         EditorResponse::None => {}
                     }

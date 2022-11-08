@@ -2,9 +2,9 @@ use bytestream::ByteOrder;
 use std::fs::File;
 
 const FOLDER_NAME: &str = "ver2";
-const NAME: &str = "rocker_bg";
-const TILES_EXTENSION: &str = "NCGR";
-const NSCR: bool = true;
+const NAME: &str = "rocker";
+const TILES_EXTENSION: &str = "NCBR";
+const NSCR: bool = false;
 
 fn main() -> nuclear::error::Result<()> {
     // Open NCLR file

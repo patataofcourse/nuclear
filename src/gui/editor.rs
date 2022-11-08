@@ -51,16 +51,12 @@ impl Editor {
 
 pub enum EditorResponse {
     None,
-    Metadata(MetadataResponse),
-}
-
-pub enum MetadataResponse {
+    SavePalette,
     CreateProj,
-    Save,
+    SaveMetadata,
 }
 
 impl Editor {
-    #[must_use]
     pub fn draw(&mut self, ui: &mut Ui) -> EditorResponse {
         let mut response = EditorResponse::None;
         ui.vertical(|ui| match self {
@@ -70,82 +66,7 @@ impl Editor {
                 ..
             } => {
                 ui.heading("Palette editor");
-                ui.horizontal(|ui| {
-                    Frame::group(ui.style()).show(ui, |ui| {
-                        ui.set_width(300.0);
-                        ui.set_height(300.0);
-                        ui.vertical(|ui| {
-                            for (num, pal) in &contents.palettes {
-                                let label_rect = ui.label(format!("Palette {}", num)).rect;
-                                let mut min: egui::Pos2 =
-                                    (label_rect.max.x + 5.0, label_rect.min.y).into();
-                                let size = label_rect.max.y - label_rect.min.y;
-                                let size: egui::Vec2 = (size, size).into();
-                                let painter = ui.painter();
-                                if contents.is_8_bit {
-                                    let TODO = 0;
-                                    todo!();
-                                } else {
-                                    for i in 0..contents.color_amt {
-                                        if i == 0 && *transparency {
-                                            painter.rect(
-                                                [min, min + size / 2.0].into(),
-                                                0.0,
-                                                egui::Color32::DARK_GRAY,
-                                                egui::Stroke::none(),
-                                            );
-                                            painter.rect(
-                                                [
-                                                    min + (size.x / 2.0, 0.0).into(),
-                                                    min + (size.x, size.y / 2.0).into(),
-                                                ]
-                                                .into(),
-                                                0.0,
-                                                egui::Color32::LIGHT_GRAY,
-                                                egui::Stroke::none(),
-                                            );
-                                            painter.rect(
-                                                [
-                                                    min + (0.0, size.y / 2.0).into(),
-                                                    min + (size.x / 2.0, size.y).into(),
-                                                ]
-                                                .into(),
-                                                0.0,
-                                                egui::Color32::LIGHT_GRAY,
-                                                egui::Stroke::none(),
-                                            );
-                                            painter.rect(
-                                                [
-                                                    min + (size.x / 2.0, size.y / 2.0).into(),
-                                                    min + (size.x, size.y).into(),
-                                                ]
-                                                .into(),
-                                                0.0,
-                                                egui::Color32::DARK_GRAY,
-                                                egui::Stroke::none(),
-                                            );
-                                        } else {
-                                            let [r, g, b] = pal[i as usize].to_rgb888();
-                                            painter.rect(
-                                                [min, min + size].into(),
-                                                0.0,
-                                                egui::Color32::from_rgb(r, g, b),
-                                                egui::Stroke::none(),
-                                            );
-                                        }
-                                        min.x += size.x;
-                                    }
-                                }
-                            }
-                        })
-                    });
-                    ui.vertical(|ui| {
-                        ui.checkbox(transparency, "Enable transparency");
-                        ui.button("Import .pal file");
-                        ui.button("Export .pal file");
-                    })
-                });
-                ui.button("Save");
+                response = Self::draw_palette(ui, contents, transparency);
             }
             Self::Tileset { .. } => {
                 ui.heading("Tileset editor");
@@ -170,16 +91,92 @@ impl Editor {
                 description,
             } => {
                 ui.heading("Project metadata settings");
-                response = if let Some(r) =
-                    Self::draw_metadata(ui, proj_creation, name, author, description)
-                {
-                    EditorResponse::Metadata(r)
-                } else {
-                    EditorResponse::None
-                }
+                response = Self::draw_metadata(ui, proj_creation, name, author, description);
             }
         });
         response
+    }
+
+    fn draw_palette(ui: &mut Ui, contents: &NCLR, transparency: &mut bool) -> EditorResponse {
+        ui.horizontal(|ui| {
+            Frame::group(ui.style()).show(ui, |ui| {
+                ui.set_width(300.0);
+                ui.set_height(300.0);
+                ui.vertical(|ui| {
+                    for (num, pal) in &contents.palettes {
+                        let label_rect = ui.label(format!("Palette {}", num)).rect;
+                        let mut min: egui::Pos2 = (label_rect.max.x + 5.0, label_rect.min.y).into();
+                        let size = label_rect.max.y - label_rect.min.y;
+                        let size: egui::Vec2 = (size, size).into();
+                        let painter = ui.painter();
+                        if contents.is_8_bit {
+                            let todo = 0;
+                            todo!();
+                        } else {
+                            for i in 0..contents.color_amt {
+                                if i == 0 && *transparency {
+                                    painter.rect(
+                                        [min, min + size / 2.0].into(),
+                                        0.0,
+                                        egui::Color32::DARK_GRAY,
+                                        egui::Stroke::none(),
+                                    );
+                                    painter.rect(
+                                        [
+                                            min + (size.x / 2.0, 0.0).into(),
+                                            min + (size.x, size.y / 2.0).into(),
+                                        ]
+                                        .into(),
+                                        0.0,
+                                        egui::Color32::LIGHT_GRAY,
+                                        egui::Stroke::none(),
+                                    );
+                                    painter.rect(
+                                        [
+                                            min + (0.0, size.y / 2.0).into(),
+                                            min + (size.x / 2.0, size.y).into(),
+                                        ]
+                                        .into(),
+                                        0.0,
+                                        egui::Color32::LIGHT_GRAY,
+                                        egui::Stroke::none(),
+                                    );
+                                    painter.rect(
+                                        [
+                                            min + (size.x / 2.0, size.y / 2.0).into(),
+                                            min + (size.x, size.y).into(),
+                                        ]
+                                        .into(),
+                                        0.0,
+                                        egui::Color32::DARK_GRAY,
+                                        egui::Stroke::none(),
+                                    );
+                                } else {
+                                    let [r, g, b] = pal[i as usize].to_rgb888();
+                                    painter.rect(
+                                        [min, min + size].into(),
+                                        0.0,
+                                        egui::Color32::from_rgb(r, g, b),
+                                        egui::Stroke::none(),
+                                    );
+                                }
+                                min.x += size.x;
+                            }
+                        }
+                    }
+                })
+            });
+            ui.vertical(|ui| {
+                ui.checkbox(transparency, "Enable transparency");
+                ui.button("Import .pal file");
+                ui.button("Export .pal file");
+            })
+        });
+        if ui.button("Save").clicked() {
+            EditorResponse::SavePalette
+        } else {
+            EditorResponse::None
+        }
     }
 
     fn draw_metadata(
@@ -188,7 +185,7 @@ impl Editor {
         name: &mut String,
         author: &mut String,
         description: &mut String,
-    ) -> Option<MetadataResponse> {
+    ) -> EditorResponse {
         {
             if *proj_creation {
                 ui.label("Fill in the following parameters to create your project:\n");
@@ -221,15 +218,15 @@ impl Editor {
             {
                 if name == "" || author == "" {
                     message::error("Metadata incomplete", "Project name and author required");
-                    return None;
+                    return EditorResponse::None;
                 }
-                Some(if *proj_creation {
-                    MetadataResponse::CreateProj
+                if *proj_creation {
+                    EditorResponse::CreateProj
                 } else {
-                    MetadataResponse::Save
-                })
+                    EditorResponse::SaveMetadata
+                }
             } else {
-                None
+                EditorResponse::None
             }
         }
     }

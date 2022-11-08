@@ -7,7 +7,7 @@ use crate::{
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use png::{BitDepth, ColorType, Encoder};
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     fs::{self, File},
     io::{BufWriter, Read, Write},
     ops::Deref,
@@ -19,7 +19,7 @@ use std::{
 /// NCLR (Nintendo CoLor Resource) palette format
 pub struct NCLR {
     /// The palettes themselves, in BGR555 format
-    pub palettes: HashMap<u16, Vec<ColorBGR555>>,
+    pub palettes: BTreeMap<u16, Vec<ColorBGR555>>,
     /// Indicates whether the file uses 8-bit color (true) or 4-bit color (false)
     pub is_8_bit: bool,
     /// The amount of colors in each palette
@@ -84,7 +84,7 @@ impl NCLR {
                 })?,
             }
         }
-        let mut palette_map = HashMap::<u16, Vec<ColorBGR555>>::new();
+        let mut palette_map = BTreeMap::<u16, Vec<ColorBGR555>>::new();
         let mut color_amt = 0;
         if let Some((pal, amt)) = palettes {
             if let Some(id) = ids {

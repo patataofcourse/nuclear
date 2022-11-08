@@ -29,6 +29,7 @@ pub fn menu_bar(app: &NuclearApp, ctx: &Context) -> MenuBarResponse {
                     response.set_if_none(MenuBarResponse::OpenProj)
                 };
                 ui.button("Save as");
+                /*
                 ui.separator();
                 ui.menu_button("Open recent", |ui| {
                     ui.button("1. -");
@@ -45,11 +46,14 @@ pub fn menu_bar(app: &NuclearApp, ctx: &Context) -> MenuBarResponse {
                     ui.button("Nintendo files");
                     ui.button("BNCAD");
                 });
+                */
             });
             ui.menu_button("Edit", |ui| {
+                /*
                 ui.button("Undo");
                 ui.button("Redo");
                 ui.separator();
+                */
                 if ui
                     .add_enabled(
                         if let None = app.project { false } else { true },
@@ -60,7 +64,10 @@ pub fn menu_bar(app: &NuclearApp, ctx: &Context) -> MenuBarResponse {
                     response.set_if_none(MenuBarResponse::Metadata)
                 }
             });
-            ui.button("button!!!");
+            #[allow(unused_must_use)]
+            {
+                ui.button("button!!!");
+            }
             ui.with_layout(Layout::right_to_left(Align::TOP), |ui| {
                 widgets::global_dark_light_mode_switch(ui);
                 ui.label("Toggle dark mode");

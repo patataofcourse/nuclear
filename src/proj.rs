@@ -10,7 +10,7 @@ use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     fs::{self, File},
     io::{Read, Write},
     path::PathBuf,
@@ -19,10 +19,10 @@ use std::{
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NCLRWrapper {
     pub folder: PathBuf,
-    pub palettes: HashMap<u16, PathBuf>,
+    pub palettes: BTreeMap<u16, PathBuf>,
     pub is_8_bit: bool,
     #[serde(skip, default)]
-    pub bin: HashMap<u16, Vec<u8>>, // to be loaded at project load
+    pub bin: BTreeMap<u16, Vec<u8>>, // to be loaded at project load
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -161,8 +161,8 @@ impl NuclearProject {
         path.extend(&PathBuf::from(format!("pal/{}", name)));
         fs::create_dir_all(&path)?;
 
-        let mut files = HashMap::new();
-        let mut binaries = HashMap::new();
+        let mut files = BTreeMap::new();
+        let mut binaries = BTreeMap::new();
 
         for (id, palette) in &nclr.palettes {
             let mut path = path.clone();
@@ -197,7 +197,7 @@ impl NuclearProject {
             Some(c) => c,
             None => return Ok(None),
         };
-        let mut palettes = HashMap::new();
+        let mut palettes = BTreeMap::new();
         let mut color_amt = 0;
         for (id, pal) in &wrapper.bin {
             let mut pal: &[u8] = &pal;
