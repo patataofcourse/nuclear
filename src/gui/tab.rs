@@ -10,13 +10,12 @@ pub enum TabBarResponse {
     Close(usize),
 }
 
-pub struct Tab<'a> {
-    pub name: &'a str,
-    pub editor_type: &'static str,
+pub struct Tab {
+    pub name: String,
     pub selected: bool,
 }
 
-impl Tab<'_> {
+impl Tab {
     fn selected_color(ui: &Ui) -> Color32 {
         if ui.visuals().dark_mode {
             Color32::from_white_alpha(15)
@@ -26,11 +25,11 @@ impl Tab<'_> {
     }
 }
 
-impl Widget for Tab<'_> {
+impl Widget for Tab {
     fn ui(self, ui: &mut Ui) -> Response {
         // 1. Deciding widget size:
         let margin = Margin::same(6.0);
-        let text = WidgetText::from(format!("{} ({})", self.name, self.editor_type)).into_galley(
+        let text = WidgetText::from(format!("{}", self.name)).into_galley(
             ui,
             Some(false),
             f32::INFINITY,
@@ -56,7 +55,7 @@ impl Widget for Tab<'_> {
         };
         let button_response = ui.interact(
             button_rect,
-            Id::new(format!("tab_button_{}_{}", self.name, self.editor_type)),
+            Id::new(format!("tab_button_{}", self.name)),
             Sense::click(),
         );
 

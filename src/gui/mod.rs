@@ -17,7 +17,7 @@ use self::{
 
 pub struct NuclearApp {
     pub project: Option<NuclearProject>,
-    pub tabs: Vec<(String, Editor)>,
+    pub editors: Vec<Editor>,
     pub selected_tab: usize,
 }
 
@@ -26,7 +26,7 @@ impl NuclearApp {
         //TODO: check if unsaved
 
         self.project = None;
-        self.tabs = vec![];
+        self.editors = vec![];
         self.selected_tab = 0;
         return true;
     }
@@ -40,7 +40,7 @@ impl NuclearApp {
 impl Default for NuclearApp {
     fn default() -> Self {
         Self {
-            tabs: vec![],
+            editors: vec![],
             selected_tab: 0,
             project: None,
         }
@@ -60,11 +60,11 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                         if ui.link(name).clicked() {
                             //TODO: check if already open
                             //TODO: add method to get directly from wrapper
-                            app.tabs.push((
-                                name.to_string(),
-                                Editor::palette(project.get_nclr(name).manage().unwrap()),
+                            app.editors.push(Editor::palette(
+                                name.clone(),
+                                project.get_nclr(name).manage().unwrap(),
                             ));
-                            app.selected_tab = app.tabs.len() - 1;
+                            app.selected_tab = app.editors.len() - 1;
                         }
                     }
                 });
@@ -97,16 +97,15 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
     });
 }
 
-pub fn tab_bar(tabs: &Vec<(String, Editor)>, ui: &mut Ui, selected_tab: usize) -> TabBarResponse {
+pub fn tab_bar(editors: &Vec<Editor>, ui: &mut Ui, selected_tab: usize) -> TabBarResponse {
     let mut out = TabBarResponse::None;
 
     ScrollArea::horizontal().show(ui, |ui| {
         ui.horizontal(|ui| {
             let mut c = 0;
-            for tab in tabs {
+            for editor in editors {
                 let response = ui.add(Tab {
-                    name: tab.0.as_str(),
-                    editor_type: tab.1.editor_type(),
+                    name: editor.tab_name(),
                     selected: c == selected_tab,
                 });
 
@@ -116,7 +115,7 @@ pub fn tab_bar(tabs: &Vec<(String, Editor)>, ui: &mut Ui, selected_tab: usize) -
                     out = TabBarResponse::Select(c);
                 }
 
-                if c != tabs.len() - 1 {
+                if c != editors.len() - 1 {
                     ui.separator();
                 }
                 c += 1;
@@ -129,18 +128,15 @@ pub fn tab_bar(tabs: &Vec<(String, Editor)>, ui: &mut Ui, selected_tab: usize) -
 
 impl eframe::App for NuclearApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        match menu_bar::menu_bar(ctx) {
+        match menu_bar::menu_bar(self, ctx) {
             MenuBarResponse::NewProj => {
                 if self.close_project() {
-                    self.tabs.push((
-                        String::new(),
-                        Editor::Metadata {
-                            proj_creation: true,
-                            name: String::new(),
-                            author: String::new(),
-                            description: String::new(),
-                        },
-                    ))
+                    self.editors.push(Editor::Metadata {
+                        proj_creation: true,
+                        name: String::new(),
+                        author: String::new(),
+                        description: String::new(),
+                    })
                 }
             }
             MenuBarResponse::OpenProj => {
@@ -160,13 +156,22 @@ impl eframe::App for NuclearApp {
                     }
                 }
             }
+            MenuBarResponse::Metadata => {
+                let proj = self.project.as_ref().unwrap();
+                self.editors.push(Editor::Metadata {
+                    proj_creation: false,
+                    name: proj.name.clone(),
+                    author: proj.author.clone(),
+                    description: proj.description.clone(),
+                })
+            }
             MenuBarResponse::None => {}
         }
 
         side_panel(ctx, self);
 
         CentralPanel::default().show(ctx, |ui| {
-            if self.tabs.len() == 0 {
+            if self.editors.len() == 0 {
                 if let None = self.project {
                     ui.heading("No project open!");
                     ui.label("Use File > New to start a new project or File > Open to open one");
@@ -175,7 +180,7 @@ impl eframe::App for NuclearApp {
                     ui.label("Click one of the files on the sidebar to open it on the editor");
                 }
             } else {
-                match tab_bar(&self.tabs, ui, self.selected_tab) {
+                match tab_bar(&self.editors, ui, self.selected_tab) {
                     TabBarResponse::Select(c) => {
                         self.selected_tab = c;
                     }
@@ -183,17 +188,17 @@ impl eframe::App for NuclearApp {
                         if self.selected_tab >= c && self.selected_tab != 0 {
                             self.selected_tab -= 1;
                         }
-                        self.tabs.remove(c);
+                        self.editors.remove(c);
                     }
                     _ => {}
                 }
 
                 ui.separator();
 
-                if self.tabs.len() != 0 {
-                    match self.tabs[self.selected_tab].1.draw(ui) {
+                if self.editors.len() != 0 {
+                    match self.editors[self.selected_tab].draw(ui) {
                         EditorResponse::Metadata(MetadataResponse::CreateProj) => {
-                            let Editor::Metadata { name, author, description, ..} =  &self.tabs[self.selected_tab].1 else {
+                            let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
                                 unreachable!();
                             };
 
@@ -204,7 +209,7 @@ impl eframe::App for NuclearApp {
                                     "Project created!",
                                     &format!("Successfully created project {}", name),
                                 );
-                                self.tabs.remove(self.selected_tab);
+                                self.editors.remove(self.selected_tab);
 
                                 if self.selected_tab != 0 {
                                     self.selected_tab -= 1;
@@ -215,7 +220,14 @@ impl eframe::App for NuclearApp {
                             }
                         }
                         EditorResponse::Metadata(MetadataResponse::Save) => {
-                            todo!();
+                            let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
+                                unreachable!();
+                            };
+                            let project = self.project.as_mut().unwrap();
+                            project.name = name.to_string();
+                            project.author = author.to_string();
+                            project.description = description.to_string();
+                            message::info("Project metadata", "Saved project metadata!");
                         }
                         EditorResponse::None => {}
                     }

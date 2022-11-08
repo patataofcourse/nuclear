@@ -5,13 +5,22 @@ use eframe::egui::{containers::Frame, Ui};
 #[derive(Clone, Debug)]
 pub enum Editor {
     Palette {
+        name: String,
         transparency: bool,
         contents: NCLR,
     },
-    Tileset {},
-    Tilemap {},
-    Frames {},
-    Animation {},
+    Tileset {
+        name: String,
+    },
+    Tilemap {
+        name: String,
+    },
+    Frames {
+        name: String,
+    },
+    Animation {
+        name: String,
+    },
     Metadata {
         proj_creation: bool,
         name: String,
@@ -21,18 +30,19 @@ pub enum Editor {
 }
 
 impl Editor {
-    pub const fn editor_type(&self) -> &'static str {
+    pub fn tab_name(&self) -> String {
         match self {
-            Self::Palette { .. } => "Palette",
-            Self::Tileset { .. } => "Tileset",
-            Self::Tilemap { .. } => "Tilemap",
-            Self::Frames { .. } => "Frames",
-            Self::Animation { .. } => "Animation",
-            Self::Metadata { .. } => "Project metadata",
+            Self::Palette { name, .. } => format!("{} (Palette)", name),
+            Self::Tileset { name, .. } => format!("{} (Tileset)", name),
+            Self::Tilemap { name, .. } => format!("{} (Tilemap)", name),
+            Self::Frames { name, .. } => format!("{} (Frames)", name),
+            Self::Animation { name, .. } => format!("{} (Animation)", name),
+            Self::Metadata { .. } => "Project metadata".to_string(),
         }
     }
-    pub fn palette(contents: NCLR) -> Self {
+    pub fn palette(name: String, contents: NCLR) -> Self {
         Self::Palette {
+            name,
             transparency: false,
             contents,
         }
@@ -54,12 +64,13 @@ impl Editor {
     pub fn draw(&mut self, ui: &mut Ui) -> EditorResponse {
         let mut response = EditorResponse::None;
         ui.vertical(|ui| {
-            ui.heading(format!("{} editor", self.editor_type()));
             match self {
                 Self::Palette {
                     transparency,
                     contents,
+                    ..
                 } => {
+                    ui.heading("Palette editor");
                     ui.horizontal(|ui| {
                         Frame::group(ui.style()).show(ui, |ui| {
                             ui.set_width(200.0);
@@ -82,16 +93,20 @@ impl Editor {
                     });
                     ui.button("Save");
                 }
-                Self::Tileset {} => {
+                Self::Tileset { .. } => {
+                    ui.heading("Tileset editor");
                     ui.label("Not implemented");
                 }
-                Self::Tilemap {} => {
+                Self::Tilemap { .. } => {
+                    ui.heading("Tilemap editor");
                     ui.label("Not implemented");
                 }
-                Self::Frames {} => {
+                Self::Frames { .. } => {
+                    ui.heading("Frame editor");
                     ui.label("Not implemented");
                 }
-                Self::Animation {} => {
+                Self::Animation { .. } => {
+                    ui.heading("Animation editor");
                     ui.label("Not implemented");
                 }
                 Self::Metadata {
@@ -100,6 +115,7 @@ impl Editor {
                     author,
                     description,
                 } => {
+                    ui.heading("Project metadata settings");
                     response = if let Some(r) =
                         Self::draw_metadata(ui, proj_creation, name, author, description)
                     {

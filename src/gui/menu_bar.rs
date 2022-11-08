@@ -1,8 +1,10 @@
-use eframe::egui::{menu, widgets, Align, Context, Layout, TopBottomPanel};
+use super::NuclearApp;
+use eframe::egui::{menu, widgets, Align, Button, Context, Layout, TopBottomPanel};
 
 pub enum MenuBarResponse {
     NewProj,
     OpenProj,
+    Metadata,
     None,
 }
 
@@ -15,7 +17,7 @@ impl MenuBarResponse {
 }
 
 #[must_use]
-pub fn menu_bar(ctx: &Context) -> MenuBarResponse {
+pub fn menu_bar(app: &NuclearApp, ctx: &Context) -> MenuBarResponse {
     let mut response = MenuBarResponse::None;
     TopBottomPanel::top("menu_bar").show(ctx, |ui| {
         menu::bar(ui, |ui| {
@@ -47,6 +49,16 @@ pub fn menu_bar(ctx: &Context) -> MenuBarResponse {
             ui.menu_button("Edit", |ui| {
                 ui.button("Undo");
                 ui.button("Redo");
+                ui.separator();
+                if ui
+                    .add_enabled(
+                        if let None = app.project { false } else { true },
+                        Button::new("Project metadata"),
+                    )
+                    .clicked()
+                {
+                    response.set_if_none(MenuBarResponse::Metadata)
+                }
             });
             ui.button("button!!!");
             ui.with_layout(Layout::right_to_left(Align::TOP), |ui| {
