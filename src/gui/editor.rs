@@ -1,6 +1,6 @@
 use super::message;
 use crate::img::NCLR;
-use eframe::egui::{containers::Frame, Ui};
+use eframe::egui::{self, containers::Frame, Ui};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
@@ -63,66 +63,119 @@ impl Editor {
     #[must_use]
     pub fn draw(&mut self, ui: &mut Ui) -> EditorResponse {
         let mut response = EditorResponse::None;
-        ui.vertical(|ui| {
-            match self {
-                Self::Palette {
-                    transparency,
-                    contents,
-                    ..
-                } => {
-                    ui.heading("Palette editor");
-                    ui.horizontal(|ui| {
-                        Frame::group(ui.style()).show(ui, |ui| {
-                            ui.set_width(200.0);
-                            ui.set_height(200.0);
-                            ui.vertical(|ui| {
-                                ui.label(format!(
-                                    "Transparency: {}",
-                                    if *transparency { "on" } else { "off" }
-                                ));
-                                ui.label("Palette 0");
-                                ui.label("Palette 1");
-                                //TODO
-                            })
-                        });
+        ui.vertical(|ui| match self {
+            Self::Palette {
+                transparency,
+                contents,
+                ..
+            } => {
+                ui.heading("Palette editor");
+                ui.horizontal(|ui| {
+                    Frame::group(ui.style()).show(ui, |ui| {
+                        ui.set_width(300.0);
+                        ui.set_height(300.0);
                         ui.vertical(|ui| {
-                            ui.checkbox(transparency, "Enable transparency");
-                            ui.button("Import .pal file");
-                            ui.button("Export .pal file");
+                            for (num, pal) in &contents.palettes {
+                                let label_rect = ui.label(format!("Palette {}", num)).rect;
+                                let mut min: egui::Pos2 =
+                                    (label_rect.max.x + 5.0, label_rect.min.y).into();
+                                let size = label_rect.max.y - label_rect.min.y;
+                                let size: egui::Vec2 = (size, size).into();
+                                let painter = ui.painter();
+                                if contents.is_8_bit {
+                                    let TODO = 0;
+                                    todo!();
+                                } else {
+                                    for i in 0..contents.color_amt {
+                                        if i == 0 && *transparency {
+                                            painter.rect(
+                                                [min, min + size / 2.0].into(),
+                                                0.0,
+                                                egui::Color32::DARK_GRAY,
+                                                egui::Stroke::none(),
+                                            );
+                                            painter.rect(
+                                                [
+                                                    min + (size.x / 2.0, 0.0).into(),
+                                                    min + (size.x, size.y / 2.0).into(),
+                                                ]
+                                                .into(),
+                                                0.0,
+                                                egui::Color32::LIGHT_GRAY,
+                                                egui::Stroke::none(),
+                                            );
+                                            painter.rect(
+                                                [
+                                                    min + (0.0, size.y / 2.0).into(),
+                                                    min + (size.x / 2.0, size.y).into(),
+                                                ]
+                                                .into(),
+                                                0.0,
+                                                egui::Color32::LIGHT_GRAY,
+                                                egui::Stroke::none(),
+                                            );
+                                            painter.rect(
+                                                [
+                                                    min + (size.x / 2.0, size.y / 2.0).into(),
+                                                    min + (size.x, size.y).into(),
+                                                ]
+                                                .into(),
+                                                0.0,
+                                                egui::Color32::DARK_GRAY,
+                                                egui::Stroke::none(),
+                                            );
+                                        } else {
+                                            let [r, g, b] = pal[i as usize].to_rgb888();
+                                            painter.rect(
+                                                [min, min + size].into(),
+                                                0.0,
+                                                egui::Color32::from_rgb(r, g, b),
+                                                egui::Stroke::none(),
+                                            );
+                                        }
+                                        min.x += size.x;
+                                    }
+                                }
+                            }
                         })
                     });
-                    ui.button("Save");
-                }
-                Self::Tileset { .. } => {
-                    ui.heading("Tileset editor");
-                    ui.label("Not implemented");
-                }
-                Self::Tilemap { .. } => {
-                    ui.heading("Tilemap editor");
-                    ui.label("Not implemented");
-                }
-                Self::Frames { .. } => {
-                    ui.heading("Frame editor");
-                    ui.label("Not implemented");
-                }
-                Self::Animation { .. } => {
-                    ui.heading("Animation editor");
-                    ui.label("Not implemented");
-                }
-                Self::Metadata {
-                    proj_creation,
-                    name,
-                    author,
-                    description,
-                } => {
-                    ui.heading("Project metadata settings");
-                    response = if let Some(r) =
-                        Self::draw_metadata(ui, proj_creation, name, author, description)
-                    {
-                        EditorResponse::Metadata(r)
-                    } else {
-                        EditorResponse::None
-                    }
+                    ui.vertical(|ui| {
+                        ui.checkbox(transparency, "Enable transparency");
+                        ui.button("Import .pal file");
+                        ui.button("Export .pal file");
+                    })
+                });
+                ui.button("Save");
+            }
+            Self::Tileset { .. } => {
+                ui.heading("Tileset editor");
+                ui.label("Not implemented");
+            }
+            Self::Tilemap { .. } => {
+                ui.heading("Tilemap editor");
+                ui.label("Not implemented");
+            }
+            Self::Frames { .. } => {
+                ui.heading("Frame editor");
+                ui.label("Not implemented");
+            }
+            Self::Animation { .. } => {
+                ui.heading("Animation editor");
+                ui.label("Not implemented");
+            }
+            Self::Metadata {
+                proj_creation,
+                name,
+                author,
+                description,
+            } => {
+                ui.heading("Project metadata settings");
+                response = if let Some(r) =
+                    Self::draw_metadata(ui, proj_creation, name, author, description)
+                {
+                    EditorResponse::Metadata(r)
+                } else {
+                    EditorResponse::None
                 }
             }
         });
