@@ -139,8 +139,8 @@ impl Editor {
     fn draw_palette(ui: &mut Ui, contents: &NCLR, transparency: &mut bool) -> EditorResponse {
         ui.horizontal(|ui| {
             Frame::group(ui.style()).show(ui, |ui| {
-                ui.set_width(300.0);
-                ui.set_height(300.0);
+                ui.set_width(350.0);
+                ui.set_height(350.0);
                 ui.vertical(|ui| {
                     if contents.is_8_bit {
                         ui.add(PalPreview {
@@ -150,35 +150,14 @@ impl Editor {
                         });
                     } else {
                         for (num, pal) in &contents.palettes {
-                            let label_rect = ui.label(format!("Palette {}", num)).rect;
-                            let mut min: egui::Pos2 =
-                                (label_rect.max.x + 5.0, label_rect.min.y).into();
-                            let size = label_rect.max.y - label_rect.min.y;
-                            let size: egui::Vec2 = (size, size).into();
-                            let painter = ui.painter();
-
-                            ui.add(PalPreview {
-                                color_amt: contents.color_amt,
-                                palette: pal,
-                                is_8_bit: contents.is_8_bit,
+                            ui.horizontal(|ui| {
+                                ui.label(format!("Palette {}", num)).rect;
+                                ui.add(PalPreview {
+                                    color_amt: contents.color_amt,
+                                    palette: pal,
+                                    is_8_bit: contents.is_8_bit,
+                                });
                             });
-
-                            /*
-                            for i in 0..contents.color_amt {
-                                if i == 0 && *transparency {
-                                    Self::transparency(painter, min, size)
-                                } else {
-                                    let [r, g, b] = pal[i as usize].to_rgb888();
-                                    painter.rect(
-                                        [min, min + size].into(),
-                                        0.0,
-                                        egui::Color32::from_rgb(r, g, b),
-                                        egui::Stroke::none(),
-                                    );
-                                }
-                                min.x += size.x;
-                            }
-                            */
                         }
                     }
                 })

@@ -28,8 +28,8 @@ impl Widget for PalPreview<'_> {
         } as usize;
 
         let desired_size = egui::vec2(
-            color_size * num_columns as f32 + SEPARATOR_SIZE * (num_columns as f32 - 1.0),
-            color_size * num_rows as f32 + SEPARATOR_SIZE * (num_rows as f32 - 1.0),
+            color_size * num_columns as f32 + SEPARATOR_SIZE * (num_columns as f32 + 1.0),
+            color_size * num_rows as f32 + SEPARATOR_SIZE * (num_rows as f32 + 1.0),
         );
 
         // 2. Allocating space:
@@ -41,8 +41,10 @@ impl Widget for PalPreview<'_> {
             let pos = response.interact_pointer_pos().unwrap() - rect.min;
 
             // if it hasn't clicked on a separator
-            if !(pos.x % (color_size + SEPARATOR_SIZE) >= color_size
-                || pos.y % (color_size + SEPARATOR_SIZE) >= color_size)
+            if !(pos.x < SEPARATOR_SIZE
+                || pos.y < SEPARATOR_SIZE
+                || (pos.x - SEPARATOR_SIZE) % (color_size + SEPARATOR_SIZE) >= color_size
+                || pos.y - SEPARATOR_SIZE % (color_size + SEPARATOR_SIZE) >= color_size)
             {
                 let row = pos.y / 17.0;
                 let column = pos.x / 17.0;
@@ -57,11 +59,30 @@ impl Widget for PalPreview<'_> {
         });
 
         // 4. Paint!
+        let visuals = ui.visuals().noninteractive();
+
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            painter.rect(rect, 0.0, Color32::BLACK, (0.0, Color32::BLACK));
+            painter.rect(rect, 0.0, visuals.bg_stroke.color, (0.0, Color32::BLACK));
             for i in 0..num_rows {
-                //todo!();
+                for j in 0..if self.is_8_bit && i == num_rows - 1 {
+                    self.color_amt as usize - 16 * num_rows
+                } else {
+                    num_columns
+                } {
+                    let origin_pos = rect.min
+                        + egui::vec2(
+                            SEPARATOR_SIZE + j as f32 * (color_size + SEPARATOR_SIZE),
+                            SEPARATOR_SIZE + i as f32 * (color_size + SEPARATOR_SIZE),
+                        );
+                    let [r, g, b] = self.palette[i * 16 + j].to_rgb888();
+                    painter.rect(
+                        [origin_pos, origin_pos + egui::vec2(color_size, color_size)].into(),
+                        0.0,
+                        Color32::from_rgb(r, g, b),
+                        (0.0, Color32::BLACK),
+                    );
+                }
             }
         }
         response
