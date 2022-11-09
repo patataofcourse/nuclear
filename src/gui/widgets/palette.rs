@@ -13,7 +13,7 @@ impl Widget for PalPreview<'_> {
         //   Width: text_height * num_colors_row + separator_size * (num_colors_row - 1)
         //   Height: text_height * num_columns + separator_size * (num_columns - 1)
         let color_size = ui.fonts().pixels_per_point() * TextStyle::Body.resolve(ui.style()).size;
-        const SEPARATOR_SIZE: f32 = 2.0;
+        const SEPARATOR_SIZE: f32 = 1.0;
 
         let num_rows = if self.is_8_bit {
             self.color_amt / 16
@@ -36,7 +36,7 @@ impl Widget for PalPreview<'_> {
         let (rect, response) = ui.allocate_exact_size(desired_size, Sense::click());
 
         // 3. Interact: Time to check for clicks!
-        let clicked_color: Option<usize> = None;
+        let mut clicked_color: Option<usize> = None;
         if response.clicked() {
             let pos = response.interact_pointer_pos().unwrap() - rect.min;
 
@@ -46,7 +46,7 @@ impl Widget for PalPreview<'_> {
             {
                 let row = pos.y / 17.0;
                 let column = pos.x / 17.0;
-                dbg!(row, column, row as usize * 16 + column as usize);
+                clicked_color = Some(row as usize * 16 + column as usize);
             }
         }
 
