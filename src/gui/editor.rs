@@ -1,6 +1,6 @@
-use super::message;
+use super::{message, widgets::palette::PalPreview};
 use crate::img::NCLR;
-use eframe::egui::{self, containers::Frame, Ui};
+use eframe::egui::{self, containers::Frame, Painter, Ui};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
@@ -97,60 +97,76 @@ impl Editor {
         response
     }
 
+    fn transparency(painter: &Painter, pos: egui::Pos2, size: egui::Vec2) {
+        painter.rect(
+            [pos, pos + size / 2.0].into(),
+            0.0,
+            egui::Color32::DARK_GRAY,
+            egui::Stroke::none(),
+        );
+        painter.rect(
+            [
+                pos + (size.x / 2.0, 0.0).into(),
+                pos + (size.x, size.y / 2.0).into(),
+            ]
+            .into(),
+            0.0,
+            egui::Color32::LIGHT_GRAY,
+            egui::Stroke::none(),
+        );
+        painter.rect(
+            [
+                pos + (0.0, size.y / 2.0).into(),
+                pos + (size.x / 2.0, size.y).into(),
+            ]
+            .into(),
+            0.0,
+            egui::Color32::LIGHT_GRAY,
+            egui::Stroke::none(),
+        );
+        painter.rect(
+            [
+                pos + (size.x / 2.0, size.y / 2.0).into(),
+                pos + (size.x, size.y).into(),
+            ]
+            .into(),
+            0.0,
+            egui::Color32::DARK_GRAY,
+            egui::Stroke::none(),
+        );
+    }
+
     fn draw_palette(ui: &mut Ui, contents: &NCLR, transparency: &mut bool) -> EditorResponse {
         ui.horizontal(|ui| {
             Frame::group(ui.style()).show(ui, |ui| {
                 ui.set_width(300.0);
                 ui.set_height(300.0);
                 ui.vertical(|ui| {
-                    for (num, pal) in &contents.palettes {
-                        let label_rect = ui.label(format!("Palette {}", num)).rect;
-                        let mut min: egui::Pos2 = (label_rect.max.x + 5.0, label_rect.min.y).into();
-                        let size = label_rect.max.y - label_rect.min.y;
-                        let size: egui::Vec2 = (size, size).into();
-                        let painter = ui.painter();
-                        if contents.is_8_bit {
-                            let todo = 0;
-                            todo!();
-                        } else {
+                    if contents.is_8_bit {
+                        ui.add(PalPreview {
+                            color_amt: contents.color_amt,
+                            palette: &contents.palettes[&0],
+                            is_8_bit: contents.is_8_bit,
+                        });
+                    } else {
+                        for (num, pal) in &contents.palettes {
+                            let label_rect = ui.label(format!("Palette {}", num)).rect;
+                            let mut min: egui::Pos2 =
+                                (label_rect.max.x + 5.0, label_rect.min.y).into();
+                            let size = label_rect.max.y - label_rect.min.y;
+                            let size: egui::Vec2 = (size, size).into();
+                            let painter = ui.painter();
+
+                            ui.add(PalPreview {
+                                color_amt: contents.color_amt,
+                                palette: pal,
+                                is_8_bit: contents.is_8_bit,
+                            });
+
+                            /*
                             for i in 0..contents.color_amt {
                                 if i == 0 && *transparency {
-                                    painter.rect(
-                                        [min, min + size / 2.0].into(),
-                                        0.0,
-                                        egui::Color32::DARK_GRAY,
-                                        egui::Stroke::none(),
-                                    );
-                                    painter.rect(
-                                        [
-                                            min + (size.x / 2.0, 0.0).into(),
-                                            min + (size.x, size.y / 2.0).into(),
-                                        ]
-                                        .into(),
-                                        0.0,
-                                        egui::Color32::LIGHT_GRAY,
-                                        egui::Stroke::none(),
-                                    );
-                                    painter.rect(
-                                        [
-                                            min + (0.0, size.y / 2.0).into(),
-                                            min + (size.x / 2.0, size.y).into(),
-                                        ]
-                                        .into(),
-                                        0.0,
-                                        egui::Color32::LIGHT_GRAY,
-                                        egui::Stroke::none(),
-                                    );
-                                    painter.rect(
-                                        [
-                                            min + (size.x / 2.0, size.y / 2.0).into(),
-                                            min + (size.x, size.y).into(),
-                                        ]
-                                        .into(),
-                                        0.0,
-                                        egui::Color32::DARK_GRAY,
-                                        egui::Stroke::none(),
-                                    );
+                                    Self::transparency(painter, min, size)
                                 } else {
                                     let [r, g, b] = pal[i as usize].to_rgb888();
                                     painter.rect(
@@ -162,6 +178,7 @@ impl Editor {
                                 }
                                 min.x += size.x;
                             }
+                            */
                         }
                     }
                 })

@@ -6,13 +6,13 @@ pub mod addon;
 pub mod editor;
 pub mod menu_bar;
 pub mod message;
-pub mod tab;
+pub mod widgets;
 
 use self::{
     addon::NuclearResult,
     editor::{Editor, EditorResponse},
     menu_bar::MenuBarResponse,
-    tab::{Tab, TabBarResponse},
+    widgets::tab::Tab,
 };
 
 pub struct NuclearApp {
@@ -45,6 +45,13 @@ impl Default for NuclearApp {
             project: None,
         }
     }
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum TabBarResponse {
+    None,
+    Select(usize),
+    Close(usize),
 }
 
 pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {

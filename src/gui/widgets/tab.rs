@@ -3,13 +3,6 @@ use eframe::egui::{
     WidgetText,
 };
 
-#[derive(Clone, PartialEq, Debug)]
-pub enum TabBarResponse {
-    None,
-    Select(usize),
-    Close(usize),
-}
-
 pub struct Tab {
     pub name: String,
     pub selected: bool,

@@ -64,6 +64,13 @@ impl NCLR {
                         palette_vec.push(palette);
                         palette = vec![];
                     }
+
+                    if is_8_bit && palette_vec.len() != 1 {
+                        Err(Error::MalformedData {
+                            file: file.fname.clone(),
+                        })?
+                    }
+
                     palettes = Some((palette_vec, color_amt));
                 }
                 "PMCP" => {
