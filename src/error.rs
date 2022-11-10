@@ -79,7 +79,7 @@ impl From<io::Error> for Error {
 
 impl From<std::convert::Infallible> for Error {
     fn from(_: std::convert::Infallible) -> Self {
-        panic!("This should never happen!")
+        unreachable!()
     }
 }
 
