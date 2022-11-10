@@ -1,23 +1,44 @@
 # nuclear
 Rust library and tool for opening various graphics-related Nintendo DS files
 
-
 ## Roadmap
-- File format support
+
+### Version 0.1 (#8CF)
+- [x] **Core**: Support NCLR, NCGR, NSCR
+- [x] **Core**: Project format with wrappers, allow loading and saving it
+- [ ] **GUI**: Load/create/save projects
+    - missing saving
+- [x] **GUI**: Edit project metadata
+- [ ] **GUI**: Editors for the implemented formats
     - [x] NCLR
-    - [x] NCGR / NCBR
-    - [x] NSCR
-    - [ ] NCER
-    - [ ] NANR
-- Project format
-    - [x] Saving files to project
-    - [ ] Loading project from files
-    - [x] Exporting files from project
-    - [ ] Importing files to project
-- Animation editor
-    - [ ] Export NCER to a spritesheet
-    - [ ] Create a cell animation editor for NCER/NANR
-    - [ ] Binary format - BNCAD?
+    - [ ] NCGR
+        - in progress
+    - [ ] NSCR
+- [ ] **GUI**: Import Nintendo files into project
+- [ ] **GUI**: Open files with sidebar
+    - in progress
+
+### Versions 0.2 (#F88) - 1.0 (#20F)
+- [ ] **Core:** Import PNG into NSCR (smart/GRIT-like conversion)
+- [ ] **Core**: NCER / NANR support
+- [ ] **Core**: Portable project format
+- [ ] **fission**: Get a basic version of the framework
+    - this objective will be detailed more in the future
+- [ ] **GUI**: Project "main page" that shows all the metadata
+- [ ] **GUI**: NCER/NANR editors
+- [ ] **GUI**: Undo/Redo
+- [ ] **GUI**: Warn when closing without saving
+- [ ] **GUI**: Open recent
+- [ ] **GUI**: Import/export portable project
+- [ ] **GUI**: Settings
+    - [ ] Light/dark mode saving
+    - [ ] Recent project list
+
+### Versions 1.1+
+- [ ] **Core**: BNCAD format
+- [ ] **Core**: Support alternative files that use Nintendo formats (Layton 1 comes to mind)
+- [ ] **fission**: Polish/improve
+- [ ] **GUI**: Import/export BNCAD
 
 ## Credits
 * Contributors: me! (patataofcourse)
