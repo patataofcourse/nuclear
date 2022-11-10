@@ -1,10 +1,50 @@
 use crate::img::ColorBGR555;
-use eframe::egui::{self, Color32, Response, Sense, TextStyle, Ui, Widget};
+use eframe::egui::{self, Color32, Painter, Response, Sense, TextStyle, Ui, Widget};
 
 pub struct PalPreview<'a> {
     pub color_amt: u32,
     pub palette: &'a Vec<ColorBGR555>,
     pub is_8_bit: bool,
+    pub transparency: bool,
+}
+
+fn transparency(painter: &Painter, pos: egui::Pos2, size: egui::Vec2) {
+    painter.rect(
+        [pos, pos + size / 2.0].into(),
+        0.0,
+        egui::Color32::DARK_GRAY,
+        egui::Stroke::none(),
+    );
+    painter.rect(
+        [
+            pos + (size.x / 2.0, 0.0).into(),
+            pos + (size.x, size.y / 2.0).into(),
+        ]
+        .into(),
+        0.0,
+        egui::Color32::LIGHT_GRAY,
+        egui::Stroke::none(),
+    );
+    painter.rect(
+        [
+            pos + (0.0, size.y / 2.0).into(),
+            pos + (size.x / 2.0, size.y).into(),
+        ]
+        .into(),
+        0.0,
+        egui::Color32::LIGHT_GRAY,
+        egui::Stroke::none(),
+    );
+    painter.rect(
+        [
+            pos + (size.x / 2.0, size.y / 2.0).into(),
+            pos + (size.x, size.y).into(),
+        ]
+        .into(),
+        0.0,
+        egui::Color32::DARK_GRAY,
+        egui::Stroke::none(),
+    );
 }
 
 impl Widget for PalPreview<'_> {
@@ -55,7 +95,6 @@ impl Widget for PalPreview<'_> {
         // Attach some meta-data to the response which can be used by screen readers:
         response.widget_info(|| {
             egui::WidgetInfo::selected(egui::WidgetType::Other, true, format!("Palette previewer"))
-            //TODO
         });
 
         // 4. Paint!
@@ -75,13 +114,17 @@ impl Widget for PalPreview<'_> {
                             SEPARATOR_SIZE + j as f32 * (color_size + SEPARATOR_SIZE),
                             SEPARATOR_SIZE + i as f32 * (color_size + SEPARATOR_SIZE),
                         );
-                    let [r, g, b] = self.palette[i * 16 + j].to_rgb888();
-                    painter.rect(
-                        [origin_pos, origin_pos + egui::vec2(color_size, color_size)].into(),
-                        0.0,
-                        Color32::from_rgb(r, g, b),
-                        (0.0, Color32::BLACK),
-                    );
+                    if i == 0 && j == 0 && self.transparency {
+                        transparency(painter, origin_pos, egui::vec2(color_size, color_size))
+                    } else {
+                        let [r, g, b] = self.palette[i * 16 + j].to_rgb888();
+                        painter.rect(
+                            [origin_pos, origin_pos + egui::vec2(color_size, color_size)].into(),
+                            0.0,
+                            Color32::from_rgb(r, g, b),
+                            (0.0, Color32::BLACK),
+                        );
+                    }
                 }
             }
         }

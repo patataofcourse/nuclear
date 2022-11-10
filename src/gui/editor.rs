@@ -1,6 +1,6 @@
 use super::{message, widgets::palette::PalPreview};
 use crate::img::NCLR;
-use eframe::egui::{self, containers::Frame, Painter, Ui};
+use eframe::egui::{containers::Frame, Ui};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
@@ -97,45 +97,6 @@ impl Editor {
         response
     }
 
-    fn transparency(painter: &Painter, pos: egui::Pos2, size: egui::Vec2) {
-        painter.rect(
-            [pos, pos + size / 2.0].into(),
-            0.0,
-            egui::Color32::DARK_GRAY,
-            egui::Stroke::none(),
-        );
-        painter.rect(
-            [
-                pos + (size.x / 2.0, 0.0).into(),
-                pos + (size.x, size.y / 2.0).into(),
-            ]
-            .into(),
-            0.0,
-            egui::Color32::LIGHT_GRAY,
-            egui::Stroke::none(),
-        );
-        painter.rect(
-            [
-                pos + (0.0, size.y / 2.0).into(),
-                pos + (size.x / 2.0, size.y).into(),
-            ]
-            .into(),
-            0.0,
-            egui::Color32::LIGHT_GRAY,
-            egui::Stroke::none(),
-        );
-        painter.rect(
-            [
-                pos + (size.x / 2.0, size.y / 2.0).into(),
-                pos + (size.x, size.y).into(),
-            ]
-            .into(),
-            0.0,
-            egui::Color32::DARK_GRAY,
-            egui::Stroke::none(),
-        );
-    }
-
     fn draw_palette(ui: &mut Ui, contents: &NCLR, transparency: &mut bool) -> EditorResponse {
         ui.horizontal(|ui| {
             Frame::group(ui.style()).show(ui, |ui| {
@@ -147,6 +108,7 @@ impl Editor {
                             color_amt: contents.color_amt,
                             palette: &contents.palettes[&0],
                             is_8_bit: contents.is_8_bit,
+                            transparency: *transparency,
                         });
                     } else {
                         for (num, pal) in &contents.palettes {
@@ -156,6 +118,7 @@ impl Editor {
                                     color_amt: contents.color_amt,
                                     palette: pal,
                                     is_8_bit: contents.is_8_bit,
+                                    transparency: *transparency,
                                 });
                             });
                         }
