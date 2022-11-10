@@ -49,7 +49,11 @@ impl NCLR {
                 "TTLP" => {
                     let mut palette_vec = vec![];
 
-                    is_8_bit = u32::read_from(&mut data, o)? == 4;
+                    is_8_bit = match u32::read_from(&mut data, o)? {
+                        3 => false,
+                        4 => true,
+                        c => unimplemented!("Unknown color format #{}", c),
+                    };
                     u32::read_from(&mut data, o)?; //padding
                     let data_size = u32::read_from(&mut data, o)?;
                     let color_amt = u32::read_from(&mut data, o)?;

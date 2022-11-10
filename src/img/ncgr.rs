@@ -61,7 +61,11 @@ impl NCGR {
                     is_8_bit = u32::read_from(&mut data, o)? == 4;
 
                     u32::read_from(&mut data, o)?; // Padding
-                    lineal_mode = (u32::read_from(&mut data, o)? & 0xFF) != 0;
+                    lineal_mode = match u32::read_from(&mut data, o)? & 0xFF {
+                        0 => false,
+                        1 => true,
+                        c => unimplemented!("Unknown tile mode #{}", c),
+                    };
                     let tile_data_size = u32::read_from(&mut data, o)?;
                     u32::read_from(&mut data, o)?; // Unknown, always 0x18
 

@@ -11,9 +11,11 @@ pub enum Editor {
     },
     Tileset {
         name: String,
+        palette: Option<String>,
     },
     Tilemap {
         name: String,
+        tileset: Option<String>,
     },
     Frames {
         name: String,

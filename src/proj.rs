@@ -34,6 +34,7 @@ pub struct NCGRWrapper {
     pub lineal_mode: bool,
     #[serde(skip, default)]
     pub bin: Vec<u8>, // to be loaded at project load
+    pub associated_palette: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -43,6 +44,7 @@ pub struct NSCRWrapper {
     pub height: u16,
     #[serde(skip, default)]
     pub bin: Vec<u8>, // to be loaded at project load
+    pub associated_tileset: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -267,6 +269,7 @@ impl NuclearProject {
                 has_cpos: ncgr.has_cpos,
                 tiles: fname,
                 bin: binary,
+                associated_palette: None,
             },
         );
         self.write_meta()?;
@@ -332,6 +335,7 @@ impl NuclearProject {
                 width: nscr.width,
                 height: nscr.height,
                 bin: binary,
+                associated_tileset: None,
             },
         );
         self.write_meta()?;
