@@ -1,17 +1,15 @@
-use crate::message;
+use crate::{message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
 use nuclear::{error::Error, proj::NuclearProject};
 
 pub mod addon;
 pub mod editor;
 pub mod menu_bar;
-pub mod widgets;
 
 use self::{
     addon::NuclearResult,
     editor::{Editor, EditorResponse},
     menu_bar::MenuBarResponse,
-    widgets::tab::Tab,
 };
 
 pub struct NuclearApp {
@@ -79,7 +77,16 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                         ui.label("None");
                     }
                     for (name, set) in &project.tilesets {
-                        ui.link(name);
+                        if ui.link(name).clicked() {
+                            //TODO: check if already open
+                            //TODO: add method to get directly from wrapper
+                            app.editors.push(Editor::tileset(
+                                name.clone(),
+                                project.get_ncgr(name).manage().unwrap(),
+                                set.associated_palette.clone(),
+                            ));
+                            app.selected_tab = app.editors.len() - 1;
+                        }
                     }
                 });
                 ui.collapsing("Tilemaps", |ui| {
@@ -203,7 +210,7 @@ impl eframe::App for NuclearApp {
                 ui.separator();
 
                 if self.editors.len() != 0 {
-                    match self.editors[self.selected_tab].draw(ui) {
+                    match self.editors[self.selected_tab].draw(self.project.as_ref().unwrap(), ui) {
                         EditorResponse::CreateProj => {
                             let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
                                 unreachable!();

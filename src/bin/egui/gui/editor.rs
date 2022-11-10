@@ -1,6 +1,9 @@
-use crate::{gui::widgets::palette::PalPreview, message};
-use eframe::egui::{containers::Frame, Ui};
-use nuclear::img::NCLR;
+use crate::{message, widgets::palette::PalPreview};
+use eframe::egui::{containers::Frame, ComboBox, Ui};
+use nuclear::{
+    img::{NCGR, NCLR},
+    proj::NuclearProject,
+};
 
 #[derive(Clone, Debug)]
 pub enum Editor {
@@ -11,6 +14,7 @@ pub enum Editor {
     },
     Tileset {
         name: String,
+        contents: NCGR,
         palette: Option<String>,
     },
     Tilemap {
@@ -49,6 +53,13 @@ impl Editor {
             contents,
         }
     }
+    pub fn tileset(name: String, contents: NCGR, palette: Option<String>) -> Self {
+        Self::Tileset {
+            name,
+            contents,
+            palette,
+        }
+    }
 }
 
 pub enum EditorResponse {
@@ -59,7 +70,7 @@ pub enum EditorResponse {
 }
 
 impl Editor {
-    pub fn draw(&mut self, ui: &mut Ui) -> EditorResponse {
+    pub fn draw(&mut self, proj: &NuclearProject, ui: &mut Ui) -> EditorResponse {
         let mut response = EditorResponse::None;
         ui.vertical(|ui| match self {
             Self::Palette {
@@ -70,9 +81,11 @@ impl Editor {
                 ui.heading("Palette editor");
                 response = Self::draw_palette(ui, contents, transparency);
             }
-            Self::Tileset { .. } => {
+            Self::Tileset {
+                contents, palette, ..
+            } => {
                 ui.heading("Tileset editor");
-                ui.label("Not implemented");
+                response = Self::draw_tileset(ui, proj, contents, palette);
             }
             Self::Tilemap { .. } => {
                 ui.heading("Tilemap editor");
@@ -138,6 +151,23 @@ impl Editor {
         } else {
             EditorResponse::None
         }
+    }
+
+    fn draw_tileset(
+        ui: &mut Ui,
+        project: &NuclearProject,
+        contents: &NCGR,
+        palette: &mut Option<String>,
+    ) -> EditorResponse {
+        ComboBox::from_label("Choose a palette")
+            .selected_text(palette.as_deref().unwrap_or("None"))
+            .show_ui(ui, |ui| {
+                ui.selectable_value(palette, None, "None");
+                for (name, _) in &project.palette_sets {
+                    ui.selectable_value(palette, Some(name.clone()), name);
+                }
+            });
+        EditorResponse::None
     }
 
     fn draw_metadata(

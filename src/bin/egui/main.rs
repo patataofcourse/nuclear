@@ -5,6 +5,8 @@ pub mod gui;
 /// This module is supposed to offer abstraction to whatever dialog crate nuclear uses
 /// just in case I have to switch to another crate (or implement my own dialogs)
 pub mod message;
+/// Additional widgets that I'm using for nuclear
+pub mod widgets;
 
 fn main() {
     panic::set_hook(Box::new(panic_hook));

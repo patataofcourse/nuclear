@@ -18,7 +18,7 @@ gui = ["eframe", "tinyfiledialogs"]
 
 [[bin]]
 name = "nuclear-egui"
-path = "src/main.rs"
+path = "src/bin/egui/main.rs"
 required-features = ["gui"]
 
 [[example]]
