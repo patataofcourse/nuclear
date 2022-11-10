@@ -1,6 +1,6 @@
-use super::ColorBGR555;
 use crate::{
     error::{Error, Result},
+    img::ColorBGR555,
     ndsfile::{NDSFile, Section},
 };
 

@@ -1,4 +1,4 @@
-use super::NuclearApp;
+use crate::gui::NuclearApp;
 use eframe::egui::{menu, widgets, Align, Button, Context, Layout, TopBottomPanel};
 
 pub enum MenuBarResponse {

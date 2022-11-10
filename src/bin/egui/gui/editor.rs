@@ -1,6 +1,6 @@
-use super::{message, widgets::palette::PalPreview};
-use crate::img::NCLR;
+use crate::{gui::widgets::palette::PalPreview, message};
 use eframe::egui::{containers::Frame, Ui};
+use nuclear::img::NCLR;
 
 #[derive(Clone, Debug)]
 pub enum Editor {

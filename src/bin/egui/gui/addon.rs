@@ -1,16 +1,13 @@
 // stuff that adds onto types in nuclear itself
 
-use super::message;
-use crate::error::Result;
-
-#[cfg(feature = "gui")]
+use crate::message;
+use nuclear::error::Result;
 pub trait NuclearResult<T> {
     fn manage(self) -> T
     where
         Self: Sized;
 }
 
-#[cfg(feature = "gui")]
 impl<T> NuclearResult<T> for Result<T> {
     fn manage(self) -> T {
         match self {

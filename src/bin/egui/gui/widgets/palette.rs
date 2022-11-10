@@ -1,5 +1,5 @@
-use crate::img::ColorBGR555;
 use eframe::egui::{self, Color32, Painter, Response, Sense, TextStyle, Ui, Widget};
+use nuclear::img::ColorBGR555;
 
 pub struct PalPreview<'a> {
     pub color_amt: u32,

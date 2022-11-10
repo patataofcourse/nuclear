@@ -1,8 +1,5 @@
 #![allow(dead_code)]
 
-// This module is supposed to offer abstraction to whatever dialog crate nuclear uses
-// just in case I have to switch to another crate (or implement my own dialogs)
-
 use std::path::PathBuf;
 use tinyfiledialogs::{MessageBoxIcon, YesNo};
 
