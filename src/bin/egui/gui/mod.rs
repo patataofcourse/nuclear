@@ -1,13 +1,11 @@
-use crate::{message, widgets::tab::Tab};
+use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
 use nuclear::{error::Error, proj::NuclearProject};
 
-pub mod addon;
 pub mod editor;
 pub mod menu_bar;
 
 use self::{
-    addon::NuclearResult,
     editor::{Editor, EditorResponse},
     menu_bar::MenuBarResponse,
 };

@@ -24,9 +24,10 @@ pub struct NCGR {
 #[derive(Debug, Clone)]
 /// Contains raw tile data (names extracted from Tinke)
 pub enum NCGRTiles {
-    /// Format in which gfx data isn't split into tiles per se
+    /// Format in which gfx data isn't split into tiles per se, instead being split into "scanlines"
     ///
-    /// TODO: explain format better
+    /// This can be somewhat annoying to work with, specifically in NCBR since different cells will have
+    /// different widths, so there's no universal way to display all tiles properly at once without cell data
     Lineal(Vec<u8>),
     /// Format in which gfx data is split into 8x8 tiles
     Horizontal(Vec<Tile>),

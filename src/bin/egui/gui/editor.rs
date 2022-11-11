@@ -1,11 +1,11 @@
 use crate::{message, widgets::palette::PalPreview};
-use eframe::egui::{containers::Frame, ComboBox, Ui};
+use eframe::egui::{containers::Frame, text::LayoutJob, ComboBox, TextFormat, Ui};
+use egui_extras::image::RetainedImage;
 use nuclear::{
-    img::{NCGR, NCLR},
+    img::{ncgr::NCGRTiles, NCGR, NCLR},
     proj::NuclearProject,
 };
 
-#[derive(Clone, Debug)]
 pub enum Editor {
     Palette {
         name: String,
@@ -16,6 +16,7 @@ pub enum Editor {
         name: String,
         contents: NCGR,
         palette: Option<String>,
+        image: Option<RetainedImage>,
     },
     Tilemap {
         name: String,
@@ -57,6 +58,11 @@ impl Editor {
         Self::Tileset {
             name,
             contents,
+            image: if let Some(_) = palette {
+                todo!();
+            } else {
+                None
+            },
             palette,
         }
     }
@@ -159,7 +165,8 @@ impl Editor {
         contents: &NCGR,
         palette: &mut Option<String>,
     ) -> EditorResponse {
-        ComboBox::from_label("Choose a palette")
+        ui.label("Palette associated with this tileset:");
+        ComboBox::from_label("")
             .selected_text(palette.as_deref().unwrap_or("None"))
             .show_ui(ui, |ui| {
                 ui.selectable_value(palette, None, "None");
@@ -167,6 +174,27 @@ impl Editor {
                     ui.selectable_value(palette, Some(name.clone()), name);
                 }
             });
+        Frame::group(ui.style()).show(ui, |ui| {
+            if contents.ncbr_ff {
+                if let NCGRTiles::Lineal(_) = contents.tiles {
+                    let mut text = LayoutJob::default();
+                    text.append(
+                        "WARNING:",
+                        0.0,
+                        TextFormat {
+                            underline: ui.style().visuals.widgets.noninteractive.fg_stroke,
+                            ..Default::default()
+                        },
+                    );
+                    text.append(
+                        " NCBR + lineal mode detected. Tiles may look garbled",
+                        0.0,
+                        TextFormat::default(),
+                    );
+                    ui.label(text);
+                }
+            }
+        });
         EditorResponse::None
     }
 

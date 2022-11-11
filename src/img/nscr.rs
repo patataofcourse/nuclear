@@ -23,7 +23,7 @@ pub struct TileRef {
 }
 
 #[derive(Debug, Clone)]
-/// A variant of [nuclear::img::NCGR] with horizontal mode forced, for NSCR referencing use
+/// A variant of [super::NCGR] with horizontal mode forced (width 256), for NSCR referencing use
 pub struct TilesForNSCR {
     /// Tile data
     pub tiles: Vec<Tile>,

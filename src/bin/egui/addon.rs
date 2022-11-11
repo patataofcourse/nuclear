@@ -1,5 +1,3 @@
-// stuff that adds onto types in nuclear itself
-
 use crate::message;
 use nuclear::error::Result;
 pub trait NuclearResult<T> {

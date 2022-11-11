@@ -1,5 +1,7 @@
 use std::panic::{self, PanicInfo};
 
+/// Stuff that adds onto types in nuclear itself
+pub mod addon;
 /// Actual GUI implementation
 pub mod gui;
 /// This module is supposed to offer abstraction to whatever dialog crate nuclear uses

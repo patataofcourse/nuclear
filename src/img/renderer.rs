@@ -61,6 +61,10 @@ impl Renderer {
         Ok(())
     }
 
+    pub fn tilesheet_to_rgba8888(&self, pal: &NCLR, tiles: &NCGR, alpha_channel: bool) -> Vec<u8> {
+        todo!();
+    }
+
     pub fn export_tilemap<W: Write>(
         &self,
         f: &mut W,
