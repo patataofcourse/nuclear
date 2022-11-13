@@ -1,5 +1,8 @@
 use crate::{message, widgets::palette::PalPreview};
-use eframe::egui::{containers::Frame, text::LayoutJob, ComboBox, TextFormat, Ui};
+use eframe::{
+    egui::{self, containers::Frame, text::LayoutJob, ComboBox, ScrollArea, TextFormat, Ui},
+    epaint::Stroke,
+};
 use egui_extras::image::RetainedImage;
 use nuclear::{
     img::{ncgr::NCGRTiles, NCGR, NCLR},
@@ -17,6 +20,7 @@ pub enum Editor {
         contents: NCGR,
         palette: Option<String>,
         image: Option<RetainedImage>,
+        view: ViewOptions,
     },
     Tilemap {
         name: String,
@@ -34,6 +38,24 @@ pub enum Editor {
         author: String,
         description: String,
     },
+}
+
+pub struct ViewOptions {
+    pub width: u16,
+    pub palette: i16,
+    pub start_at: u32,
+    pub length: u32,
+}
+
+impl Default for ViewOptions {
+    fn default() -> Self {
+        Self {
+            width: 256,
+            palette: -1,
+            start_at: 0,
+            length: 1,
+        }
+    }
 }
 
 impl Editor {
@@ -64,6 +86,7 @@ impl Editor {
                 None
             },
             palette,
+            view: Default::default(),
         }
     }
 }
@@ -88,10 +111,14 @@ impl Editor {
                 response = Self::draw_palette(ui, contents, transparency);
             }
             Self::Tileset {
-                contents, palette, ..
+                contents,
+                palette,
+                view,
+                ..
             } => {
                 ui.heading("Tileset editor");
-                response = Self::draw_tileset(ui, proj, contents, palette);
+                ui.label("(Only meant for previewing)\n");
+                response = Self::draw_tileset(ui, proj, contents, palette, view);
             }
             Self::Tilemap { .. } => {
                 ui.heading("Tilemap editor");
@@ -164,6 +191,7 @@ impl Editor {
         project: &NuclearProject,
         contents: &NCGR,
         palette: &mut Option<String>,
+        view: &mut ViewOptions,
     ) -> EditorResponse {
         ui.label("Palette associated with this tileset:");
         ComboBox::from_label("")
@@ -174,26 +202,52 @@ impl Editor {
                     ui.selectable_value(palette, Some(name.clone()), name);
                 }
             });
-        Frame::group(ui.style()).show(ui, |ui| {
-            if contents.ncbr_ff {
-                if let NCGRTiles::Lineal(_) = contents.tiles {
-                    let mut text = LayoutJob::default();
-                    text.append(
-                        "WARNING:",
-                        0.0,
-                        TextFormat {
-                            underline: ui.style().visuals.widgets.noninteractive.fg_stroke,
-                            ..Default::default()
-                        },
-                    );
-                    text.append(
-                        " NCBR + lineal mode detected. Tiles may look garbled",
-                        0.0,
-                        TextFormat::default(),
-                    );
-                    ui.label(text);
-                }
+        ui.label("");
+        if contents.ncbr_ff {
+            if let NCGRTiles::Lineal(_) = contents.tiles {
+                let mut text = LayoutJob::default();
+                let color = ui.style().visuals.widgets.noninteractive.text_color();
+                text.append(
+                    "WARNING:",
+                    0.0,
+                    TextFormat {
+                        underline: Stroke { color, width: 1.0 },
+                        color,
+                        ..Default::default()
+                    },
+                );
+                text.append(
+                    " NCBR + lineal mode detected. Tiles may look garbled",
+                    0.0,
+                    TextFormat {
+                        color,
+                        ..Default::default()
+                    },
+                );
+                ui.label(text);
             }
+        }
+        if let None = palette {
+            ui.set_enabled(false);
+        }
+        ui.horizontal(|ui| {
+            Frame::group(ui.style()).show(ui, |ui| {
+                ui.set_min_size(egui::vec2(100.00, 100.0));
+                ScrollArea::new([false, true]).show(ui, |ui| {
+                    ui.label("bloop");
+                })
+            });
+            ui.vertical(|ui| {
+                ComboBox::from_label("")
+                    .selected_text(view.width.to_string())
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut view.width, 8, "8");
+                        ui.selectable_value(&mut view.width, 16, "16");
+                        ui.selectable_value(&mut view.width, 32, "32");
+                        ui.selectable_value(&mut view.width, 64, "64");
+                        ui.selectable_value(&mut view.width, 256, "256");
+                    });
+            });
         });
         EditorResponse::None
     }
