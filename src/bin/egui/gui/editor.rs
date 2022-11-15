@@ -1,6 +1,8 @@
-use crate::{message, widgets::palette::PalPreview};
+use crate::{addon::NuclearResult, message, widgets::palette::PalPreview};
 use eframe::{
-    egui::{self, containers::Frame, text::LayoutJob, ComboBox, ScrollArea, TextFormat, Ui},
+    egui::{
+        self, containers::Frame, text::LayoutJob, ComboBox, ScrollArea, Slider, TextFormat, Ui,
+    },
     epaint::Stroke,
 };
 use egui_extras::image::RetainedImage;
@@ -40,9 +42,11 @@ pub enum Editor {
     },
 }
 
+#[derive(Clone, Debug)]
 pub struct ViewOptions {
     pub width: u16,
     pub palette: i16,
+    pub sectioned: bool,
     pub start_at: u32,
     pub length: u32,
 }
@@ -52,8 +56,9 @@ impl Default for ViewOptions {
         Self {
             width: 256,
             palette: -1,
+            sectioned: false,
             start_at: 0,
-            length: 1,
+            length: 4,
         }
     }
 }
@@ -94,6 +99,7 @@ impl Editor {
 pub enum EditorResponse {
     None,
     SavePalette,
+    SaveTset,
     CreateProj,
     SaveMetadata,
 }
@@ -114,11 +120,12 @@ impl Editor {
                 contents,
                 palette,
                 view,
+                image,
                 ..
             } => {
                 ui.heading("Tileset editor");
                 ui.label("(Only meant for previewing)\n");
-                response = Self::draw_tileset(ui, proj, contents, palette, view);
+                response = Self::draw_tileset(ui, proj, contents, palette, view, image);
             }
             Self::Tilemap { .. } => {
                 ui.heading("Tilemap editor");
@@ -192,7 +199,10 @@ impl Editor {
         contents: &NCGR,
         palette: &mut Option<String>,
         view: &mut ViewOptions,
+        image: &mut Option<RetainedImage>,
     ) -> EditorResponse {
+        let mut response = EditorResponse::None;
+
         ui.label("Palette associated with this tileset:");
         ComboBox::from_label("")
             .selected_text(palette.as_deref().unwrap_or("None"))
@@ -233,23 +243,77 @@ impl Editor {
         ui.horizontal(|ui| {
             Frame::group(ui.style()).show(ui, |ui| {
                 ui.set_min_size(egui::vec2(100.00, 100.0));
-                ScrollArea::new([false, true]).show(ui, |ui| {
-                    ui.label("bloop");
-                })
-            });
-            ui.vertical(|ui| {
-                ComboBox::from_label("")
-                    .selected_text(view.width.to_string())
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut view.width, 8, "8");
-                        ui.selectable_value(&mut view.width, 16, "16");
-                        ui.selectable_value(&mut view.width, 32, "32");
-                        ui.selectable_value(&mut view.width, 64, "64");
-                        ui.selectable_value(&mut view.width, 256, "256");
+                ScrollArea::new([false, true])
+                    .max_height(512.0)
+                    .show(ui, |ui| {
+                        if let Some(img) = image {
+                            ui.image(
+                                img.texture_id(ui.ctx()),
+                                [img.width() as f32, img.height() as f32],
+                            );
+                        } else {
+                            ui.label("Could not render image\nTry selecting a palette");
+                        }
                     });
             });
+            ui.vertical(|ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Palette");
+                    ComboBox::new("pal_combobox", "")
+                        .selected_text(if view.palette >= 0 {
+                            format!("Palette {}", view.palette)
+                        } else {
+                            "None".to_string()
+                        })
+                        .show_ui(ui, |ui| {
+                            if let Some(c) = palette {
+                                for (k, _) in project.get_nclr(c).manage().unwrap().palettes {
+                                    ui.selectable_value(
+                                        &mut view.palette,
+                                        k as i16,
+                                        format!("Palette {}", k),
+                                    );
+                                }
+                            } else {
+                            }
+                        });
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Display width");
+                    ComboBox::new("width_combobox", "")
+                        .selected_text(view.width.to_string())
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut view.width, 8, "8 px");
+                            ui.selectable_value(&mut view.width, 16, "16 px");
+                            ui.selectable_value(&mut view.width, 32, "32 px");
+                            ui.selectable_value(&mut view.width, 64, "64 px");
+                            ui.selectable_value(&mut view.width, 256, "256 px");
+                        });
+                });
+                ui.checkbox(&mut view.sectioned, "View section");
+                ui.set_enabled(view.sectioned);
+                ui.horizontal(|ui| {
+                    ui.label("Start at:");
+                    ui.add(Slider::new(
+                        &mut view.start_at,
+                        0..=(contents.tiles.len(contents.is_8_bit) as u32 - 1),
+                    ));
+                    ui.label("tiles");
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Length:");
+                    ui.add(Slider::new(
+                        &mut view.length,
+                        1..=(contents.tiles.len(contents.is_8_bit) as u32 - view.start_at),
+                    ));
+                    ui.label("tiles");
+                })
+            });
         });
-        EditorResponse::None
+        if ui.button("Save").clicked() {
+            response = EditorResponse::SaveTset;
+        }
+        response
     }
 
     fn draw_metadata(

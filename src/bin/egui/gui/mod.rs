@@ -245,6 +245,10 @@ impl eframe::App for NuclearApp {
                             let todo = 0;
                             todo!();
                         }
+                        EditorResponse::SaveTset => {
+                            let todo = 0;
+                            todo!();
+                        }
                         EditorResponse::None => {}
                     }
                 }
