@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    img::{Tile, NCGR, NCLR},
+    img::{ColorBGR555, Tile, NCGR, NCLR},
     ndsfile::{NDSFile, Section},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
@@ -159,5 +159,9 @@ impl NSCR {
         }
 
         data
+    }
+
+    pub fn gritify(img: Vec<ColorBGR555>, size: [usize; 2]) -> Self {
+        todo!();
     }
 }

@@ -6,7 +6,9 @@ pub mod ncer;
 pub mod ncgr;
 pub mod nclr;
 pub mod nscr;
-pub mod renderer;
+
+/// Only kept for the examples, renders different formats to .png
+pub mod export;
 
 pub use ncgr::{Tile, NCGR};
 pub use nclr::NCLR;
