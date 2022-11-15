@@ -7,6 +7,7 @@ use eframe::{
 };
 use egui_extras::image::RetainedImage;
 use nuclear::{
+    error::Error,
     img::{ncgr::NCGRTiles, ColorBGR555, NCGR, NCLR},
     proj::NuclearProject,
 };
@@ -124,7 +125,6 @@ impl Editor {
                 ..
             } => {
                 ui.heading("Tileset editor");
-                ui.label("(Only meant for previewing)\n");
                 response = Self::draw_tileset(ui, proj, contents, palette, view, image);
             }
             Self::Tilemap { .. } => {
@@ -247,19 +247,18 @@ impl Editor {
         }
         ui.horizontal(|ui| {
             Frame::group(ui.style()).show(ui, |ui| {
-                ui.set_min_size(egui::vec2(100.00, 100.0));
-                ScrollArea::new([false, true])
-                    .max_height(512.0)
-                    .show(ui, |ui| {
-                        if let Some(img) = image {
-                            ui.image(
-                                img.texture_id(ui.ctx()),
-                                [img.width() as f32, img.height() as f32],
-                            );
-                        } else {
-                            ui.label("Could not render image\nTry selecting a palette");
-                        }
+                if let Some(img) = image {
+                    ui.set_min_height(img.height().min(512) as f32);
+                    ScrollArea::new([false, true]).show(ui, |ui| {
+                        ui.image(
+                            img.texture_id(ui.ctx()),
+                            [img.width() as f32, img.height() as f32],
+                        );
                     });
+                } else {
+                    ui.set_height(100.0);
+                    ui.label("Could not render image\nTry selecting a palette");
+                }
             });
             ui.vertical(|ui| {
                 ui.horizontal(|ui| {
@@ -300,10 +299,6 @@ impl Editor {
                             ui.selectable_value(&mut view.width, 256, "256 px");
                         });
                     if before != view.width {
-                        update_img = true;
-                    }
-                    //TEMP
-                    if ui.add(Slider::new(&mut view.width, 2..=2048)).changed() {
                         update_img = true;
                     }
                 });
@@ -363,12 +358,8 @@ impl Editor {
                 let img = ncgr.tiles.render(
                     ncgr.is_8_bit,
                     if view.sectioned {
-                        let end = if view.start_at + view.length < ncgr.tiles.len(ncgr.is_8_bit) {
-                            view.start_at + view.length
-                        } else {
-                            ncgr.tiles.len(ncgr.is_8_bit)
-                        };
-                        Some(view.start_at..=end)
+                        let end = (view.start_at + view.length).min(ncgr.tiles.len(ncgr.is_8_bit));
+                        Some(view.start_at..end)
                     } else {
                         None
                     },
@@ -381,8 +372,10 @@ impl Editor {
                 for px in &img {
                     rgba.extend(
                         pal.get(*px as usize)
-                            .cloned()
-                            .unwrap_or_default()
+                            .ok_or(Error::MalformedData {
+                                file: "{current tileset}".to_string(),
+                            })
+                            .manage()
                             .to_rgb888(),
                     );
                     rgba.push(255);

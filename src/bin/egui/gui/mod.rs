@@ -183,6 +183,7 @@ impl eframe::App for NuclearApp {
         side_panel(ctx, self);
 
         CentralPanel::default().show(ctx, |ui| {
+            ScrollArea::new([false, true]).show(ui, |ui|{
             if self.editors.len() == 0 {
                 if let None = self.project {
                     ui.heading("No project open!");
@@ -228,7 +229,7 @@ impl eframe::App for NuclearApp {
                                 }
 
                                 self.project =
-                                    Some(NuclearProject::new(&name, &author, &description, path)?);
+                                    Some(NuclearProject::new(&name, &author, &description, path).manage());
                             }
                         }
                         EditorResponse::SaveMetadata => {
@@ -253,7 +254,7 @@ impl eframe::App for NuclearApp {
                     }
                 }
             }
-            Ok::<(), Error>(())
         });
+    });
     }
 }

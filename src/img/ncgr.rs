@@ -3,7 +3,7 @@ use crate::{
     ndsfile::{NDSFile, Section},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
-use std::{io::Write, ops::RangeInclusive};
+use std::{io::Write, ops::Range};
 
 /// Represents an NDS tile
 pub type Tile = Vec<u8>;
@@ -243,7 +243,7 @@ impl NCGRTiles {
     pub fn render(
         &self,
         is_8_bit: bool,
-        range: Option<RangeInclusive<usize>>,
+        range: Option<Range<usize>>,
         render_width: usize,
     ) -> Vec<u8> {
         match self {
@@ -251,7 +251,7 @@ impl NCGRTiles {
             Self::Lineal(c) => {
                 let tile_size = if is_8_bit { 0x40 } else { 0x20 };
                 let tile_data = match range {
-                    Some(d) => &c[d.start() * tile_size..d.end() * tile_size],
+                    Some(d) => &c[d.start * tile_size..d.end * tile_size],
                     None => &c,
                 };
                 if is_8_bit {
@@ -271,7 +271,7 @@ impl NCGRTiles {
     /// Converts a vector of [Tile] into indexed image data to be displayed
     pub fn render_tiles(
         tiles: &Vec<Tile>,
-        range: Option<RangeInclusive<usize>>,
+        range: Option<Range<usize>>,
         render_width: usize,
     ) -> Vec<u8> {
         let tiles = match range {
