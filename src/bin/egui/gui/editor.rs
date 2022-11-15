@@ -3,11 +3,11 @@ use eframe::{
     egui::{
         self, containers::Frame, text::LayoutJob, ComboBox, ScrollArea, Slider, TextFormat, Ui,
     },
-    epaint::Stroke,
+    epaint::{ColorImage, Stroke},
 };
 use egui_extras::image::RetainedImage;
 use nuclear::{
-    img::{ncgr::NCGRTiles, NCGR, NCLR},
+    img::{ncgr::NCGRTiles, ColorBGR555, NCGR, NCLR},
     proj::NuclearProject,
 };
 
@@ -44,11 +44,11 @@ pub enum Editor {
 
 #[derive(Clone, Debug)]
 pub struct ViewOptions {
-    pub width: u16,
-    pub palette: i16,
+    pub width: usize,
+    pub palette: isize,
     pub sectioned: bool,
-    pub start_at: u32,
-    pub length: u32,
+    pub start_at: usize,
+    pub length: usize,
 }
 
 impl Default for ViewOptions {
@@ -202,8 +202,10 @@ impl Editor {
         image: &mut Option<RetainedImage>,
     ) -> EditorResponse {
         let mut response = EditorResponse::None;
+        let mut update_img = false;
 
         ui.label("Palette associated with this tileset:");
+        let before = palette.clone();
         ComboBox::from_label("")
             .selected_text(palette.as_deref().unwrap_or("None"))
             .show_ui(ui, |ui| {
@@ -212,6 +214,9 @@ impl Editor {
                     ui.selectable_value(palette, Some(name.clone()), name);
                 }
             });
+        if before != *palette {
+            update_img = true;
+        }
         ui.label("");
         if contents.ncbr_ff {
             if let NCGRTiles::Lineal(_) = contents.tiles {
@@ -259,6 +264,7 @@ impl Editor {
             ui.vertical(|ui| {
                 ui.horizontal(|ui| {
                     ui.label("Palette");
+                    let before = view.palette;
                     ComboBox::new("pal_combobox", "")
                         .selected_text(if view.palette >= 0 {
                             format!("Palette {}", view.palette)
@@ -270,18 +276,22 @@ impl Editor {
                                 for (k, _) in project.get_nclr(c).manage().unwrap().palettes {
                                     ui.selectable_value(
                                         &mut view.palette,
-                                        k as i16,
+                                        k as isize,
                                         format!("Palette {}", k),
                                     );
                                 }
                             } else {
                             }
                         });
+                    if before != view.palette {
+                        update_img = true;
+                    }
                 });
                 ui.horizontal(|ui| {
                     ui.label("Display width");
+                    let before = view.width;
                     ComboBox::new("width_combobox", "")
-                        .selected_text(view.width.to_string())
+                        .selected_text(format!("{} px", view.width))
                         .show_ui(ui, |ui| {
                             ui.selectable_value(&mut view.width, 8, "8 px");
                             ui.selectable_value(&mut view.width, 16, "16 px");
@@ -289,23 +299,42 @@ impl Editor {
                             ui.selectable_value(&mut view.width, 64, "64 px");
                             ui.selectable_value(&mut view.width, 256, "256 px");
                         });
+                    if before != view.width {
+                        update_img = true;
+                    }
+                    //TEMP
+                    if ui.add(Slider::new(&mut view.width, 2..=2048)).changed() {
+                        update_img = true;
+                    }
                 });
-                ui.checkbox(&mut view.sectioned, "View section");
+                if ui.checkbox(&mut view.sectioned, "View section").changed() {
+                    update_img = true;
+                }
                 ui.set_enabled(view.sectioned);
                 ui.horizontal(|ui| {
                     ui.label("Start at:");
-                    ui.add(Slider::new(
-                        &mut view.start_at,
-                        0..=(contents.tiles.len(contents.is_8_bit) as u32 - 1),
-                    ));
+                    if ui
+                        .add(Slider::new(
+                            &mut view.start_at,
+                            0..=(contents.tiles.len(contents.is_8_bit) - 1),
+                        ))
+                        .changed()
+                    {
+                        update_img = true;
+                    }
                     ui.label("tiles");
                 });
                 ui.horizontal(|ui| {
                     ui.label("Length:");
-                    ui.add(Slider::new(
-                        &mut view.length,
-                        1..=(contents.tiles.len(contents.is_8_bit) as u32 - view.start_at),
-                    ));
+                    if ui
+                        .add(Slider::new(
+                            &mut view.length,
+                            1..=(contents.tiles.len(contents.is_8_bit) - view.start_at),
+                        ))
+                        .changed()
+                    {
+                        update_img = true;
+                    }
                     ui.label("tiles");
                 })
             });
@@ -313,7 +342,62 @@ impl Editor {
         if ui.button("Save").clicked() {
             response = EditorResponse::SaveTset;
         }
+
+        if update_img {
+            Self::update_tileset_img(contents, project, palette, image, view);
+        }
+
         response
+    }
+
+    fn update_tileset_img(
+        ncgr: &NCGR,
+        project: &NuclearProject,
+        palette: &Option<String>,
+        image: &mut Option<RetainedImage>,
+        view: &ViewOptions,
+    ) {
+        if let Some(c) = palette {
+            let nclr = project.get_nclr(c).manage().unwrap();
+            if view.palette >= 0 && nclr.palettes.contains_key(&(view.palette as u16)) {
+                let img = ncgr.tiles.render(
+                    ncgr.is_8_bit,
+                    if view.sectioned {
+                        let end = if view.start_at + view.length < ncgr.tiles.len(ncgr.is_8_bit) {
+                            view.start_at + view.length
+                        } else {
+                            ncgr.tiles.len(ncgr.is_8_bit)
+                        };
+                        Some(view.start_at..=end)
+                    } else {
+                        None
+                    },
+                    view.width as usize / 8,
+                );
+
+                let pal = nclr.palettes.get(&(view.palette as u16)).unwrap();
+                let mut rgba = vec![];
+
+                for px in &img {
+                    rgba.extend(
+                        pal.get(*px as usize)
+                            .cloned()
+                            .unwrap_or_default()
+                            .to_rgb888(),
+                    );
+                    rgba.push(255);
+                }
+
+                *image = Some(RetainedImage::from_color_image(
+                    "texture",
+                    ColorImage::from_rgba_unmultiplied([view.width, img.len() / view.width], &rgba),
+                ));
+            } else {
+                *image = None
+            }
+        } else {
+            *image = None
+        }
     }
 
     fn draw_metadata(

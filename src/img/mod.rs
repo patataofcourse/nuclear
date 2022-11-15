@@ -12,7 +12,7 @@ pub use ncgr::{Tile, NCGR};
 pub use nclr::NCLR;
 pub use nscr::NSCR;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Color format the Nintendo DS uses (BGR555)
 pub struct ColorBGR555 {
     pub r: u8,
