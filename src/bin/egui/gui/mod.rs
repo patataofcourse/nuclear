@@ -25,11 +25,6 @@ impl NuclearApp {
         self.selected_tab = 0;
         return true;
     }
-
-    /// Saves the contents of all opened editors
-    pub fn save_project(&mut self) {
-        todo!();
-    }
 }
 
 impl Default for NuclearApp {
@@ -60,13 +55,27 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                     }
                     for (name, _) in &project.palette_sets {
                         if ui.link(name).clicked() {
-                            //TODO: check if already open
                             //TODO: add method to get directly from wrapper
-                            app.editors.push(Editor::palette(
-                                name.clone(),
-                                project.get_nclr(name).manage().unwrap(),
-                            ));
-                            app.selected_tab = app.editors.len() - 1;
+                            let mut already_open = None;
+                            for i in 0..app.editors.len() {
+                                let editor = &app.editors[i];
+                                if let Editor::Palette { name: name_, .. } = editor {
+                                    if name == name_ {
+                                        already_open = Some(i);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if let Some(i) = already_open {
+                                app.selected_tab = i;
+                            } else {
+                                app.editors.push(Editor::palette(
+                                    name.clone(),
+                                    project.get_nclr(name).manage().unwrap(),
+                                ));
+                                app.selected_tab = app.editors.len() - 1;
+                            }
                         }
                     }
                 });
@@ -76,14 +85,28 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                     }
                     for (name, set) in &project.tilesets {
                         if ui.link(name).clicked() {
-                            //TODO: check if already open
                             //TODO: add method to get directly from wrapper
-                            app.editors.push(Editor::tileset(
-                                name.clone(),
-                                project.get_ncgr(name).manage().unwrap(),
-                                set.associated_palette.clone(),
-                            ));
-                            app.selected_tab = app.editors.len() - 1;
+                            let mut already_open = None;
+                            for i in 0..app.editors.len() {
+                                let editor = &app.editors[i];
+                                if let Editor::Tileset { name: name_, .. } = editor {
+                                    if name == name_ {
+                                        already_open = Some(i);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if let Some(i) = already_open {
+                                app.selected_tab = i;
+                            } else {
+                                app.editors.push(Editor::tileset(
+                                    name.clone(),
+                                    project.get_ncgr(name).manage().unwrap(),
+                                    set.associated_palette.clone(),
+                                ));
+                                app.selected_tab = app.editors.len() - 1;
+                            }
                         }
                     }
                 });
@@ -93,14 +116,28 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                     }
                     for (name, map) in &project.tilemaps {
                         if ui.link(name).clicked() {
-                            //TODO: check if already open
                             //TODO: add method to get directly from wrapper
-                            app.editors.push(Editor::tilemap(
-                                name.clone(),
-                                project.get_nscr(name).manage().unwrap(),
-                                map.associated_tileset.clone(),
-                            ));
-                            app.selected_tab = app.editors.len() - 1;
+                            let mut already_open = None;
+                            for i in 0..app.editors.len() {
+                                let editor = &app.editors[i];
+                                if let Editor::Tilemap { name: name_, .. } = editor {
+                                    if name == name_ {
+                                        already_open = Some(i);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if let Some(i) = already_open {
+                                app.selected_tab = i;
+                            } else {
+                                app.editors.push(Editor::tilemap(
+                                    name.clone(),
+                                    project.get_nscr(name).manage().unwrap(),
+                                    map.associated_tileset.clone(),
+                                ));
+                                app.selected_tab = app.editors.len() - 1;
+                            }
                         }
                     }
                 });
