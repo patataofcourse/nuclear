@@ -53,9 +53,8 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                     if project.palette_sets.len() == 0 {
                         ui.label("None");
                     }
-                    for (name, _) in &project.palette_sets {
+                    for (name, set) in &project.palette_sets {
                         if ui.link(name).clicked() {
-                            //TODO: add method to get directly from wrapper
                             let mut already_open = None;
                             for i in 0..app.editors.len() {
                                 let editor = &app.editors[i];
@@ -70,10 +69,8 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                             if let Some(i) = already_open {
                                 app.selected_tab = i;
                             } else {
-                                app.editors.push(Editor::palette(
-                                    name.clone(),
-                                    project.get_nclr(name).manage().unwrap(),
-                                ));
+                                app.editors
+                                    .push(Editor::palette(name.clone(), set.get_inner().manage()));
                                 app.selected_tab = app.editors.len() - 1;
                             }
                         }
@@ -85,7 +82,6 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                     }
                     for (name, set) in &project.tilesets {
                         if ui.link(name).clicked() {
-                            //TODO: add method to get directly from wrapper
                             let mut already_open = None;
                             for i in 0..app.editors.len() {
                                 let editor = &app.editors[i];
@@ -102,7 +98,7 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                             } else {
                                 app.editors.push(Editor::tileset(
                                     name.clone(),
-                                    project.get_ncgr(name).manage().unwrap(),
+                                    set.get_inner().manage(),
                                     set.associated_palette.clone(),
                                 ));
                                 app.selected_tab = app.editors.len() - 1;
@@ -116,7 +112,6 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                     }
                     for (name, map) in &project.tilemaps {
                         if ui.link(name).clicked() {
-                            //TODO: add method to get directly from wrapper
                             let mut already_open = None;
                             for i in 0..app.editors.len() {
                                 let editor = &app.editors[i];
@@ -133,7 +128,7 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                             } else {
                                 app.editors.push(Editor::tilemap(
                                     name.clone(),
-                                    project.get_nscr(name).manage().unwrap(),
+                                    map.get_inner().manage(),
                                     map.associated_tileset.clone(),
                                 ));
                                 app.selected_tab = app.editors.len() - 1;
@@ -299,7 +294,7 @@ impl eframe::App for NuclearApp {
                             let project = self.project.as_mut().unwrap();
                             project.insert_ncgr(name, contents).manage();
 
-                            // might need to make an insert_ncgr_with_meta or smth cause this just feels wrong
+                            //TODO: might need to make an insert_ncgr_with_meta or smth cause this just feels wrong
                             let tileset = project.tilesets.get_mut(name).unwrap();
                             tileset.associated_palette = palette.clone();
 

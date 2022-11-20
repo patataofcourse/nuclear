@@ -25,6 +25,44 @@ pub struct NCLRWrapper {
     pub bin: BTreeMap<u16, Vec<u8>>, // to be loaded at project load
 }
 
+impl NCLRWrapper {
+    pub fn get_inner(&self) -> Result<NCLR> {
+        let mut palettes = BTreeMap::new();
+        let mut color_amt = 0;
+        for (id, pal) in &self.bin {
+            let mut pal: &[u8] = &pal;
+            let mut colors = vec![];
+            while pal.len() != 0 {
+                colors.push(ColorBGR555::read_from(&mut pal, ByteOrder::LittleEndian)?);
+            }
+
+            if color_amt == 0 {
+                color_amt = colors.len();
+            } else if colors.len() != color_amt {
+                Err(Error::FileFormatWrong(
+                    self.palettes.get(&id).unwrap().to_path_buf(),
+                    format!(
+                        "All palletes must have same number of colors (found {} and {})",
+                        colors.len(),
+                        color_amt
+                    ),
+                ))?;
+            }
+
+            palettes.insert(*id, colors);
+        }
+        Ok(NCLR {
+            palettes,
+            is_8_bit: self.is_8_bit,
+            color_amt: color_amt as u32,
+        })
+    }
+
+    pub fn from_inner(nclr: &NCLR, proj_path: &PathBuf) -> Self {
+        todo!();
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NCGRWrapper {
     pub tiles: PathBuf,
@@ -32,9 +70,39 @@ pub struct NCGRWrapper {
     pub is_8_bit: bool,
     pub ncbr_ff: bool,
     pub lineal_mode: bool,
+    pub associated_palette: Option<String>,
     #[serde(skip, default)]
     pub bin: Vec<u8>, // to be loaded at project load
-    pub associated_palette: Option<String>,
+}
+
+impl NCGRWrapper {
+    pub fn get_inner(&self) -> Result<NCGR> {
+        let tiles = if self.lineal_mode {
+            NCGRTiles::Lineal(self.bin.clone())
+        } else {
+            let mut tiles: Vec<Tile> = vec![];
+            let mut f: &[u8] = &self.bin;
+            for _ in 0..self.bin.len() / 64 {
+                let t: Vec<u8>;
+                let mut tslice = [0u8; 64];
+                f.read(&mut tslice)?;
+                t = tslice.into();
+                tiles.push(t);
+            }
+            NCGRTiles::Horizontal(tiles)
+        };
+
+        Ok(NCGR {
+            tiles,
+            has_cpos: self.has_cpos,
+            is_8_bit: self.is_8_bit,
+            ncbr_ff: self.ncbr_ff,
+        })
+    }
+
+    pub fn from_inner(ncgr: &NCGR, proj_path: &PathBuf) -> Self {
+        todo!();
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -42,9 +110,34 @@ pub struct NSCRWrapper {
     pub map: PathBuf,
     pub width: u16,
     pub height: u16,
+    pub associated_tileset: Option<String>,
     #[serde(skip, default)]
     pub bin: Vec<u8>, // to be loaded at project load
-    pub associated_tileset: Option<String>,
+}
+
+impl NSCRWrapper {
+    pub fn get_inner(&self) -> Result<NSCR> {
+        let mut tiles = vec![];
+        let mut bin: &[u8] = &self.bin;
+        while bin.len() != 0 {
+            tiles.push(TileRef {
+                tile: u16::read_from(&mut bin, ByteOrder::LittleEndian)?,
+                flip_x: bool::read_from(&mut bin, ByteOrder::LittleEndian)?,
+                flip_y: bool::read_from(&mut bin, ByteOrder::LittleEndian)?,
+                palette: u8::read_from(&mut bin, ByteOrder::LittleEndian)?,
+            })
+        }
+
+        Ok(NSCR {
+            tiles,
+            width: self.width,
+            height: self.height,
+        })
+    }
+
+    pub fn from_inner(nscr: &NSCR, proj_path: &PathBuf) -> Result<Self> {
+        todo!();
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -201,35 +294,7 @@ impl NuclearProject {
             Some(c) => c,
             None => return Ok(None),
         };
-        let mut palettes = BTreeMap::new();
-        let mut color_amt = 0;
-        for (id, pal) in &wrapper.bin {
-            let mut pal: &[u8] = &pal;
-            let mut colors = vec![];
-            while pal.len() != 0 {
-                colors.push(ColorBGR555::read_from(&mut pal, ByteOrder::LittleEndian)?);
-            }
-
-            if color_amt == 0 {
-                color_amt = colors.len();
-            } else if colors.len() != color_amt {
-                Err(Error::FileFormatWrong(
-                    wrapper.palettes.get(&id).unwrap().to_path_buf(),
-                    format!(
-                        "All palletes must have same number of colors (found {} and {})",
-                        colors.len(),
-                        color_amt
-                    ),
-                ))?;
-            }
-
-            palettes.insert(*id, colors);
-        }
-        Ok(Some(NCLR {
-            palettes,
-            is_8_bit: wrapper.is_8_bit,
-            color_amt: color_amt as u32,
-        }))
+        Ok(Some(wrapper.get_inner()?))
     }
 
     /// Adds a NCGR file to the project. If it already exists, it replaces the previous version.
@@ -285,27 +350,7 @@ impl NuclearProject {
             None => return Ok(None),
         };
 
-        let tiles = if wrapper.lineal_mode {
-            NCGRTiles::Lineal(wrapper.bin.clone())
-        } else {
-            let mut tiles: Vec<Tile> = vec![];
-            let mut f: &[u8] = &wrapper.bin;
-            for _ in 0..wrapper.bin.len() / 64 {
-                let t: Vec<u8>;
-                let mut tslice = [0u8; 64];
-                f.read(&mut tslice)?;
-                t = tslice.into();
-                tiles.push(t);
-            }
-            NCGRTiles::Horizontal(tiles)
-        };
-
-        Ok(Some(NCGR {
-            tiles,
-            has_cpos: wrapper.has_cpos,
-            is_8_bit: wrapper.is_8_bit,
-            ncbr_ff: wrapper.ncbr_ff,
-        }))
+        Ok(Some(wrapper.get_inner()?))
     }
 
     /// Adds a NSCR file to the project. If it already exists, it replaces the previous version.
@@ -351,21 +396,6 @@ impl NuclearProject {
             None => return Ok(None),
         };
 
-        let mut tiles = vec![];
-        let mut bin: &[u8] = &wrapper.bin;
-        while bin.len() != 0 {
-            tiles.push(TileRef {
-                tile: u16::read_from(&mut bin, ByteOrder::LittleEndian)?,
-                flip_x: bool::read_from(&mut bin, ByteOrder::LittleEndian)?,
-                flip_y: bool::read_from(&mut bin, ByteOrder::LittleEndian)?,
-                palette: u8::read_from(&mut bin, ByteOrder::LittleEndian)?,
-            })
-        }
-
-        Ok(Some(NSCR {
-            tiles,
-            width: wrapper.width,
-            height: wrapper.height,
-        }))
+        Ok(Some(wrapper.get_inner()?))
     }
 }
