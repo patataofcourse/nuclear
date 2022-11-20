@@ -381,9 +381,19 @@ impl Editor {
                     rgba.push(255);
                 }
 
+                while rgba.len() % (view.width * 4) != 0 {
+                    rgba.push(0);
+                }
+
+                let height = if img.len() % view.width == 0 {
+                    img.len() / view.width
+                } else {
+                    img.len() / view.width + 1
+                };
+
                 *image = Some(RetainedImage::from_color_image(
                     "texture",
-                    ColorImage::from_rgba_unmultiplied([view.width, img.len() / view.width], &rgba),
+                    ColorImage::from_rgba_unmultiplied([view.width, height], &rgba),
                 ));
             } else {
                 *image = None
