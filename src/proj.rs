@@ -79,6 +79,13 @@ impl NuclearProject {
         Ok(out)
     }
 
+    /// Writes the metadata of the project, effectively saving the project
+    ///
+    /// Might be extended to more functionality in the future
+    pub fn save(&self) -> Result<()> {
+        self.write_meta()
+    }
+
     fn write_meta(&self) -> Result<()> {
         let mut file = File::create(Self::proj_file_path(&self.path))?;
         write!(file, "{}", serde_json::to_string_pretty(&self)?)?;
@@ -104,11 +111,6 @@ impl NuclearProject {
         let mut path = proj_path.clone();
         path.extend(&PathBuf::from("nuclear_meta.json"));
         path
-    }
-
-    /// Saves the entire project
-    pub fn save(&self) -> Result<()> {
-        self.write_meta()
     }
 
     pub fn load_from_file(path: impl Into<PathBuf>) -> Result<Self> {

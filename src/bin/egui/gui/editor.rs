@@ -1,14 +1,12 @@
 use crate::{addon::NuclearResult, message, widgets::palette::PalPreview};
 use eframe::{
-    egui::{
-        self, containers::Frame, text::LayoutJob, ComboBox, ScrollArea, Slider, TextFormat, Ui,
-    },
+    egui::{containers::Frame, text::LayoutJob, ComboBox, ScrollArea, Slider, TextFormat, Ui},
     epaint::{ColorImage, Stroke},
 };
 use egui_extras::image::RetainedImage;
 use nuclear::{
     error::Error,
-    img::{ncgr::NCGRTiles, ColorBGR555, NCGR, NCLR},
+    img::{ncgr::NCGRTiles, NCGR, NCLR, NSCR},
     proj::NuclearProject,
 };
 
@@ -86,14 +84,14 @@ impl Editor {
         Self::Tileset {
             name,
             contents,
-            image: if let Some(_) = palette {
-                todo!();
-            } else {
-                None
-            },
+            image: None,
             palette,
             view: Default::default(),
         }
+    }
+
+    pub fn tilemap(name: String, contents: NSCR, tileset: Option<String>) -> Self {
+        Self::Tilemap { name, tileset }
     }
 }
 
@@ -182,8 +180,9 @@ impl Editor {
             });
             ui.vertical(|ui| {
                 ui.checkbox(transparency, "Enable transparency");
-                ui.button("Import .pal file");
-                ui.button("Export .pal file");
+                //TODO: importing/exporting from a text format would be real nice
+                //ui.button("Import .pal file");
+                //ui.button("Export .pal file");
             })
         });
         if ui.button("Save").clicked() {

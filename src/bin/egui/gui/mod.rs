@@ -1,6 +1,6 @@
 use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
-use nuclear::{error::Error, proj::NuclearProject};
+use nuclear::proj::NuclearProject;
 
 pub mod editor;
 pub mod menu_bar;
@@ -92,7 +92,16 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                         ui.label("None");
                     }
                     for (name, map) in &project.tilemaps {
-                        ui.link(name);
+                        if ui.link(name).clicked() {
+                            //TODO: check if already open
+                            //TODO: add method to get directly from wrapper
+                            app.editors.push(Editor::tilemap(
+                                name.clone(),
+                                project.get_nscr(name).manage().unwrap(),
+                                map.associated_tileset.clone(),
+                            ));
+                            app.selected_tab = app.editors.len() - 1;
+                        }
                     }
                 });
                 ui.collapsing("Animation frames", |ui| {
@@ -247,8 +256,19 @@ impl eframe::App for NuclearApp {
                             todo!();
                         }
                         EditorResponse::SaveTset => {
-                            let todo = 0;
-                            todo!();
+                            let Editor::Tileset { name, contents, palette, ..} =  &self.editors[self.selected_tab] else {
+                                unreachable!();
+                            };
+                            let project = self.project.as_mut().unwrap();
+                            project.insert_ncgr(name, contents).manage();
+
+                            // might need to make an insert_ncgr_with_meta or smth cause this just feels wrong
+                            let tileset = project.tilesets.get_mut(name).unwrap();
+                            tileset.associated_palette = palette.clone();
+
+                            project.save().manage();
+
+                            message::info("Saved correctly!", &format!("Saved tileset {}.", name))
                         }
                         EditorResponse::None => {}
                     }
