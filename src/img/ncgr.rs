@@ -216,12 +216,16 @@ impl NCGRTiles {
     }
 
     /// Converts the NCGRTiles into a [Vec<Tile>] to be referred by NSCR
-    pub fn to_tiles(&self, is_8_bit: bool) -> Vec<Tile> {
+    pub fn to_tiles(&self, is_8_bit: bool) -> Option<Vec<Tile>> {
         match self {
-            NCGRTiles::Horizontal(c) => c.to_vec(),
+            NCGRTiles::Horizontal(c) => Some(c.to_vec()),
             NCGRTiles::Lineal(_) => {
                 let imgdata = self.render(is_8_bit, None, 32);
                 let height = imgdata.len() / 256 / 8;
+                if imgdata.len() % (256 * 8) != 0 {
+                    // this tileset shouldn't be used for NSCR
+                    return None;
+                }
                 let mut tiles = vec![];
                 for i in 0..height {
                     for j in 0..32 {
@@ -234,7 +238,7 @@ impl NCGRTiles {
                         tiles.push(tile);
                     }
                 }
-                tiles
+                Some(tiles)
             }
         }
     }

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::gui::NuclearApp;
 use eframe::egui::{menu, widgets, Align, Button, Context, Layout, TopBottomPanel};
 
@@ -17,7 +19,7 @@ impl MenuBarResponse {
 }
 
 #[must_use]
-pub fn menu_bar(app: &NuclearApp, ctx: &Context) -> MenuBarResponse {
+pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
     let mut response = MenuBarResponse::None;
     TopBottomPanel::top("menu_bar").show(ctx, |ui| {
         menu::bar(ui, |ui| {
@@ -48,6 +50,7 @@ pub fn menu_bar(app: &NuclearApp, ctx: &Context) -> MenuBarResponse {
                 });
                 */
             });
+
             ui.menu_button("Edit", |ui| {
                 /*
                 ui.button("Undo");
@@ -64,6 +67,18 @@ pub fn menu_bar(app: &NuclearApp, ctx: &Context) -> MenuBarResponse {
                     response.set_if_none(MenuBarResponse::Metadata)
                 }
             });
+
+            #[cfg(debug_assertions)]
+            ui.menu_button("Debug", |ui| {
+                if ui.button("rockers project").clicked() {
+                    let path = PathBuf::from("test_files/rockers");
+                    if app.close_project() {
+                        let proj = nuclear::proj::NuclearProject::load_from_file(&path).unwrap();
+                        app.project = Some(proj)
+                    }
+                }
+            });
+
             #[allow(unused_must_use)]
             {
                 ui.button("button!!!");

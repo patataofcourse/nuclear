@@ -122,9 +122,9 @@ impl NSCR {
     }
 
     /// Renders the NSCR to truecolor 24bit image data
-    pub fn render(&self, nclr: &NCLR, ncgr: &NCGR) -> Vec<u8> {
+    pub fn render(&self, nclr: &NCLR, ncgr: &NCGR) -> Option<Vec<u8>> {
         let tiles = TilesForNSCR {
-            tiles: ncgr.tiles.to_tiles(ncgr.is_8_bit),
+            tiles: ncgr.tiles.to_tiles(ncgr.is_8_bit)?,
             is_8_bit: ncgr.is_8_bit,
         };
         let mut data = vec![];
@@ -158,7 +158,7 @@ impl NSCR {
             }
         }
 
-        data
+        Some(data)
     }
 
     pub fn gritify(img: Vec<ColorBGR555>, size: [usize; 2]) -> Self {

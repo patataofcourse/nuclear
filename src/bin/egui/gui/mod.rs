@@ -281,6 +281,7 @@ impl eframe::App for NuclearApp {
                             project.name = name.to_string();
                             project.author = author.to_string();
                             project.description = description.to_string();
+                            project.save().manage();
                             message::info("Project metadata", "Saved project metadata!");
                         }
                         EditorResponse::SavePalette => {
@@ -301,6 +302,9 @@ impl eframe::App for NuclearApp {
                             project.save().manage();
 
                             message::info("Saved correctly!", &format!("Saved tileset {}.", name))
+                        }
+                        EditorResponse::SaveTmap => {
+                            todo!()
                         }
                         EditorResponse::None => {}
                     }

@@ -91,7 +91,7 @@ pub fn export_tilemap<W: Write>(f: &mut W, pal: &NCLR, tiles: &NCGR, map: &NSCR)
     encoder.set_color(ColorType::Rgb);
 
     let mut writer = encoder.write_header()?;
-    writer.write_image_data(&data)?;
+    writer.write_image_data(&data.unwrap())?;
 
     Ok(())
 }

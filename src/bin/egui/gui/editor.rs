@@ -29,6 +29,7 @@ pub enum Editor {
         tileset: Option<String>,
         tileset_cache: Option<NCGR>,
         image: Option<RetainedImage>,
+        is_first_frame: bool,
     },
     Frames {
         name: String,
@@ -100,6 +101,7 @@ impl Editor {
             tileset,
             tileset_cache: None,
             image: None,
+            is_first_frame: true,
         }
     }
 }
@@ -108,6 +110,7 @@ pub enum EditorResponse {
     None,
     SavePalette,
     SaveTset,
+    SaveTmap,
     CreateProj,
     SaveMetadata,
 }
@@ -139,10 +142,19 @@ impl Editor {
                 tileset,
                 tileset_cache,
                 image,
+                is_first_frame,
                 ..
             } => {
                 ui.heading("Tilemap editor");
-                response = Self::draw_tilemap(ui, proj, contents, tileset, tileset_cache, image);
+                response = Self::draw_tilemap(
+                    ui,
+                    proj,
+                    contents,
+                    tileset,
+                    tileset_cache,
+                    image,
+                    is_first_frame,
+                );
             }
             Self::Frames { .. } => {
                 ui.heading("Frame editor");
@@ -424,8 +436,15 @@ impl Editor {
         tileset: &mut Option<String>,
         tileset_cache: &mut Option<NCGR>,
         image: &mut Option<RetainedImage>,
+        is_first_frame: &mut bool,
     ) -> EditorResponse {
         let mut response = EditorResponse::None;
+        let mut update_img = false;
+
+        if *is_first_frame {
+            *is_first_frame = false;
+            update_img = true;
+        }
 
         ui.label("Tileset associated with this tilemap:");
         let before = tileset.clone();
@@ -438,7 +457,8 @@ impl Editor {
                 }
             });
         if before != *tileset {
-            //update_img = true;
+            update_img = true;
+            *tileset_cache = None;
         }
         ui.label("");
 
@@ -462,10 +482,63 @@ impl Editor {
             });
         });
         if ui.button("Save").clicked() {
-            response = EditorResponse::SaveTset;
+            response = EditorResponse::SaveTmap;
+        }
+
+        if update_img {
+            Self::update_tilemap_img(contents, project, tileset, tileset_cache, image)
         }
 
         response
+    }
+
+    fn update_tilemap_img(
+        nscr: &NSCR,
+        project: &NuclearProject,
+        tileset: &Option<String>,
+        tileset_cache: &mut Option<NCGR>,
+        image: &mut Option<RetainedImage>,
+    ) {
+        if let Some(c) = tileset {
+            let Some(tset_wrapper) = project.tilesets.get(c) else {
+                *image = None;
+                return;
+            };
+            let palette = if let Some(d) = tset_wrapper.associated_palette.as_ref() {
+                if let Some(f) = project.get_nclr(d).manage() {
+                    f
+                } else {
+                    *image = None;
+                    return;
+                }
+            } else {
+                *image = None;
+                return;
+            };
+            if let None = tileset_cache {
+                *tileset_cache = Some(tset_wrapper.get_inner().manage());
+            }
+
+            let Some(data) = nscr.render(&palette, tileset_cache.as_ref().unwrap()) else {
+                *image = None;
+                return;
+            };
+
+            let mut pixels = vec![];
+            for i in (0..data.len()).step_by(3) {
+                pixels.extend([data[i], data[i + 1], data[i + 2], 255])
+            }
+
+            *image = Some(RetainedImage::from_color_image(
+                "texture",
+                ColorImage::from_rgba_unmultiplied(
+                    [nscr.width.into(), nscr.height.into()],
+                    &pixels,
+                ),
+            ))
+        } else {
+            *image = None;
+        }
     }
 
     fn draw_metadata(
