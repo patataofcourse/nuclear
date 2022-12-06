@@ -21,11 +21,14 @@ pub enum Editor {
         contents: NCGR,
         palette: Option<String>,
         image: Option<RetainedImage>,
-        view: ViewOptions,
+        view: TilesetViewOptions,
     },
     Tilemap {
         name: String,
+        contents: NSCR,
         tileset: Option<String>,
+        tileset_cache: Option<NCGR>,
+        image: Option<RetainedImage>,
     },
     Frames {
         name: String,
@@ -42,7 +45,7 @@ pub enum Editor {
 }
 
 #[derive(Clone, Debug)]
-pub struct ViewOptions {
+pub struct TilesetViewOptions {
     pub width: usize,
     pub palette: isize,
     pub sectioned: bool,
@@ -50,7 +53,7 @@ pub struct ViewOptions {
     pub length: usize,
 }
 
-impl Default for ViewOptions {
+impl Default for TilesetViewOptions {
     fn default() -> Self {
         Self {
             width: 256,
@@ -91,7 +94,13 @@ impl Editor {
     }
 
     pub fn tilemap(name: String, contents: NSCR, tileset: Option<String>) -> Self {
-        Self::Tilemap { name, tileset }
+        Self::Tilemap {
+            name,
+            contents,
+            tileset,
+            tileset_cache: None,
+            image: None,
+        }
     }
 }
 
@@ -125,9 +134,15 @@ impl Editor {
                 ui.heading("Tileset editor");
                 response = Self::draw_tileset(ui, proj, contents, palette, view, image);
             }
-            Self::Tilemap { .. } => {
+            Self::Tilemap {
+                contents,
+                tileset,
+                tileset_cache,
+                image,
+                ..
+            } => {
                 ui.heading("Tilemap editor");
-                ui.label("Not implemented");
+                response = Self::draw_tilemap(ui, proj, contents, tileset, tileset_cache, image);
             }
             Self::Frames { .. } => {
                 ui.heading("Frame editor");
@@ -197,7 +212,7 @@ impl Editor {
         project: &NuclearProject,
         contents: &NCGR,
         palette: &mut Option<String>,
-        view: &mut ViewOptions,
+        view: &mut TilesetViewOptions,
         image: &mut Option<RetainedImage>,
     ) -> EditorResponse {
         let mut response = EditorResponse::None;
@@ -349,7 +364,7 @@ impl Editor {
         project: &NuclearProject,
         palette: &Option<String>,
         image: &mut Option<RetainedImage>,
-        view: &ViewOptions,
+        view: &TilesetViewOptions,
     ) {
         if let Some(c) = palette {
             let nclr = project.get_nclr(c).manage().unwrap();
@@ -400,6 +415,57 @@ impl Editor {
         } else {
             *image = None
         }
+    }
+
+    fn draw_tilemap(
+        ui: &mut Ui,
+        project: &NuclearProject,
+        contents: &mut NSCR,
+        tileset: &mut Option<String>,
+        tileset_cache: &mut Option<NCGR>,
+        image: &mut Option<RetainedImage>,
+    ) -> EditorResponse {
+        let mut response = EditorResponse::None;
+
+        ui.label("Tileset associated with this tilemap:");
+        let before = tileset.clone();
+        ComboBox::from_label("")
+            .selected_text(tileset.as_deref().unwrap_or("None"))
+            .show_ui(ui, |ui| {
+                ui.selectable_value(tileset, None, "None");
+                for (name, _) in &project.tilesets {
+                    ui.selectable_value(tileset, Some(name.clone()), name);
+                }
+            });
+        if before != *tileset {
+            //update_img = true;
+        }
+        ui.label("");
+
+        if let None = tileset {
+            ui.set_enabled(false);
+        }
+        ui.horizontal(|ui| {
+            Frame::group(ui.style()).show(ui, |ui| {
+                if let Some(img) = image {
+                    ui.set_min_height(img.height().min(512) as f32);
+                    ScrollArea::new([false, true]).show(ui, |ui| {
+                        ui.image(
+                            img.texture_id(ui.ctx()),
+                            [img.width() as f32, img.height() as f32],
+                        );
+                    });
+                } else {
+                    ui.set_height(100.0);
+                    ui.label("Could not render image\nTry selecting a tileset,\nor associating a palette to the chosen tileset");
+                }
+            });
+        });
+        if ui.button("Save").clicked() {
+            response = EditorResponse::SaveTset;
+        }
+
+        response
     }
 
     fn draw_metadata(
