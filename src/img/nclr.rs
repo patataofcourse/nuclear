@@ -79,7 +79,7 @@ impl NCLR {
 
                     // Unknown 6 bytes
                     let mut pcmp_unk = [0u8; 6];
-                    data.read(&mut pcmp_unk)?;
+                    data.read_exact(&mut pcmp_unk)?;
 
                     for _ in 0..pal_count {
                         ids.as_mut().unwrap().push(u16::read_from(&mut data, o)?);
@@ -100,8 +100,8 @@ impl NCLR {
                         file: file.fname.clone(),
                     })?
                 }
-                for i in 0..id.len() {
-                    palette_map.insert(id[i], pal.get(i).unwrap().to_vec());
+                for (i, p) in id.into_iter().enumerate() {
+                    palette_map.insert(p, pal.get(i).unwrap().to_vec());
                 }
                 color_amt = amt;
             } else {
@@ -137,7 +137,7 @@ impl NCLR {
         //PCMP header
         (self.palettes.len() as u16).write_to(&mut pcmp_buffer, byteorder)?;
         let pcmp_unk = [0xEFu8, 0xBE, 0x08, 0x00, 0x00, 0x00];
-        pcmp_buffer.write(&pcmp_unk)?;
+        pcmp_buffer.write_all(&pcmp_unk)?;
 
         for (id, palette) in &self.palettes {
             id.write_to(&mut pcmp_buffer, byteorder)?;

@@ -32,7 +32,7 @@ fn main() -> nuclear::error::Result<()> {
         nuclear::ndsfile::NDSFile::from_file(&format!("{}.{}", NAME, TILES_EXTENSION), &mut f)?;
 
     // Export NCGR to tilesheet
-    let ref mut f_w = File::create(format!("test_files/out/{}/{}.tiles.png", FOLDER_NAME, NAME))?;
+    let f_w = &mut File::create(format!("test_files/out/{}/{}.tiles.png", FOLDER_NAME, NAME))?;
     let cgr = nuclear::img::ncgr::NCGR::from_ndsfile(&nds)?;
     nuclear::img::export::export_tilesheet(f_w, &clr.palettes[&0], &cgr, 32, false)?;
 
@@ -52,7 +52,7 @@ fn main() -> nuclear::error::Result<()> {
         let mut f = File::open(format!("test_files/{}/{}.NSCR", FOLDER_NAME, NAME))?;
         let nds = nuclear::ndsfile::NDSFile::from_file(&format!("{}.NSCR", NAME), &mut f)?;
         // Export NSCR to image
-        let ref mut f_w = File::create(format!("test_files/out/{}/{}.png", FOLDER_NAME, NAME))?;
+        let f_w = &mut File::create(format!("test_files/out/{}/{}.png", FOLDER_NAME, NAME))?;
         let scr = nuclear::img::nscr::NSCR::from_ndsfile(&nds)?;
         nuclear::img::export::export_tilemap(f_w, &clr, &cgr, &scr)?;
         // Re-export NSCR file

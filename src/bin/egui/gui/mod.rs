@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
 use nuclear::proj::NuclearProject;
@@ -10,6 +12,7 @@ use self::{
     menu_bar::MenuBarResponse,
 };
 
+#[derive(Default)]
 pub struct NuclearApp {
     pub project: Option<NuclearProject>,
     pub editors: Vec<Editor>,
@@ -23,17 +26,7 @@ impl NuclearApp {
         self.project = None;
         self.editors = vec![];
         self.selected_tab = 0;
-        return true;
-    }
-}
-
-impl Default for NuclearApp {
-    fn default() -> Self {
-        Self {
-            editors: vec![],
-            selected_tab: 0,
-            project: None,
-        }
+        true
     }
 }
 
@@ -50,7 +43,7 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
             if let Some(project) = &app.project {
                 ui.label(RichText::new(format!("Project - {}", project.name)).underline());
                 ui.collapsing("Palettes", |ui| {
-                    if project.palette_sets.len() == 0 {
+                    if project.palette_sets.is_empty() {
                         ui.label("None");
                     }
                     for (name, set) in &project.palette_sets {
@@ -77,7 +70,7 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                     }
                 });
                 ui.collapsing("Tilesets", |ui| {
-                    if project.tilesets.len() == 0 {
+                    if project.tilesets.is_empty() {
                         ui.label("None");
                     }
                     for (name, set) in &project.tilesets {
@@ -107,7 +100,7 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
                     }
                 });
                 ui.collapsing("Tilemaps", |ui| {
-                    if project.tilemaps.len() == 0 {
+                    if project.tilemaps.is_empty() {
                         ui.label("None");
                     }
                     for (name, map) in &project.tilemaps {
@@ -154,8 +147,7 @@ pub fn tab_bar(editors: &Vec<Editor>, ui: &mut Ui, selected_tab: usize) -> TabBa
 
     ScrollArea::horizontal().show(ui, |ui| {
         ui.horizontal(|ui| {
-            let mut c = 0;
-            for editor in editors {
+            for (c, editor) in editors.iter().enumerate() {
                 let response = ui.add(Tab {
                     name: editor.tab_name(),
                     selected: c == selected_tab,
@@ -170,7 +162,6 @@ pub fn tab_bar(editors: &Vec<Editor>, ui: &mut Ui, selected_tab: usize) -> TabBa
                 if c != editors.len() - 1 {
                     ui.separator();
                 }
-                c += 1;
             }
         });
     });
@@ -192,7 +183,7 @@ impl eframe::App for NuclearApp {
                 }
             }
             MenuBarResponse::OpenProj => {
-                if let Some(path) = message::open_folder("Open project folder", &"".into()) {
+                if let Some(path) = message::open_folder("Open project folder", Path::new("")) {
                     if self.close_project() {
                         match NuclearProject::load_from_file(&path) {
                             Ok(c) => self.project = Some(c),
@@ -225,8 +216,8 @@ impl eframe::App for NuclearApp {
 
         CentralPanel::default().show(ctx, |ui| {
             ScrollArea::new([false, true]).show(ui, |ui|{
-            if self.editors.len() == 0 {
-                if let None = self.project {
+            if self.editors.is_empty() {
+                if self.project.is_none() {
                     ui.heading("No project open!");
                     ui.label("Use File > New to start a new project or File > Open to open one");
                 } else {
@@ -249,7 +240,7 @@ impl eframe::App for NuclearApp {
 
                 ui.separator();
 
-                if self.editors.len() != 0 {
+                if !self.editors.is_empty() {
                     match self.editors[self.selected_tab].draw(self.project.as_ref().unwrap(), ui) {
                         EditorResponse::CreateProj => {
                             let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
@@ -258,7 +249,7 @@ impl eframe::App for NuclearApp {
 
                             let (name, author, description) = (name.to_string(), author.to_string(), description.to_string());
 
-                            if let Some(path) = message::open_folder("Choose empty folder for new project", &"".into()) {
+                            if let Some(path) = message::open_folder("Choose empty folder for new project", Path::new("")) {
                                 message::info(
                                     "Project created!",
                                     &format!("Successfully created project {}", name),

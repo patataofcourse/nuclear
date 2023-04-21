@@ -193,7 +193,7 @@ impl Editor {
                     } else {
                         for (num, pal) in &contents.palettes {
                             ui.horizontal(|ui| {
-                                ui.label(format!("Palette {}", num)).rect;
+                                ui.label(format!("Palette {}", num));
                                 ui.add(PalPreview {
                                     color_amt: contents.color_amt,
                                     palette: pal,
@@ -236,7 +236,7 @@ impl Editor {
             .selected_text(palette.as_deref().unwrap_or("None"))
             .show_ui(ui, |ui| {
                 ui.selectable_value(palette, None, "None");
-                for (name, _) in &project.palette_sets {
+                for name in project.palette_sets.keys() {
                     ui.selectable_value(palette, Some(name.clone()), name);
                 }
             });
@@ -268,7 +268,7 @@ impl Editor {
                 ui.label(text);
             }
         }
-        if let None = palette {
+        if palette.is_none() {
             ui.set_enabled(false);
         }
         ui.horizontal(|ui| {
@@ -389,7 +389,7 @@ impl Editor {
                     } else {
                         None
                     },
-                    view.width as usize / 8,
+                    view.width / 8,
                 );
 
                 let pal = nclr.palettes.get(&(view.palette as u16)).unwrap();
@@ -452,7 +452,7 @@ impl Editor {
             .selected_text(tileset.as_deref().unwrap_or("None"))
             .show_ui(ui, |ui| {
                 ui.selectable_value(tileset, None, "None");
-                for (name, _) in &project.tilesets {
+                for name in project.tilesets.keys() {
                     ui.selectable_value(tileset, Some(name.clone()), name);
                 }
             });
@@ -462,7 +462,7 @@ impl Editor {
         }
         ui.label("");
 
-        if let None = tileset {
+        if tileset.is_none() {
             ui.set_enabled(false);
         }
         ui.horizontal(|ui| {
@@ -515,7 +515,7 @@ impl Editor {
                 *image = None;
                 return;
             };
-            if let None = tileset_cache {
+            if tileset_cache.is_none() {
                 *tileset_cache = Some(tset_wrapper.get_inner().manage());
             }
 
@@ -578,7 +578,7 @@ impl Editor {
                 })
                 .clicked()
             {
-                if name == "" || author == "" {
+                if name.is_empty() || author.is_empty() {
                     message::error("Metadata incomplete", "Project name and author required");
                     return EditorResponse::None;
                 }

@@ -13,7 +13,7 @@ use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, File},
     io::{Read, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -30,9 +30,9 @@ impl NCLRWrapper {
         let mut palettes = BTreeMap::new();
         let mut color_amt = 0;
         for (id, pal) in &self.bin {
-            let mut pal: &[u8] = &pal;
+            let mut pal: &[u8] = pal;
             let mut colors = vec![];
-            while pal.len() != 0 {
+            while !pal.is_empty() {
                 colors.push(ColorBGR555::read_from(&mut pal, ByteOrder::LittleEndian)?);
             }
 
@@ -40,7 +40,7 @@ impl NCLRWrapper {
                 color_amt = colors.len();
             } else if colors.len() != color_amt {
                 Err(Error::FileFormatWrong(
-                    self.palettes.get(&id).unwrap().to_path_buf(),
+                    self.palettes.get(id).unwrap().to_path_buf(),
                     format!(
                         "All palletes must have same number of colors (found {} and {})",
                         colors.len(),
@@ -58,7 +58,7 @@ impl NCLRWrapper {
         })
     }
 
-    pub fn from_inner(nclr: &NCLR, proj_path: &PathBuf) -> Self {
+    pub fn from_inner(nclr: &NCLR, proj_path: &Path) -> Self {
         todo!();
     }
 }
@@ -83,11 +83,9 @@ impl NCGRWrapper {
             let mut tiles: Vec<Tile> = vec![];
             let mut f: &[u8] = &self.bin;
             for _ in 0..self.bin.len() / 64 {
-                let t: Vec<u8>;
                 let mut tslice = [0u8; 64];
-                f.read(&mut tslice)?;
-                t = tslice.into();
-                tiles.push(t);
+                f.read_exact(&mut tslice)?;
+                tiles.push(tslice.into());
             }
             NCGRTiles::Horizontal(tiles)
         };
@@ -100,7 +98,7 @@ impl NCGRWrapper {
         })
     }
 
-    pub fn from_inner(ncgr: &NCGR, proj_path: &PathBuf) -> Self {
+    pub fn from_inner(ncgr: &NCGR, proj_path: &Path) -> Self {
         todo!();
     }
 }
@@ -119,7 +117,7 @@ impl NSCRWrapper {
     pub fn get_inner(&self) -> Result<NSCR> {
         let mut tiles = vec![];
         let mut bin: &[u8] = &self.bin;
-        while bin.len() != 0 {
+        while !bin.is_empty() {
             tiles.push(TileRef {
                 tile: u16::read_from(&mut bin, ByteOrder::LittleEndian)?,
                 flip_x: bool::read_from(&mut bin, ByteOrder::LittleEndian)?,
@@ -135,7 +133,7 @@ impl NSCRWrapper {
         })
     }
 
-    pub fn from_inner(nscr: &NSCR, proj_path: &PathBuf) -> Result<Self> {
+    pub fn from_inner(nscr: &NSCR, proj_path: &Path) -> Result<Self> {
         todo!();
     }
 }
@@ -165,7 +163,7 @@ impl NuclearProject {
             palette_sets: HashMap::new(),
             tilesets: HashMap::new(),
             tilemaps: HashMap::new(),
-            path: path,
+            path,
         };
 
         out.write_meta()?;
@@ -187,12 +185,12 @@ impl NuclearProject {
 
     fn write_file(&self, path: &PathBuf, contents: &[u8]) -> Result<()> {
         let mut file = File::create(path)?;
-        file.write(contents)?;
+        file.write_all(contents)?;
         Ok(())
     }
 
-    fn read_file(own_path: &PathBuf, path: &PathBuf) -> Result<Vec<u8>> {
-        let mut path_ = own_path.clone();
+    fn read_file(own_path: &Path, path: &PathBuf) -> Result<Vec<u8>> {
+        let mut path_ = own_path.to_path_buf();
         path_.extend(path);
         let mut file = File::open(path_)?;
         let mut buffer = vec![];
@@ -200,8 +198,8 @@ impl NuclearProject {
         Ok(buffer)
     }
 
-    fn proj_file_path(proj_path: &PathBuf) -> PathBuf {
-        let mut path = proj_path.clone();
+    fn proj_file_path(proj_path: &Path) -> PathBuf {
+        let mut path = proj_path.to_path_buf();
         path.extend(&PathBuf::from("nuclear_meta.json"));
         path
     }
@@ -325,7 +323,7 @@ impl NuclearProject {
         }
 
         let mut file = File::create(&path)?;
-        file.write(&binary)?;
+        file.write_all(&binary)?;
 
         self.tilesets.insert(
             name.to_string(),
@@ -373,7 +371,7 @@ impl NuclearProject {
         }
 
         let mut file = File::create(&path)?;
-        file.write(&binary)?;
+        file.write_all(&binary)?;
 
         self.tilemaps.insert(
             name.to_string(),

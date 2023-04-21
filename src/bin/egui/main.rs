@@ -1,5 +1,7 @@
 use std::panic::{self, PanicInfo};
 
+use gui::NuclearApp;
+
 /// Stuff that adds onto types in nuclear itself
 pub mod addon;
 /// Actual GUI implementation
@@ -13,12 +15,14 @@ pub mod widgets;
 fn main() {
     panic::set_hook(Box::new(panic_hook));
 
-    let mut options = eframe::NativeOptions::default();
-    options.default_theme = eframe::Theme::Light; //TODO: settings
+    let options = eframe::NativeOptions {
+        default_theme: eframe::Theme::Light,
+        ..Default::default()
+    };
     eframe::run_native(
         "nuclear",
         options,
-        Box::new(|_cc| Box::new(gui::NuclearApp::default())),
+        Box::new(|_cc| Box::<NuclearApp>::default()),
     );
 }
 

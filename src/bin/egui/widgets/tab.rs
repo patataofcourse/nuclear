@@ -22,7 +22,7 @@ impl Widget for Tab {
     fn ui(self, ui: &mut Ui) -> Response {
         // 1. Deciding widget size:
         let margin = Margin::same(6.0);
-        let text = WidgetText::from(format!("{}", self.name)).into_galley(
+        let text = WidgetText::from(self.name.to_string()).into_galley(
             ui,
             Some(false),
             f32::INFINITY,
@@ -60,14 +60,14 @@ impl Widget for Tab {
         }
         // Attach some meta-data to the response which can be used by screen readers:
         response.widget_info(|| {
-            egui::WidgetInfo::selected(egui::WidgetType::Button, true, format!("Tab"))
+            egui::WidgetInfo::selected(egui::WidgetType::Button, true, "Tab".to_string())
             //TODO
         });
 
         // 4. Paint!
         if ui.is_rect_visible(rect) {
             // background
-            let mut visuals = ui.style().noninteractive().clone();
+            let mut visuals = *ui.style().noninteractive();
             let color = if self.selected {
                 Self::selected_color(ui)
             } else {

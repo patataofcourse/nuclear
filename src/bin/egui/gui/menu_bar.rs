@@ -58,10 +58,7 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                 ui.separator();
                 */
                 if ui
-                    .add_enabled(
-                        if let None = app.project { false } else { true },
-                        Button::new("Project metadata"),
-                    )
+                    .add_enabled(app.project.is_none(), Button::new("Project metadata"))
                     .clicked()
                 {
                     response.set_if_none(MenuBarResponse::Metadata)
@@ -73,7 +70,7 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                 if ui.button("rockers project").clicked() {
                     let path = PathBuf::from("test_files/rockers");
                     if app.close_project() {
-                        let proj = nuclear::proj::NuclearProject::load_from_file(&path).unwrap();
+                        let proj = nuclear::proj::NuclearProject::load_from_file(path).unwrap();
                         app.project = Some(proj)
                     }
                 }

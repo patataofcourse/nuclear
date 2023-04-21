@@ -36,7 +36,7 @@ impl NSCR {
         if file.magic != "RCSN" {
             Err(Error::WrongFileKind {
                 file: file.fname.to_string(),
-                ftype: Some("NSCR/NDS image data".to_string().to_string()),
+                ftype: Some("NSCR/NDS image data".to_string()),
                 expected: "RSCN".to_string(),
                 got: file.magic.to_string(),
             })?
@@ -94,7 +94,7 @@ impl NSCR {
     }
 
     pub fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
-        let ref mut scrn_buffer = vec![];
+        let scrn_buffer = &mut vec![];
         self.width.write_to(scrn_buffer, o)?;
         self.height.write_to(scrn_buffer, o)?;
         0u32.write_to(scrn_buffer, o)?;
@@ -144,11 +144,11 @@ impl NSCR {
             let flip_x = tile.flip_x;
             let flip_y = tile.flip_y;
             let tile = &tiles.tiles[tile.tile as usize];
-            for j in 0..8 {
+            for (j, row) in rows.iter_mut().enumerate() {
                 let j_ = if flip_y { 7 - j } else { j };
                 for i in 0..8 {
                     let i = if flip_x { 7 - i } else { i };
-                    rows[j].extend(palette[tile[j_ * 8 + i] as usize].to_rgb888());
+                    row.extend(palette[tile[j_ * 8 + i] as usize].to_rgb888());
                 }
             }
             if rows[0].len() / 3 == self.width as usize {
@@ -162,6 +162,12 @@ impl NSCR {
     }
 
     pub fn gritify(img: Vec<ColorBGR555>, size: [usize; 2]) -> Self {
+        // Step 1: divide image into tiles
+
+        // Step 2: find equal and flipped tiles
+
+        // Step 3: convert
+
         todo!();
     }
 }

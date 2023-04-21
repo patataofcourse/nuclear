@@ -28,7 +28,7 @@ pub fn export_palettes(pal: &NCLR, dir: PathBuf) -> Result<()> {
         fpath.push(PathBuf::from_str(&format!("{}.png", id))?);
         let f = File::create(fpath)?;
 
-        let ref mut w = BufWriter::new(f);
+        let w = &mut BufWriter::new(f);
         let mut encoder = Encoder::new(w, 16, height);
         encoder.set_color(ColorType::Indexed);
         encoder.set_depth(depth);
@@ -56,14 +56,12 @@ pub fn export_tilesheet<W: Write>(
     let img_data = tiles.tiles.render(tiles.is_8_bit, None, width);
     let height = (img_data.len() / 0x8 / width) as u32;
 
-    let ref mut w = BufWriter::new(f);
+    let w = &mut BufWriter::new(f);
     let mut encoder = Encoder::new(w, width as u32 * 8, height);
 
     if transparency {
         let mut trns = vec![0];
-        for _ in 0..pal.len() - 1 {
-            trns.push(255);
-        }
+        trns.extend(vec![255; pal.len() - 1]);
         encoder.set_trns(trns);
     }
 
@@ -85,7 +83,7 @@ pub fn export_tilesheet<W: Write>(
 pub fn export_tilemap<W: Write>(f: &mut W, pal: &NCLR, tiles: &NCGR, map: &NSCR) -> Result<()> {
     let data = map.render(pal, tiles);
 
-    let ref mut w = BufWriter::new(f);
+    let w = &mut BufWriter::new(f);
     let mut encoder = Encoder::new(w, map.width as u32, map.height as u32);
 
     encoder.set_color(ColorType::Rgb);

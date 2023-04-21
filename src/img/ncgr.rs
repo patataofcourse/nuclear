@@ -39,7 +39,7 @@ impl NCGR {
         if file.magic != "RGCN" {
             Err(Error::WrongFileKind {
                 file: file.fname.to_string(),
-                ftype: Some("NCGR/NDS tile data".to_string().to_string()),
+                ftype: Some("NCGR/NDS tile data".to_string()),
                 expected: "RGCN".to_string(),
                 got: file.magic.to_string(),
             })?
@@ -115,7 +115,7 @@ impl NCGR {
     /// Creates an NDSFile from the NCGR struct gives
     pub fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
         // CHAR section
-        let ref mut char_buff: Vec<u8> = vec![];
+        let char_buff = &mut vec![];
         if self.ncbr_ff {
             (-1i32).write_to(char_buff, o)?;
         } else {
@@ -133,7 +133,7 @@ impl NCGR {
                 0x18u32.write_to(char_buff, o)?;
                 if self.is_8_bit {
                     for tile in c {
-                        char_buff.write(tile)?;
+                        char_buff.write_all(tile)?;
                     }
                 } else {
                     for tile in c {
@@ -149,12 +149,12 @@ impl NCGR {
                 tile_data_size = c.len() as u32;
                 tile_data_size.write_to(char_buff, o)?;
                 0x18u32.write_to(char_buff, o)?;
-                char_buff.write(c)?;
+                char_buff.write_all(c)?;
             }
         }
 
         // CPOS section
-        let ref mut cpos_buff: Vec<u8> = vec![];
+        let cpos_buff = &mut vec![];
         0u32.write_to(cpos_buff, o)?;
         if self.is_8_bit { 0x40u16 } else { 0x20 }.write_to(cpos_buff, o)?;
         tile_data_size.write_to(cpos_buff, o)?;
@@ -256,7 +256,7 @@ impl NCGRTiles {
                 let tile_size = if is_8_bit { 0x40 } else { 0x20 };
                 let tile_data = match range {
                     Some(d) => &c[d.start * tile_size..d.end * tile_size],
-                    None => &c,
+                    None => c,
                 };
                 if is_8_bit {
                     tile_data.to_vec()
@@ -280,7 +280,7 @@ impl NCGRTiles {
     ) -> Vec<u8> {
         let tiles = match range {
             Some(d) => &tiles[d],
-            None => &tiles,
+            None => tiles,
         };
         let mut imgdata: Vec<u8> = vec![];
 
@@ -295,8 +295,7 @@ impl NCGRTiles {
             vec![],
         ];
 
-        for i in 0..tiles.len() {
-            let tile = &tiles[i];
+        for (i, tile) in tiles.iter().enumerate() {
             for j in 0..8 {
                 let row = &tile[j * 8..(j + 1) * 8];
                 current_scanlines[j].extend(row);

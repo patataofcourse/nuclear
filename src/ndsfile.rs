@@ -22,10 +22,10 @@ pub struct Section {
 impl NDSFile {
     pub fn from_file<F: Read>(fname: &str, f: &mut F) -> Result<Self> {
         let mut magic = [0u8; 4];
-        f.read(&mut magic)?;
+        f.read_exact(&mut magic)?;
 
         let mut bom = [0u8; 2];
-        f.read(&mut bom)?;
+        f.read_exact(&mut bom)?;
         let o = match bom {
             [0xFF, 0xFE] => ByteOrder::LittleEndian,
             [0xFE, 0xFF] => ByteOrder::BigEndian,
@@ -33,7 +33,6 @@ impl NDSFile {
                 file: fname.to_string(),
             })?,
         };
-        drop(bom);
 
         u16::read_from(f, o)?; // 0x0001
         u32::read_from(f, o)?; // Full filesize, we can discard it here
@@ -43,7 +42,7 @@ impl NDSFile {
         let mut sections = vec![];
         for _ in 0..section_count {
             let mut s_magic = [0u8; 4];
-            f.read(&mut s_magic)?;
+            f.read_exact(&mut s_magic)?;
             let size = u32::read_from(f, o)? - 0x08;
             let mut s_contents = vec![];
             for _ in 0..size {
@@ -64,8 +63,8 @@ impl NDSFile {
     }
 
     pub fn to_file<F: Write + Seek>(&self, f: &mut F) -> Result<()> {
-        f.write(self.magic.as_bytes())?;
-        f.write(match self.byteorder {
+        f.write_all(self.magic.as_bytes())?;
+        f.write_all(match self.byteorder {
             ByteOrder::BigEndian => &[0xFE, 0xFF],
             ByteOrder::LittleEndian => &[0xFF, 0xFE],
         })?;
@@ -76,9 +75,9 @@ impl NDSFile {
         (self.sections.len() as u16).write_to(f, self.byteorder)?; // Section count
 
         for section in &self.sections {
-            f.write(section.magic.as_bytes())?;
+            f.write_all(section.magic.as_bytes())?;
             (section.contents.len() as u32 + 0x8).write_to(f, self.byteorder)?;
-            f.write(&section.contents)?;
+            f.write_all(&section.contents)?;
         }
 
         let file_size = f.stream_position()? as u32;
