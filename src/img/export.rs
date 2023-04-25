@@ -93,3 +93,21 @@ pub fn export_tilemap<W: Write>(f: &mut W, pal: &NCLR, tiles: &NCGR, map: &NSCR)
 
     Ok(())
 }
+
+pub fn export_image<W: Write>(
+    f: &mut W,
+    data: &[u8],
+    width: u32,
+    height: u32,
+    color_type: ColorType,
+) -> Result<()> {
+    let w = &mut BufWriter::new(f);
+    let mut encoder = Encoder::new(w, width, height);
+
+    encoder.set_color(color_type);
+
+    let mut writer = encoder.write_header()?;
+    writer.write_image_data(data)?;
+
+    Ok(())
+}

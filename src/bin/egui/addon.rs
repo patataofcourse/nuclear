@@ -1,12 +1,18 @@
+use std::error::Error;
+
 use crate::message;
-use nuclear::error::Result;
-pub trait NuclearResult<T> {
+pub trait NuclearResult<T, E: Error> {
     fn manage(self) -> T
+    where
+        nuclear::error::Error: From<E>,
+        Self: Sized;
+
+    fn manage_explicit(self) -> T
     where
         Self: Sized;
 }
 
-impl<T> NuclearResult<T> for Result<T> {
+impl<T, E: Error> NuclearResult<T, E> for Result<T, E> {
     fn manage(self) -> T {
         match self {
             Ok(c) => c,
@@ -16,10 +22,8 @@ impl<T> NuclearResult<T> for Result<T> {
             }
         }
     }
-}
 
-impl<T> NuclearResult<T> for eframe::Result<T> {
-    fn manage(self) -> T {
+    fn manage_explicit(self) -> T {
         match self {
             Ok(c) => c,
             Err(e) => {

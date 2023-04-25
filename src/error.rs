@@ -69,6 +69,11 @@ pub enum Error {
     /// Wrapper for [serde_json::Error]
     #[error("Saving or loading JSON file failed: {0}")]
     SerdeError(serde_json::Error),
+
+    /// Error with the GUI library
+    #[cfg(feature = "gui")]
+    #[error("GUI library error: {0}")]
+    GUIError(eframe::Error),
 }
 
 impl From<io::Error> for Error {
@@ -97,6 +102,13 @@ impl From<png::EncodingError> for Error {
 impl From<serde_json::Error> for Error {
     fn from(error: serde_json::Error) -> Self {
         Self::SerdeError(error)
+    }
+}
+
+#[cfg(feature = "gui")]
+impl From<eframe::Error> for Error {
+    fn from(error: eframe::Error) -> Self {
+        Self::GUIError(error)
     }
 }
 

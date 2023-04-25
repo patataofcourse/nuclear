@@ -108,9 +108,18 @@ impl Editor {
 
 pub enum EditorResponse {
     None,
+
+    // Palette editor
     SavePalette,
+
+    // Tileset editor
     SaveTset,
+
+    // Tilemap editor
     SaveTmap,
+    ExportPng,
+
+    // Metadata editor
     CreateProj,
     SaveMetadata,
 }
@@ -460,11 +469,18 @@ impl Editor {
             update_img = true;
             *tileset_cache = None;
         }
-        ui.label("");
 
         if tileset.is_none() {
             ui.set_enabled(false);
         }
+
+        ui.horizontal(|ui| {
+            //ui.button("Import PNG image")
+            if ui.button("Export to PNG image").clicked() {
+                response = EditorResponse::ExportPng
+            }
+        });
+
         ui.horizontal(|ui| {
             Frame::group(ui.style()).show(ui, |ui| {
                 if let Some(img) = image {
@@ -500,34 +516,10 @@ impl Editor {
         image: &mut Option<RetainedImage>,
     ) {
         if let Some(c) = tileset {
-            let Some(tset_wrapper) = project.tilesets.get(c) else {
+            let Some(pixels) = Self::render_tilemap_img(nscr, project, c, tileset_cache) else {
                 *image = None;
                 return;
             };
-            let palette = if let Some(d) = tset_wrapper.associated_palette.as_ref() {
-                if let Some(f) = project.get_nclr(d).manage() {
-                    f
-                } else {
-                    *image = None;
-                    return;
-                }
-            } else {
-                *image = None;
-                return;
-            };
-            if tileset_cache.is_none() {
-                *tileset_cache = Some(tset_wrapper.get_inner().manage());
-            }
-
-            let Some(data) = nscr.render(&palette, tileset_cache.as_ref().unwrap()) else {
-                *image = None;
-                return;
-            };
-
-            let mut pixels = vec![];
-            for i in (0..data.len()).step_by(3) {
-                pixels.extend([data[i], data[i + 1], data[i + 2], 255])
-            }
 
             *image = Some(RetainedImage::from_color_image(
                 "texture",
@@ -539,6 +531,29 @@ impl Editor {
         } else {
             *image = None;
         }
+    }
+
+    pub fn render_tilemap_img(
+        nscr: &NSCR,
+        project: &NuclearProject,
+        tileset: &str,
+        tileset_cache: &mut Option<NCGR>,
+    ) -> Option<Vec<u8>> {
+        let tset_wrapper = project.tilesets.get(tileset)?;
+        let palette = project
+            .get_nclr(tset_wrapper.associated_palette.as_ref()?)
+            .manage()?;
+        if tileset_cache.is_none() {
+            *tileset_cache = Some(tset_wrapper.get_inner().manage());
+        }
+
+        let data = nscr.render(&palette, tileset_cache.as_ref().unwrap())?;
+
+        let mut pixels = vec![];
+        for i in (0..data.len()).step_by(3) {
+            pixels.extend([data[i], data[i + 1], data[i + 2], 255])
+        }
+        Some(pixels)
     }
 
     fn draw_metadata(

@@ -1,8 +1,8 @@
-use std::path::Path;
+use std::{fs::File, path::Path};
 
 use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
-use nuclear::proj::NuclearProject;
+use nuclear::{img::export, proj::NuclearProject};
 
 pub mod editor;
 pub mod menu_bar;
@@ -297,7 +297,7 @@ impl eframe::App for NuclearApp {
                                 message::info("Saved correctly!", &format!("Saved tileset {}.", name))
                             }
                             EditorResponse::SaveTmap => {
-                                let Editor::Tilemap { name, contents, tileset, ..} =  &self.editors[self.selected_tab] else {
+                                let Editor::Tilemap { name, contents, tileset, ..} = &self.editors[self.selected_tab] else {
                                     unreachable!();
                                 };
                                 let project = self.project.as_mut().unwrap();
@@ -310,6 +310,31 @@ impl eframe::App for NuclearApp {
                                 project.save().manage();
 
                                 message::info("Saved correctly!", &format!("Saved tilemap {}.", name))
+                            }
+                            EditorResponse::ExportPng =>  {
+                                let Editor::Tilemap { contents, tileset, tileset_cache, ..} = &mut self.editors[self.selected_tab] else {
+                                    unreachable!();
+                                };
+
+                                if let Some(c) = tileset {
+                                    if let Some(path) = message::save_file("Choose path for exported PNG", Path::new("")) {
+                                        if let Some(pixels) =
+                                            Editor::render_tilemap_img(contents, self.project.as_ref().unwrap(), c, tileset_cache) {
+                                            export::export_image(
+                                                &mut File::create(path).manage(),
+                                                &pixels,
+                                                contents.width as u32,
+                                                contents.height as u32,
+                                                png::ColorType::Rgba,
+                                            ).manage();
+                                            message::info("Exported PNG correctly!", "Tilemap successfully exported")
+                                        } else {
+                                            message::error("Can't export image", "Failed to render image for some reason, are you sure it's valid?");
+                                        }
+                                    }
+                                } else {
+                                    message::error("Can't export image", "Tilemap needs an associated tileset to be exported!");
+                                }
                             }
                             EditorResponse::None => {}
                         }
