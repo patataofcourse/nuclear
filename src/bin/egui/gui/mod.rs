@@ -211,6 +211,15 @@ impl eframe::App for NuclearApp {
                 });
                 self.selected_tab = self.editors.len() - 1;
             }
+            MenuBarResponse::ImportFile(c) => {
+                if let Some(files) =
+                    message::open_files("Open Nintendo file", Path::new(""), c.filters())
+                {
+                    for file in files {
+                        todo!("identify files, add to project, ask for name of files?");
+                    }
+                }
+            }
             MenuBarResponse::None => {}
         }
 

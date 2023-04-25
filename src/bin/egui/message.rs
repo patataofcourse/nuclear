@@ -26,9 +26,19 @@ pub fn error(title: &str, contents: &str) {
     tinyfiledialogs::message_box_ok(&title, &contents, MessageBoxIcon::Error);
 }
 
-pub fn open_file(title: &str, path: &Path, filter: Option<(&[&str], &str)>) -> Option<PathBuf> {
+pub fn open_files(
+    title: &str,
+    path: &Path,
+    filter: Option<(&[&str], &str)>,
+) -> Option<Vec<PathBuf>> {
     let title = title.replace('`', "\\`");
-    tinyfiledialogs::open_file_dialog(&title, path.as_os_str().to_str()?, filter).map(|c| c.into())
+    tinyfiledialogs::open_file_dialog_multi(&title, path.as_os_str().to_str()?, filter).map(|c| {
+        let mut out = vec![];
+        for i in c {
+            out.push(i.into())
+        }
+        out
+    })
 }
 
 pub fn save_file(title: &str, path: &Path) -> Option<PathBuf> {
