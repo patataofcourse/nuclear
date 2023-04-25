@@ -2,7 +2,7 @@ use std::{fs::File, path::Path};
 
 use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
-use nuclear::{img::export, proj::NuclearProject};
+use nuclear::{img::png_util, proj::NuclearProject};
 
 pub mod editor;
 pub mod menu_bar;
@@ -320,7 +320,7 @@ impl eframe::App for NuclearApp {
                                     if let Some(path) = message::save_file("Choose path for exported PNG", Path::new("")) {
                                         if let Some(pixels) =
                                             Editor::render_tilemap_img(contents, self.project.as_ref().unwrap(), c, tileset_cache) {
-                                            export::export_image(
+                                            png_util::export_image(
                                                 &mut File::create(path).manage(),
                                                 &pixels,
                                                 contents.width as u32,

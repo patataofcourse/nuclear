@@ -1,16 +1,17 @@
 // when i originally made this i had a completely different idea of how nuclear would go,
 // so right now it's just here for the examples
 
-// that said, export::export_image *is* useful
+// that said, export_image *is* useful
 
 use crate::{
-    error::Result,
+    error::{Error, Result},
     img::{ColorBGR555, NCGR, NCLR, NSCR},
 };
-use png::{BitDepth, ColorType, Encoder};
+use bytestream::{ByteOrder, StreamReader};
+use png::{BitDepth, ColorType, Encoder, Reader};
 use std::{
     fs::{self, File},
-    io::{BufWriter, Write},
+    io::{BufWriter, Read, Write},
     path::PathBuf,
     str::FromStr,
 };
@@ -36,7 +37,7 @@ pub fn export_palettes(pal: &NCLR, dir: PathBuf) -> Result<()> {
         encoder.set_depth(depth);
         let mut p = vec![];
         for color in palette {
-            p.extend(color.to_rgb888());
+            p.extend(color.to_rgb8());
         }
         encoder.set_palette(p);
         let mut writer = encoder.write_header()?;
@@ -72,7 +73,7 @@ pub fn export_tilesheet<W: Write>(
 
     let mut palette = vec![];
     for color in pal {
-        palette.extend(color.to_rgb888());
+        palette.extend(color.to_rgb8());
     }
     encoder.set_palette(palette);
     let mut writer = encoder.write_header()?;
@@ -112,4 +113,48 @@ pub fn export_image<W: Write>(
     writer.write_image_data(data)?;
 
     Ok(())
+}
+
+pub struct ImgHelper {
+    pub pixels: Vec<[u8; 3]>,
+    pub width: usize,
+    pub height: usize,
+}
+
+impl ImgHelper {
+    pub fn new<R: Read>(mut img: Reader<R>) -> Result<Self> {
+        let mut image = vec![0u8; img.output_buffer_size()];
+        img.next_frame(&mut image)?;
+        let info = img.info();
+        let mut data: &[u8] = image.as_ref();
+
+        let mut pixels = vec![];
+        while !data.is_empty() {
+            match (info.color_type, info.bit_depth) {
+                (ColorType::Rgb | ColorType::Rgba, BitDepth::Eight) => {
+                    pixels.push([
+                        u8::read_from(&mut data, ByteOrder::LittleEndian)?,
+                        u8::read_from(&mut data, ByteOrder::LittleEndian)?,
+                        u8::read_from(&mut data, ByteOrder::LittleEndian)?,
+                    ]);
+                    if info.color_type == ColorType::Rgba {
+                        u8::read_from(&mut data, ByteOrder::LittleEndian)?;
+                    }
+                }
+                _ => Err(Error::Generic(
+                    "Unsupported PNG format - must be RGB / RGBA and 8bpp".to_string(),
+                ))?,
+            }
+        }
+
+        Ok(Self {
+            pixels,
+            width: info.width as usize,
+            height: info.height as usize,
+        })
+    }
+
+    pub fn get_pixel(&self, x: usize, y: usize) -> [u8; 3] {
+        self.pixels[x + y * self.width]
+    }
 }

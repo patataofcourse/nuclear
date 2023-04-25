@@ -411,9 +411,8 @@ impl Editor {
                                 file: "{current tileset}".to_string(),
                             })
                             .manage()
-                            .to_rgb888(),
+                            .to_rgba8(),
                     );
-                    rgba.push(255);
                 }
 
                 while rgba.len() % (view.width * 4) != 0 {

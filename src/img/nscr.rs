@@ -148,7 +148,7 @@ impl NSCR {
                 let j_ = if flip_y { 7 - j } else { j };
                 for i in 0..8 {
                     let i = if flip_x { 7 - i } else { i };
-                    row.extend(palette[tile[j_ * 8 + i] as usize].to_rgb888());
+                    row.extend(palette[tile[j_ * 8 + i] as usize].to_rgb8());
                 }
             }
             if rows[0].len() / 3 == self.width as usize {
