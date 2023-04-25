@@ -1,4 +1,6 @@
-use eframe::egui::{self, Color32, Painter, Response, Sense, TextStyle, Ui, Widget};
+use eframe::egui::{
+    self, popup, Color32, Id, Painter, Response, RichText, Sense, TextStyle, Ui, Widget,
+};
 use nuclear::img::ColorBGR555;
 
 pub struct PalPreview<'a> {
@@ -89,6 +91,27 @@ impl Widget for PalPreview<'_> {
                 let row = pos.y / 17.0;
                 let column = pos.x / 17.0;
                 clicked_color = Some(row as usize * 16 + column as usize);
+            }
+        } else if response.hovered() {
+            let pos = response.hover_pos().unwrap() - rect.min;
+
+            // if it hasn't hovered on a separator
+            if !(pos.x < SEPARATOR_SIZE
+                || pos.y < SEPARATOR_SIZE
+                || (pos.x - SEPARATOR_SIZE) % (color_size + SEPARATOR_SIZE) >= color_size
+                || pos.y - SEPARATOR_SIZE % (color_size + SEPARATOR_SIZE) >= color_size)
+            {
+                let row = pos.y / 17.0;
+                let column = pos.x / 17.0;
+                let hovered_color = row as usize * 16 + column as usize;
+                let hovered_color_data = self.palette[hovered_color].to_rgb888();
+                let hovered_color_hex = hovered_color_data[0] as u32 * 0x10000
+                    + hovered_color_data[1] as u32 * 0x100
+                    + hovered_color_data[2] as u32;
+
+                popup::show_tooltip(ui.ctx(), Id::new("palette_tooltip"), |ui| {
+                    ui.label(RichText::new(format!("#{hovered_color_hex:06x}")))
+                });
             }
         }
 

@@ -145,24 +145,26 @@ pub fn side_panel(ctx: &Context, app: &mut NuclearApp) {
 pub fn tab_bar(editors: &Vec<Editor>, ui: &mut Ui, selected_tab: usize) -> TabBarResponse {
     let mut out = TabBarResponse::None;
 
-    ScrollArea::horizontal().show(ui, |ui| {
-        ui.horizontal(|ui| {
-            for (c, editor) in editors.iter().enumerate() {
-                let response = ui.add(Tab {
-                    name: editor.tab_name(),
-                    selected: c == selected_tab,
-                });
+    ui.push_id("tab_bar", |ui| {
+        ScrollArea::horizontal().show(ui, |ui| {
+            ui.horizontal(|ui| {
+                for (c, editor) in editors.iter().enumerate() {
+                    let response = ui.add(Tab {
+                        name: editor.tab_name(),
+                        selected: c == selected_tab,
+                    });
 
-                if response.changed() {
-                    out = TabBarResponse::Close(c);
-                } else if response.clicked() {
-                    out = TabBarResponse::Select(c);
-                }
+                    if response.changed() {
+                        out = TabBarResponse::Close(c);
+                    } else if response.clicked() {
+                        out = TabBarResponse::Select(c);
+                    }
 
-                if c != editors.len() - 1 {
-                    ui.separator();
+                    if c != editors.len() - 1 {
+                        ui.separator();
+                    }
                 }
-            }
+            });
         });
     });
 
@@ -215,7 +217,6 @@ impl eframe::App for NuclearApp {
         side_panel(ctx, self);
 
         CentralPanel::default().show(ctx, |ui| {
-            ScrollArea::new([false, true]).show(ui, |ui|{
             if self.editors.is_empty() {
                 if self.project.is_none() {
                     ui.heading("No project open!");
@@ -241,67 +242,80 @@ impl eframe::App for NuclearApp {
                 ui.separator();
 
                 if !self.editors.is_empty() {
-                    match self.editors[self.selected_tab].draw(self.project.as_ref().unwrap(), ui) {
-                        EditorResponse::CreateProj => {
-                            let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
-                                unreachable!();
-                            };
+                    ScrollArea::vertical().show(ui, |ui| {
+                        ui.set_width(ui.available_width());
+                        match self.editors[self.selected_tab].draw(self.project.as_ref().unwrap(), ui) {
+                            EditorResponse::CreateProj => {
+                                let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
+                                    unreachable!();
+                                };
 
-                            let (name, author, description) = (name.to_string(), author.to_string(), description.to_string());
+                                let (name, author, description) = (name.to_string(), author.to_string(), description.to_string());
 
-                            if let Some(path) = message::open_folder("Choose empty folder for new project", Path::new("")) {
-                                message::info(
-                                    "Project created!",
-                                    &format!("Successfully created project {}", name),
-                                );
-                                self.editors.remove(self.selected_tab);
+                                if let Some(path) = message::open_folder("Choose empty folder for new project", Path::new("")) {
+                                    message::info(
+                                        "Project created!",
+                                        &format!("Successfully created project {}", name),
+                                    );
+                                    self.editors.remove(self.selected_tab);
 
-                                if self.selected_tab != 0 {
-                                    self.selected_tab -= 1;
+                                    if self.selected_tab != 0 {
+                                        self.selected_tab -= 1;
+                                    }
+
+                                    self.project =
+                                        Some(NuclearProject::new(&name, &author, &description, path).manage());
                                 }
-
-                                self.project =
-                                    Some(NuclearProject::new(&name, &author, &description, path).manage());
                             }
-                        }
-                        EditorResponse::SaveMetadata => {
-                            let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
-                                unreachable!();
-                            };
-                            let project = self.project.as_mut().unwrap();
-                            project.name = name.to_string();
-                            project.author = author.to_string();
-                            project.description = description.to_string();
-                            project.save().manage();
-                            message::info("Project metadata", "Saved project metadata!");
-                        }
-                        EditorResponse::SavePalette => {
-                            let todo = 0;
-                            todo!();
-                        }
-                        EditorResponse::SaveTset => {
-                            let Editor::Tileset { name, contents, palette, ..} =  &self.editors[self.selected_tab] else {
-                                unreachable!();
-                            };
-                            let project = self.project.as_mut().unwrap();
-                            project.insert_ncgr(name, contents).manage();
+                            EditorResponse::SaveMetadata => {
+                                let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
+                                    unreachable!();
+                                };
+                                let project = self.project.as_mut().unwrap();
+                                project.name = name.to_string();
+                                project.author = author.to_string();
+                                project.description = description.to_string();
+                                project.save().manage();
+                                message::info("Project metadata", "Saved project metadata!");
+                            }
+                            EditorResponse::SavePalette => {
+                                todo!("Save palette event");
+                            }
+                            EditorResponse::SaveTset => {
+                                let Editor::Tileset { name, contents, palette, ..} =  &self.editors[self.selected_tab] else {
+                                    unreachable!();
+                                };
+                                let project = self.project.as_mut().unwrap();
+                                project.insert_ncgr(name, contents).manage();
 
-                            //TODO: might need to make an insert_ncgr_with_meta or smth cause this just feels wrong
-                            let tileset = project.tilesets.get_mut(name).unwrap();
-                            tileset.associated_palette = palette.clone();
+                                //TODO: might need to make an insert_ncgr_with_meta or smth cause this just feels wrong
+                                let tileset = project.tilesets.get_mut(name).unwrap();
+                                tileset.associated_palette = palette.clone();
 
-                            project.save().manage();
+                                project.save().manage();
 
-                            message::info("Saved correctly!", &format!("Saved tileset {}.", name))
+                                message::info("Saved correctly!", &format!("Saved tileset {}.", name))
+                            }
+                            EditorResponse::SaveTmap => {
+                                let Editor::Tilemap { name, contents, tileset, ..} =  &self.editors[self.selected_tab] else {
+                                    unreachable!();
+                                };
+                                let project = self.project.as_mut().unwrap();
+                                project.insert_nscr(name, contents).manage();
+
+                                //TODO: might need to make an insert_ncgr_with_meta or smth cause this just feels wrong
+                                let tilemap = project.tilemaps.get_mut(name).unwrap();
+                                tilemap.associated_tileset = tileset.clone();
+
+                                project.save().manage();
+
+                                message::info("Saved correctly!", &format!("Saved tilemap {}.", name))
+                            }
+                            EditorResponse::None => {}
                         }
-                        EditorResponse::SaveTmap => {
-                            todo!()
-                        }
-                        EditorResponse::None => {}
-                    }
+                    });
                 }
             }
         });
-    });
     }
 }

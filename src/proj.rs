@@ -59,7 +59,7 @@ impl NCLRWrapper {
     }
 
     pub fn from_inner(nclr: &NCLR, proj_path: &Path) -> Self {
-        todo!();
+        todo!("NCLRWrapper::from_inner");
     }
 }
 
@@ -99,7 +99,7 @@ impl NCGRWrapper {
     }
 
     pub fn from_inner(ncgr: &NCGR, proj_path: &Path) -> Self {
-        todo!();
+        todo!("NCGRWrapper::from_inner");
     }
 }
 
@@ -134,7 +134,7 @@ impl NSCRWrapper {
     }
 
     pub fn from_inner(nscr: &NSCR, proj_path: &Path) -> Result<Self> {
-        todo!();
+        todo!("NSCRWrapper::from_inner");
     }
 }
 

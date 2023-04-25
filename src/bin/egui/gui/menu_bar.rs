@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::gui::NuclearApp;
+use crate::{gui::NuclearApp, message};
 use eframe::egui::{menu, widgets, Align, Button, Context, Layout, TopBottomPanel};
 
 pub enum MenuBarResponse {
@@ -26,11 +26,13 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
             ui.menu_button("File", |ui| {
                 if ui.button("New").clicked() {
                     response.set_if_none(MenuBarResponse::NewProj)
-                };
+                }
                 if ui.button("Open").clicked() {
                     response.set_if_none(MenuBarResponse::OpenProj)
-                };
-                ui.button("Save as");
+                }
+                if ui.button("Save as").clicked() {
+                    message::warning("Not implemented!", "Can't 'save as' yet")
+                }
                 /*
                 ui.separator();
                 ui.menu_button("Open recent", |ui| {
@@ -76,10 +78,11 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                 }
             });
 
-            #[allow(unused_must_use)]
-            {
-                ui.button("button!!!");
+            //TODO: where do i hide this easter egg?
+            if ui.button("button!!!").clicked() {
+                message::info("button", ":)")
             }
+
             ui.with_layout(Layout::right_to_left(Align::TOP), |ui| {
                 widgets::global_dark_light_mode_switch(ui);
                 ui.label("Toggle dark mode");
