@@ -1,6 +1,8 @@
 // when i originally made this i had a completely different idea of how nuclear would go,
 // so right now it's just here for the examples
 
+// that said, export::export_image *is* useful
+
 use crate::{
     error::Result,
     img::{ColorBGR555, NCGR, NCLR, NSCR},

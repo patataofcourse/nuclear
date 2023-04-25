@@ -4,19 +4,26 @@ Rust library and tool for opening various graphics-related Nintendo DS files
 ## Roadmap
 
 ### Version 0.1 (#8CF)
-- [x] **Core**: Support NCLR, NCGR, NSCR
-- [x] **Core**: Project format with wrappers, allow loading and saving it
-- [ ] **GUI**: Load/create/save projects
-    - missing saving
-- [x] **GUI**: Edit project metadata
-- [ ] **GUI**: Editors for the implemented formats
+- [x] **Core:** Support NCLR, NCGR, NSCR
+- [x] **Core:** Project format with wrappers, allow loading and saving it
+- [ ] **Core:** Import PNG into NSCR (smart/GRIT-like conversion)
+- [ ] **GUI:** Load/create/save projects
+    - [x] Load
+    - [x] Create
+    - [x] Save changes (from the tabs themselves)
+    - [ ] Save as
+- [x] **GUI:** Edit project metadata
+- [x] **GUI:** Editors for the implemented formats
     - [x] NCLR
-    - [ ] NCGR
-        - in progress
-    - [ ] NSCR
-- [ ] **GUI**: Import Nintendo files into project
-- [ ] **GUI**: Open files with sidebar
-    - in progress
+    - [x] NCGR
+    - [x] NSCR
+- [x] **GUI:** Editor features
+    - [x] NCLR: import/export NCLR to a standardized palette format (?)
+    - [x] NCLR: in-app palette edits, with preview options
+    - [x] NSCR: import/export NCSR to .png
+- [ ] **GUI:** Import Nintendo files into project
++ [x] **GUI:** Interactive sidebar
+- [ ] **Mantainance:** Remove img::export, replace with convenience file creation functions
 
 ### Versions 0.2 (#F88) - 1.0 (#20F)
 - [ ] **Core:** Import PNG into NSCR (smart/GRIT-like conversion)
@@ -27,6 +34,7 @@ Rust library and tool for opening various graphics-related Nintendo DS files
 - [ ] **GUI**: Project "main page" that shows all the metadata
 - [ ] **GUI**: NCER/NANR editors
 - [ ] **GUI**: Undo/Redo
+    - [ ] Show an asterisk on tabs with unsaved changes
 - [ ] **GUI**: Warn when closing without saving
 - [ ] **GUI**: Open recent
 - [ ] **GUI**: Import/export portable project
@@ -39,6 +47,8 @@ Rust library and tool for opening various graphics-related Nintendo DS files
 - [ ] **Core**: Support alternative files that use Nintendo formats (Layton 1 comes to mind)
 - [ ] **fission**: Polish/improve
 - [ ] **GUI**: Import/export BNCAD
+- [ ] **GUI**: Tile-by-tile editing for NSCR and NCGR
+
 
 ## Credits
 * Contributors: me! (patataofcourse)
