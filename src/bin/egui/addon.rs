@@ -17,3 +17,15 @@ impl<T> NuclearResult<T> for Result<T> {
         }
     }
 }
+
+impl<T> NuclearResult<T> for eframe::Result<T> {
+    fn manage(self) -> T {
+        match self {
+            Ok(c) => c,
+            Err(e) => {
+                message::error("Error happened!", &format!("Details:\n\n{}", e));
+                std::process::exit(1)
+            }
+        }
+    }
+}

@@ -15,7 +15,7 @@ fn transparency(painter: &Painter, pos: egui::Pos2, size: egui::Vec2) {
         [pos, pos + size / 2.0].into(),
         0.0,
         egui::Color32::DARK_GRAY,
-        egui::Stroke::none(),
+        egui::Stroke::NONE,
     );
     painter.rect(
         [
@@ -25,7 +25,7 @@ fn transparency(painter: &Painter, pos: egui::Pos2, size: egui::Vec2) {
         .into(),
         0.0,
         egui::Color32::LIGHT_GRAY,
-        egui::Stroke::none(),
+        egui::Stroke::NONE,
     );
     painter.rect(
         [
@@ -35,7 +35,7 @@ fn transparency(painter: &Painter, pos: egui::Pos2, size: egui::Vec2) {
         .into(),
         0.0,
         egui::Color32::LIGHT_GRAY,
-        egui::Stroke::none(),
+        egui::Stroke::NONE,
     );
     painter.rect(
         [
@@ -45,7 +45,7 @@ fn transparency(painter: &Painter, pos: egui::Pos2, size: egui::Vec2) {
         .into(),
         0.0,
         egui::Color32::DARK_GRAY,
-        egui::Stroke::none(),
+        egui::Stroke::NONE,
     );
 }
 
@@ -54,7 +54,8 @@ impl Widget for PalPreview<'_> {
         // 1. Deciding widget size:
         //   Width: text_height * num_colors_row + separator_size * (num_colors_row - 1)
         //   Height: text_height * num_columns + separator_size * (num_columns - 1)
-        let color_size = ui.fonts().pixels_per_point() * TextStyle::Body.resolve(ui.style()).size;
+        let color_size =
+            ui.fonts(|fonts| fonts.pixels_per_point()) * TextStyle::Body.resolve(ui.style()).size;
         const SEPARATOR_SIZE: f32 = 1.0;
 
         let num_rows = if self.is_8_bit {

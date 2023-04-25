@@ -53,9 +53,7 @@ impl Widget for Tab {
         );
 
         // 3. Interact: Time to check for clicks!
-        if !button_response.clicked_elsewhere() && button_response.ctx.input().pointer.any_click()
-        // because button_response.clicked() doesn't seem to work
-        {
+        if button_response.clicked() {
             response.mark_changed();
         }
         // Attach some meta-data to the response which can be used by screen readers:

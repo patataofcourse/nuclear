@@ -1,5 +1,6 @@
 use std::panic::{self, PanicInfo};
 
+use addon::NuclearResult;
 use gui::NuclearApp;
 
 /// Stuff that adds onto types in nuclear itself
@@ -23,7 +24,8 @@ fn main() {
         "nuclear",
         options,
         Box::new(|_cc| Box::<NuclearApp>::default()),
-    );
+    )
+    .manage();
 }
 
 pub fn panic_hook(info: &PanicInfo) {
