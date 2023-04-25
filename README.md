@@ -17,16 +17,15 @@ Rust library and tool for opening various graphics-related Nintendo DS files
     - [x] NCLR
     - [x] NCGR
     - [x] NSCR
-- [x] **GUI:** Editor features
-    - [x] NCLR: import/export NCLR to a standardized palette format (?)
-    - [x] NCLR: in-app palette edits, with preview options
-    - [x] NSCR: import/export NCSR to .png
+- [ ] **GUI:** Editor features
+    - [ ] NCLR: import/export NCLR to a standardized palette format (?)
+    - [ ] NCLR: in-app palette edits, with preview options
+    - [ ] NSCR: import/export NCSR to .png
 - [ ] **GUI:** Import Nintendo files into project
 + [x] **GUI:** Interactive sidebar
 - [ ] **Mantainance:** Remove img::export, replace with convenience file creation functions
 
 ### Versions 0.2 (#F88) - 1.0 (#20F)
-- [ ] **Core:** Import PNG into NSCR (smart/GRIT-like conversion)
 - [ ] **Core**: NCER / NANR support
 - [ ] **Core**: Portable project format
 - [ ] **fission**: Get a basic version of the framework
