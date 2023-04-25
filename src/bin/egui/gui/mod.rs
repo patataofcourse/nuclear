@@ -216,7 +216,8 @@ impl eframe::App for NuclearApp {
                     message::open_files("Open Nintendo file", Path::new(""), c.filters())
                 {
                     for file in files {
-                        todo!("identify files, add to project, ask for name of files?");
+                        //TODO: identify files, add to project, ask for name of files?
+                        message::warning("TODO", "can't do this yet")
                     }
                 }
             }
