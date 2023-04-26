@@ -83,15 +83,13 @@ pub fn export_tilesheet<W: Write>(
 }
 
 pub fn export_tilemap<W: Write>(f: &mut W, pal: &NCLR, tiles: &NCGR, map: &NSCR) -> Result<()> {
-    let data = map.render(pal, tiles);
-
     let w = &mut BufWriter::new(f);
     let mut encoder = Encoder::new(w, map.width as u32, map.height as u32);
 
     encoder.set_color(ColorType::Rgb);
 
     let mut writer = encoder.write_header()?;
-    writer.write_image_data(&data.unwrap())?;
+    writer.write_image_data(&map.render(pal, tiles).unwrap())?;
 
     Ok(())
 }
