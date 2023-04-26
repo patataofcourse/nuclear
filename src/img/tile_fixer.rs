@@ -5,10 +5,10 @@ use std::io::Read;
 
 use crate::{
     error::{Error, Result},
-    img::{png_util::ImgHelper, ColorBGR555},
+    format::{nscr::TileRef, ColorBGR555},
 };
 
-use super::nscr::TileRef;
+use super::png_util::ImgHelper;
 
 #[derive(Eq, Clone, Debug)]
 pub struct FixerTile {

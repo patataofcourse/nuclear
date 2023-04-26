@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    img::{ColorBGR555, Tile, NCGR, NCLR},
+    format::{ColorBGR555, Tile, NCGR, NCLR},
     ndsfile::{NDSFile, NDSFileType, Section},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};

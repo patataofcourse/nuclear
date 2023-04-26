@@ -13,7 +13,7 @@ fn main() -> nuclear::error::Result<()> {
     let nds = nuclear::ndsfile::NDSFile::from_file(&format!("{}.NCLR", NAME), &mut f)?;
 
     // Export NCLR to palette set
-    let clr = nuclear::img::nclr::NCLR::from_ndsfile(&nds)?;
+    let clr = nuclear::format::nclr::NCLR::from_ndsfile(&nds)?;
     nuclear::img::png_util::export_palettes(
         &clr,
         format!("test_files/out/{}/{}_pal", FOLDER_NAME, NAME).into(),
@@ -34,7 +34,7 @@ fn main() -> nuclear::error::Result<()> {
 
     // Export NCGR to tilesheet
     let f_w = &mut File::create(format!("test_files/out/{}/{}.tiles.png", FOLDER_NAME, NAME))?;
-    let cgr = nuclear::img::ncgr::NCGR::from_ndsfile(&nds)?;
+    let cgr = nuclear::format::ncgr::NCGR::from_ndsfile(&nds)?;
     nuclear::img::png_util::export_tilesheet(f_w, &clr.palettes[&0], &cgr, 32, false)?;
 
     // Re-export NCGR file
@@ -54,7 +54,7 @@ fn main() -> nuclear::error::Result<()> {
         let nds = nuclear::ndsfile::NDSFile::from_file(&format!("{}.NSCR", NAME), &mut f)?;
         // Export NSCR to image
         let f_w = &mut File::create(format!("test_files/out/{}/{}.png", FOLDER_NAME, NAME))?;
-        let scr = nuclear::img::nscr::NSCR::from_ndsfile(&nds)?;
+        let scr = nuclear::format::nscr::NSCR::from_ndsfile(&nds)?;
         nuclear::img::png_util::export_tilemap(f_w, &clr, &cgr, &scr)?;
         // Re-export NSCR file
         let nds = scr.to_ndsfile(format!("{}.NSCR", NAME), ByteOrder::LittleEndian)?;

@@ -5,7 +5,7 @@
 
 use crate::{
     error::{Error, Result},
-    img::{ColorBGR555, NCGR, NCLR, NSCR},
+    format::{ColorBGR555, NCGR, NCLR, NSCR},
 };
 use bytestream::{ByteOrder, StreamReader};
 use png::{BitDepth, ColorType, Encoder, Reader};
@@ -16,8 +16,7 @@ use std::{
     str::FromStr,
 };
 
-//TODO: make this take a Vec<&mut impl W> instead of just always using fs
-/// Exports a folder with all the palettes in it, in PNG format
+//TODO: change this so it works one palette at a time
 pub fn export_palettes(pal: &NCLR, dir: PathBuf) -> Result<()> {
     fs::create_dir_all(&dir)?;
     let height = if pal.is_8_bit { 16 } else { 1 };
@@ -84,15 +83,13 @@ pub fn export_tilesheet<W: Write>(
 }
 
 pub fn export_tilemap<W: Write>(f: &mut W, pal: &NCLR, tiles: &NCGR, map: &NSCR) -> Result<()> {
-    let w = &mut BufWriter::new(f);
-    let mut encoder = Encoder::new(w, map.width as u32, map.height as u32);
-
-    encoder.set_color(ColorType::Rgb);
-
-    let mut writer = encoder.write_header()?;
-    writer.write_image_data(&map.render(pal, tiles).unwrap())?;
-
-    Ok(())
+    export_image(
+        f,
+        &map.render(pal, tiles).unwrap(),
+        map.width as u32,
+        map.height as u32,
+        ColorType::Rgb,
+    )
 }
 
 pub fn export_image<W: Write>(

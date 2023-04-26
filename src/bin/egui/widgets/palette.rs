@@ -1,7 +1,7 @@
 use eframe::egui::{
     self, popup, Color32, Id, Painter, Response, RichText, Sense, TextStyle, Ui, Widget,
 };
-use nuclear::img::ColorBGR555;
+use nuclear::format::ColorBGR555;
 
 pub struct PalPreview<'a> {
     pub color_amt: u32,

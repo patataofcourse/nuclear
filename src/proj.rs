@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result},
     extend::{FileType, FormatType},
-    img::{
+    format::{
         ncgr::{NCGRTiles, Tile},
         nscr::TileRef,
         ColorBGR555, NCGR, NCLR, NSCR,

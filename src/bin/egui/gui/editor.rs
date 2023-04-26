@@ -6,7 +6,7 @@ use eframe::{
 use egui_extras::image::RetainedImage;
 use nuclear::{
     error::Error,
-    img::{ncgr::NCGRTiles, NCGR, NCLR, NSCR},
+    format::{ncgr::NCGRTiles, NCGR, NCLR, NSCR},
     proj::NuclearProject,
 };
 

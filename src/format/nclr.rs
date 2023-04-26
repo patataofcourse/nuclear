@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    img::ColorBGR555,
+    format::ColorBGR555,
     ndsfile::{NDSFile, NDSFileType, Section},
 };
 
