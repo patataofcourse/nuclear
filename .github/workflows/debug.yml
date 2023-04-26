@@ -17,9 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cargo build --verbose 
+      run: cargo build --verbose --features gui
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose --features gui
     - uses: actions/upload-artifact@v1
       with:
         name: nuclear-egui-linux
@@ -31,9 +31,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cargo build --verbose 
+      run: cargo build --verbose --features gui
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose --features gui
     - uses: actions/upload-artifact@v1
       with:
         name: nuclear-egui-windows
@@ -45,9 +45,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --features gui
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose --features gui
     - uses: actions/upload-artifact@v1
       with:
         name: nuclear-egui-mac
