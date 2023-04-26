@@ -3,9 +3,9 @@ use nuclear::ndsfile::NDSFileType;
 use std::fs::File;
 
 const FOLDER_NAME: &str = "ver2";
-const NAME: &str = "rocker";
-const TILES_EXTENSION: &str = "NCBR";
-const NSCR: bool = false;
+const NAME: &str = "rocker_bg";
+const TILES_EXTENSION: &str = "NCGR";
+const NSCR: bool = true;
 
 fn main() -> nuclear::error::Result<()> {
     // Open NCLR file
@@ -60,6 +60,29 @@ fn main() -> nuclear::error::Result<()> {
         let nds = scr.to_ndsfile(format!("{}.NSCR", NAME), ByteOrder::LittleEndian)?;
         let mut f_w = File::create(format!("test_files/out/{}/{}.NSCR", FOLDER_NAME, NAME))?;
         nds.to_file(&mut f_w)?;
+        // Re-import image
+        let mut f = File::open(format!("test_files/out/{}/{}.png", FOLDER_NAME, NAME))?;
+        let (clr, cgr, scr) =
+            nuclear::format::nscr::NSCR::gritify(&mut f, cgr.is_8_bit, cgr.has_cpos, cgr.ncbr_ff)?;
+        // Re-export image-imported files
+        clr.to_file(
+            &mut File::create(format!("test_files/out/{}/{}.png.nclr", FOLDER_NAME, NAME))?,
+            NAME.to_string(),
+            ByteOrder::LittleEndian,
+        )?;
+        cgr.to_file(
+            &mut File::create(format!(
+                "test_files/out/{}/{}.png.{}",
+                FOLDER_NAME, NAME, TILES_EXTENSION
+            ))?,
+            NAME.to_string(),
+            ByteOrder::LittleEndian,
+        )?;
+        scr.to_file(
+            &mut File::create(format!("test_files/out/{}/{}.png.nscr", FOLDER_NAME, NAME))?,
+            NAME.to_string(),
+            ByteOrder::LittleEndian,
+        )?;
     }
 
     Ok(())

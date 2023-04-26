@@ -1,11 +1,11 @@
 // tile_fixer.rs
 //   Rust adaptation of ShaffySwitcher's R-IQ Tile Fixer program, with multipalette support
 
-use std::io::Read;
+use std::{collections::BTreeMap, io::Read};
 
 use crate::{
     error::{Error, Result},
-    format::{nscr::TileRef, ColorBGR555},
+    format::{nscr::TileRef, ColorBGR555, Tile, NCGR, NCLR, NSCR},
 };
 
 use super::png_util::ImgHelper;
@@ -121,4 +121,51 @@ pub fn image_to_tiles<R: Read>(img: &mut R) -> Result<(Vec<FixerTile>, Vec<TileR
     }
 
     Ok((tiles, tile_refs))
+}
+
+impl FixerTile {
+    pub fn to_indexed_tiles(
+        ftiles: &[Self],
+        tile_refs: &[TileRef],
+        is_8_bit: bool,
+        has_cpos: bool,
+        ncbr_ff: bool,
+    ) -> Result<(NCLR, NCGR, NSCR)> {
+        let mut palettes: BTreeMap<u16, Vec<ColorBGR555>> = BTreeMap::new();
+        for tile in ftiles {
+            let colors = tile.colors();
+            if is_8_bit {
+                match palettes.get_mut(&0) {
+                    Some(c) => {
+                        if colors.len() + c.len() >= 256 {
+                            Err(Error::Generic("Image has too many colors!".to_string()))?
+                        }
+                        c.extend(colors);
+                    }
+                    None => {
+                        palettes.insert(0, colors);
+                    }
+                }
+            } else {
+                todo!("Manage 4-bit mode palettes");
+            }
+        }
+        todo!("Convert FixerTiles to tiles with palettes");
+    }
+
+    pub fn colors(&self) -> Vec<ColorBGR555> {
+        let mut colors = vec![];
+        for row in self.pixels {
+            for pixel in row {
+                if !colors.contains(&pixel) {
+                    colors.push(pixel);
+                }
+            }
+        }
+        colors
+    }
+
+    pub fn apply_palette(&self, pal: &[ColorBGR555]) -> Tile {
+        todo!();
+    }
 }

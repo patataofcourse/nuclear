@@ -1,6 +1,9 @@
+use std::io::Read;
+
 use crate::{
     error::{Error, Result},
-    format::{ColorBGR555, Tile, NCGR, NCLR},
+    format::{Tile, NCGR, NCLR},
+    img::tile_fixer::{self, FixerTile},
     ndsfile::{NDSFile, NDSFileType, Section},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
@@ -163,13 +166,18 @@ impl NSCR {
         Some(data)
     }
 
-    pub fn gritify(img: Vec<ColorBGR555>, size: [usize; 2]) -> Self {
-        // Step 1: divide image into tiles
+    /// Imports a PNG image into NCLR/NCGR/NSCR
+    pub fn gritify<R: Read>(
+        img: &mut R,
+        is_8_bit: bool,
+        has_cpos: bool,
+        ncbr_ff: bool,
+    ) -> Result<(NCLR, NCGR, Self)> {
+        let (tiles, tile_refs) = tile_fixer::image_to_tiles(img)?;
 
-        // Step 2: find equal and flipped tiles
+        let (palette, tiles, map) =
+            FixerTile::to_indexed_tiles(&tiles, &tile_refs, is_8_bit, has_cpos, ncbr_ff)?;
 
-        // Step 3: convert
-
-        todo!();
+        Ok((palette, tiles, map))
     }
 }
