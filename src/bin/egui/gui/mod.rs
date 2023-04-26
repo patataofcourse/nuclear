@@ -2,7 +2,11 @@ use std::{fs::File, path::Path};
 
 use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
-use nuclear::{extend::FileType, img::export, proj::NuclearProject};
+use nuclear::{
+    extend::{FileType, FormatType},
+    img::export,
+    proj::NuclearProject,
+};
 
 pub mod editor;
 pub mod menu_bar;
@@ -216,8 +220,6 @@ impl eframe::App for NuclearApp {
                     message::open_files("Open Nintendo file", Path::new(""), c.filters())
                 {
                     for file in files {
-                        //TODO: identify files, add to project, ask for name of files?
-                        message::warning("TODO", "can't do this yet");
                         let extension = file
                             .extension()
                             .map(|c| c.to_ascii_lowercase().to_str().map(|c| c.to_string()))
@@ -234,6 +236,19 @@ impl eframe::App for NuclearApp {
                                 return;
                             }
                         };
+                        let mut f = File::open(&file).manage();
+                        let filename = file.file_stem().map(|c| c.to_str()).unwrap_or(None);
+                        //TODO: ask for filename
+                        self.project
+                            .as_mut()
+                            .unwrap()
+                            .insert_file(
+                                &mut f,
+                                ftype,
+                                FormatType::Nintendo,
+                                filename.unwrap_or("unknown"),
+                            )
+                            .manage();
                     }
                 }
             }

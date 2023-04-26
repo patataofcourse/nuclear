@@ -6,6 +6,7 @@ use crate::{
         nscr::TileRef,
         ColorBGR555, NCGR, NCLR, NSCR,
     },
+    ndsfile::NDSFileType,
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
@@ -406,6 +407,17 @@ impl NuclearProject {
         format: FormatType,
         name: &str,
     ) -> Result<()> {
-        todo!("NuclearProject::insert_file");
+        match (format, ftype) {
+            (FormatType::Nintendo, FileType::Palette) => {
+                self.insert_nclr(name, &NCLR::from_file(name, file)?)
+            }
+            (FormatType::Nintendo, FileType::Tileset) => {
+                self.insert_ncgr(name, &NCGR::from_file(name, file)?)
+            }
+            (FormatType::Nintendo, FileType::Tilemap) => {
+                self.insert_nscr(name, &NSCR::from_file(name, file)?)
+            }
+            (FormatType::Nintendo, _) => todo!("NCER and NANR importing"),
+        }
     }
 }

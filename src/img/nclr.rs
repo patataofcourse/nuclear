@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result},
     img::ColorBGR555,
-    ndsfile::{NDSFile, Section},
+    ndsfile::{NDSFile, NDSFileType, Section},
 };
 
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
@@ -22,9 +22,9 @@ pub struct NCLR {
     pub color_amt: u32,
 }
 
-impl NCLR {
+impl NDSFileType for NCLR {
     /// Creates a NCLR struct from the NDSFile given
-    pub fn from_ndsfile(file: &NDSFile) -> Result<Self> {
+    fn from_ndsfile(file: &NDSFile) -> Result<Self> {
         if file.magic != "RLCN" {
             Err(Error::WrongFileKind {
                 file: file.fname.clone(),
@@ -124,7 +124,7 @@ impl NCLR {
     }
 
     /// Exports an NDSFile struct from an NCLR struct
-    pub fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
+    fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
         let mut pltt_buffer = vec![];
         let mut pcmp_buffer = vec![];
 

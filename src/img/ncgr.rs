@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    ndsfile::{NDSFile, Section},
+    ndsfile::{NDSFile, NDSFileType, Section},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use std::{io::Write, ops::Range};
@@ -33,9 +33,9 @@ pub enum NCGRTiles {
     Horizontal(Vec<Tile>),
 }
 
-impl NCGR {
+impl NDSFileType for NCGR {
     /// Creates an NCGR struct from the NDSFile given
-    pub fn from_ndsfile(file: &NDSFile) -> Result<Self> {
+    fn from_ndsfile(file: &NDSFile) -> Result<Self> {
         if file.magic != "RGCN" {
             Err(Error::WrongFileKind {
                 file: file.fname.to_string(),
@@ -113,7 +113,7 @@ impl NCGR {
     }
 
     /// Creates an NDSFile from the NCGR struct gives
-    pub fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
+    fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
         // CHAR section
         let char_buff = &mut vec![];
         if self.ncbr_ff {
