@@ -2,7 +2,11 @@ use std::{fs::File, path::Path};
 
 use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
-use nuclear::{img::png_util, proj::NuclearProject};
+use nuclear::{
+    extend::{FileType, FormatType},
+    img::png_util,
+    proj::NuclearProject,
+};
 
 pub mod editor;
 pub mod menu_bar;
@@ -211,6 +215,43 @@ impl eframe::App for NuclearApp {
                 });
                 self.selected_tab = self.editors.len() - 1;
             }
+            MenuBarResponse::ImportFile(c) => {
+                if let Some(files) =
+                    message::open_files("Open Nintendo file", Path::new(""), c.filters())
+                {
+                    for file in files {
+                        let extension = file
+                            .extension()
+                            .map(|c| c.to_ascii_lowercase().to_str().map(|c| c.to_string()))
+                            .unwrap_or(None);
+                        let ftype = match extension.as_deref() {
+                            Some("nclr") => FileType::Palette,
+                            Some("ncgr" | "ncbr") => FileType::Tileset,
+                            Some("nscr") => FileType::Tilemap,
+                            _ => {
+                                message::error(
+                                    "Unsupported file format",
+                                    &format!("Can't open file {}", file.display()),
+                                );
+                                return;
+                            }
+                        };
+                        let mut f = File::open(&file).manage();
+                        let filename = file.file_stem().map(|c| c.to_str()).unwrap_or(None);
+                        //TODO: ask for filename
+                        self.project
+                            .as_mut()
+                            .unwrap()
+                            .insert_file(
+                                &mut f,
+                                ftype,
+                                FormatType::Nintendo,
+                                filename.unwrap_or("unknown"),
+                            )
+                            .manage();
+                    }
+                }
+            }
             MenuBarResponse::None => {}
         }
 
@@ -244,7 +285,7 @@ impl eframe::App for NuclearApp {
                 if !self.editors.is_empty() {
                     ScrollArea::vertical().show(ui, |ui| {
                         ui.set_width(ui.available_width());
-                        match self.editors[self.selected_tab].draw(self.project.as_ref().unwrap(), ui) {
+                        match self.editors[self.selected_tab].draw(self.project.as_ref(), ui) {
                             EditorResponse::CreateProj => {
                                 let Editor::Metadata { name, author, description, ..} =  &self.editors[self.selected_tab] else {
                                     unreachable!();

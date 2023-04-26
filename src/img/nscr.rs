@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result},
     img::{ColorBGR555, Tile, NCGR, NCLR},
-    ndsfile::{NDSFile, Section},
+    ndsfile::{NDSFile, NDSFileType, Section},
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 
@@ -31,8 +31,8 @@ pub struct TilesForNSCR {
     pub is_8_bit: bool,
 }
 
-impl NSCR {
-    pub fn from_ndsfile(file: &NDSFile) -> Result<Self> {
+impl NDSFileType for NSCR {
+    fn from_ndsfile(file: &NDSFile) -> Result<Self> {
         if file.magic != "RCSN" {
             Err(Error::WrongFileKind {
                 file: file.fname.to_string(),
@@ -93,7 +93,7 @@ impl NSCR {
         }
     }
 
-    pub fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
+    fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
         let scrn_buffer = &mut vec![];
         self.width.write_to(scrn_buffer, o)?;
         self.height.write_to(scrn_buffer, o)?;
@@ -120,7 +120,9 @@ impl NSCR {
             }],
         })
     }
+}
 
+impl NSCR {
     /// Renders the NSCR to truecolor 24bit image data
     pub fn render(&self, nclr: &NCLR, ncgr: &NCGR) -> Option<Vec<u8>> {
         let tiles = TilesForNSCR {

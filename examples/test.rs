@@ -1,4 +1,5 @@
 use bytestream::ByteOrder;
+use nuclear::ndsfile::NDSFileType;
 use std::fs::File;
 
 const FOLDER_NAME: &str = "ver2";

@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, Result},
     img::ColorBGR555,
-    ndsfile::{NDSFile, Section},
+    ndsfile::{NDSFile, NDSFileType, Section},
 };
 
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
@@ -22,9 +22,9 @@ pub struct NCLR {
     pub color_amt: u32,
 }
 
-impl NCLR {
+impl NDSFileType for NCLR {
     /// Creates a NCLR struct from the NDSFile given
-    pub fn from_ndsfile(file: &NDSFile) -> Result<Self> {
+    fn from_ndsfile(file: &NDSFile) -> Result<Self> {
         if file.magic != "RLCN" {
             Err(Error::WrongFileKind {
                 file: file.fname.clone(),
@@ -124,29 +124,29 @@ impl NCLR {
     }
 
     /// Exports an NDSFile struct from an NCLR struct
-    pub fn to_ndsfile(&self, fname: String, byteorder: ByteOrder) -> Result<NDSFile> {
+    fn to_ndsfile(&self, fname: String, o: ByteOrder) -> Result<NDSFile> {
         let mut pltt_buffer = vec![];
         let mut pcmp_buffer = vec![];
 
         //PLTT header
-        if self.is_8_bit { 4u32 } else { 3u32 }.write_to(&mut pltt_buffer, byteorder)?;
-        0u32.write_to(&mut pltt_buffer, byteorder)?;
-        (self.palettes.len() as u32 * self.color_amt * 2).write_to(&mut pltt_buffer, byteorder)?;
-        self.color_amt.write_to(&mut pltt_buffer, byteorder)?;
+        if self.is_8_bit { 4u32 } else { 3u32 }.write_to(&mut pltt_buffer, o)?;
+        0u32.write_to(&mut pltt_buffer, o)?;
+        (self.palettes.len() as u32 * self.color_amt * 2).write_to(&mut pltt_buffer, o)?;
+        self.color_amt.write_to(&mut pltt_buffer, o)?;
 
         //PCMP header
-        (self.palettes.len() as u16).write_to(&mut pcmp_buffer, byteorder)?;
+        (self.palettes.len() as u16).write_to(&mut pcmp_buffer, o)?;
         let pcmp_unk = [0xEFu8, 0xBE, 0x08, 0x00, 0x00, 0x00];
         pcmp_buffer.write_all(&pcmp_unk)?;
 
         for (id, palette) in &self.palettes {
-            id.write_to(&mut pcmp_buffer, byteorder)?;
+            id.write_to(&mut pcmp_buffer, o)?;
             for color in palette {
-                color.write_to(&mut pltt_buffer, byteorder)?;
+                color.write_to(&mut pltt_buffer, o)?;
             }
         }
         Ok(NDSFile {
-            byteorder,
+            byteorder: o,
             magic: "RLCN".to_string(),
             fname,
             sections: vec![

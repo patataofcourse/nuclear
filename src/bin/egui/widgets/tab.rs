@@ -58,8 +58,11 @@ impl Widget for Tab {
         }
         // Attach some meta-data to the response which can be used by screen readers:
         response.widget_info(|| {
-            egui::WidgetInfo::selected(egui::WidgetType::Button, true, "Tab".to_string())
-            //TODO
+            egui::WidgetInfo::selected(
+                egui::WidgetType::Button,
+                true,
+                format!("{} tab", text.text()),
+            )
         });
 
         // 4. Paint!

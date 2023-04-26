@@ -103,3 +103,18 @@ impl Debug for NDSFile {
             .finish()
     }
 }
+
+pub trait NDSFileType
+where
+    Self: Sized,
+{
+    fn from_ndsfile(file: &NDSFile) -> Result<Self>;
+    fn to_ndsfile(&self, fname: String, order: ByteOrder) -> Result<NDSFile>;
+
+    fn from_file<F: Read>(fname: &str, f: &mut F) -> Result<Self> {
+        Self::from_ndsfile(&NDSFile::from_file(fname, f)?)
+    }
+    fn to_file<F: Write + Seek>(&self, f: &mut F, fname: String, order: ByteOrder) -> Result<()> {
+        self.to_ndsfile(fname, order)?.to_file(f)
+    }
+}

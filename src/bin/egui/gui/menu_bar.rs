@@ -2,12 +2,14 @@ use std::path::PathBuf;
 
 use crate::{gui::NuclearApp, message};
 use eframe::egui::{menu, widgets, Align, Button, Context, Layout, TopBottomPanel};
+use nuclear::extend::FormatType;
 
 pub enum MenuBarResponse {
     NewProj,
     OpenProj,
     Metadata,
     None,
+    ImportFile(FormatType),
 }
 
 impl MenuBarResponse {
@@ -30,6 +32,9 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                 if ui.button("Open").clicked() {
                     response.set_if_none(MenuBarResponse::OpenProj)
                 }
+
+                ui.set_enabled(app.project.is_some());
+
                 if ui.button("Save as").clicked() {
                     message::warning("Not implemented!", "Can't 'save as' yet")
                 }
@@ -42,10 +47,14 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                 ui.button("Import portable project");
                 ui.button("Export portable project");
                 ui.separator();
+                */
                 ui.menu_button("Import", |ui| {
-                    ui.button("Nintendo files");
-                    ui.button("BNCAD");
+                    if ui.button("Nintendo files").clicked() {
+                        response.set_if_none(MenuBarResponse::ImportFile(FormatType::Nintendo))
+                    }
+                    //ui.button("BNCAD");
                 });
+                /*
                 ui.menu_button("Export", |ui| {
                     ui.button("Nintendo files");
                     ui.button("BNCAD");

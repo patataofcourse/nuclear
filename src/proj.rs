@@ -1,10 +1,12 @@
 use crate::{
     error::{Error, Result},
+    extend::{FileType, FormatType},
     img::{
         ncgr::{NCGRTiles, Tile},
         nscr::TileRef,
         ColorBGR555, NCGR, NCLR, NSCR,
     },
+    ndsfile::NDSFileType,
 };
 use bytestream::{ByteOrder, StreamReader, StreamWriter};
 use serde::{Deserialize, Serialize};
@@ -395,5 +397,27 @@ impl NuclearProject {
         };
 
         Ok(Some(wrapper.get_inner()?))
+    }
+
+    /// Add a specific file to the project, with the given filetype
+    pub fn insert_file<F: Read>(
+        &mut self,
+        file: &mut F,
+        ftype: FileType,
+        format: FormatType,
+        name: &str,
+    ) -> Result<()> {
+        match (format, ftype) {
+            (FormatType::Nintendo, FileType::Palette) => {
+                self.insert_nclr(name, &NCLR::from_file(name, file)?)
+            }
+            (FormatType::Nintendo, FileType::Tileset) => {
+                self.insert_ncgr(name, &NCGR::from_file(name, file)?)
+            }
+            (FormatType::Nintendo, FileType::Tilemap) => {
+                self.insert_nscr(name, &NSCR::from_file(name, file)?)
+            }
+            (FormatType::Nintendo, _) => todo!("NCER and NANR importing"),
+        }
     }
 }
