@@ -1,12 +1,21 @@
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum FileType {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FormatType {
     Nintendo,
 }
 
-impl FileType {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FileType {
+    Palette,
+    Tileset,
+    Tilemap,
+    Frames,
+    Animation,
+}
+
+impl FormatType {
     pub fn filters(&self) -> Option<(&[&str], &str)> {
         match self {
-            FileType::Nintendo => Some((
+            FormatType::Nintendo => Some((
                 &[
                     "*.nclr", "*.ncgr", "*.ncbr", "*.nscr", "*.NCLR", "*.NCGR", "*.NCBR", "*.NSCR",
                 ],

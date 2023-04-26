@@ -2,14 +2,14 @@ use std::path::PathBuf;
 
 use crate::{gui::NuclearApp, message};
 use eframe::egui::{menu, widgets, Align, Button, Context, Layout, TopBottomPanel};
-use nuclear::extend::FileType;
+use nuclear::extend::FormatType;
 
 pub enum MenuBarResponse {
     NewProj,
     OpenProj,
     Metadata,
     None,
-    ImportFile(FileType),
+    ImportFile(FormatType),
 }
 
 impl MenuBarResponse {
@@ -50,7 +50,7 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                 */
                 ui.menu_button("Import", |ui| {
                     if ui.button("Nintendo files").clicked() {
-                        response.set_if_none(MenuBarResponse::ImportFile(FileType::Nintendo))
+                        response.set_if_none(MenuBarResponse::ImportFile(FormatType::Nintendo))
                     }
                     //ui.button("BNCAD");
                 });

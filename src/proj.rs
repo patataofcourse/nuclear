@@ -1,5 +1,6 @@
 use crate::{
     error::{Error, Result},
+    extend::{FileType, FormatType},
     img::{
         ncgr::{NCGRTiles, Tile},
         nscr::TileRef,
@@ -395,5 +396,16 @@ impl NuclearProject {
         };
 
         Ok(Some(wrapper.get_inner()?))
+    }
+
+    /// Add a specific file to the project, with the given filetype
+    pub fn insert_file<F: Read>(
+        &mut self,
+        file: &mut F,
+        ftype: FileType,
+        format: FormatType,
+        name: &str,
+    ) -> Result<()> {
+        todo!("NuclearProject::insert_file");
     }
 }

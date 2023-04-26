@@ -125,7 +125,7 @@ pub enum EditorResponse {
 }
 
 impl Editor {
-    pub fn draw(&mut self, proj: &NuclearProject, ui: &mut Ui) -> EditorResponse {
+    pub fn draw(&mut self, proj: Option<&NuclearProject>, ui: &mut Ui) -> EditorResponse {
         let mut response = EditorResponse::None;
         ui.vertical(|ui| match self {
             Self::Palette {
@@ -144,7 +144,7 @@ impl Editor {
                 ..
             } => {
                 ui.heading("Tileset editor");
-                response = Self::draw_tileset(ui, proj, contents, palette, view, image);
+                response = Self::draw_tileset(ui, proj.unwrap(), contents, palette, view, image);
             }
             Self::Tilemap {
                 contents,
@@ -157,7 +157,7 @@ impl Editor {
                 ui.heading("Tilemap editor");
                 response = Self::draw_tilemap(
                     ui,
-                    proj,
+                    proj.unwrap(),
                     contents,
                     tileset,
                     tileset_cache,
