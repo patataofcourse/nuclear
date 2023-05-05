@@ -127,11 +127,12 @@ impl ImgHelper {
         while !data.is_empty() {
             match (info.color_type, info.bit_depth) {
                 (ColorType::Rgb | ColorType::Rgba, BitDepth::Eight) => {
-                    pixels.push([
+                    let pixel = [
                         u8::read_from(&mut data, ByteOrder::LittleEndian)?,
                         u8::read_from(&mut data, ByteOrder::LittleEndian)?,
                         u8::read_from(&mut data, ByteOrder::LittleEndian)?,
-                    ]);
+                    ];
+                    pixels.push(pixel);
                     if info.color_type == ColorType::Rgba {
                         u8::read_from(&mut data, ByteOrder::LittleEndian)?;
                     }

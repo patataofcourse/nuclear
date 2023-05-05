@@ -175,13 +175,10 @@ impl FixerTile {
                             if c.len() == 16 {
                                 continue;
                             }
-                            println!("{:?}", colors);
                             let colors = colors
                                 .iter()
                                 .filter(|col| !c.contains(col))
                                 .collect::<Vec<_>>();
-                            println!("{} {:?}", j, colors);
-                            println!("{}", c.len());
                             if colors.len() + c.len() < 16 {
                                 c.extend(colors);
                                 num = Some(j);

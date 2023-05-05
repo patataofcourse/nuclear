@@ -23,20 +23,20 @@ pub struct ColorBGR555 {
 impl ColorBGR555 {
     /// Converts the color to the RGB8 (24-bit) format
     pub fn to_rgb8(&self) -> [u8; 3] {
-        [self.r * 0x8, self.g * 0x8, self.b * 0x8]
+        [self.r * 8, self.g * 8, self.b * 8]
     }
 
     /// Converts the color to the RGBA8 (32-bit) format
     pub fn to_rgba8(&self) -> [u8; 4] {
-        [self.r * 0x8, self.g * 0x8, self.b * 0x8, 255]
+        [self.r * 8, self.g * 8, self.b * 8, 255]
     }
 
     /// Gets a BGR555 color from the RGB8 (24-bit) format
     pub fn from_rgb8(color: [u8; 3]) -> Self {
         Self {
-            r: color[0],
-            g: color[1],
-            b: color[2],
+            r: color[0] / 8,
+            g: color[1] / 8,
+            b: color[2] / 8,
         }
     }
 }
