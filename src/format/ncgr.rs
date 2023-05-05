@@ -251,7 +251,7 @@ impl NCGRTiles {
 
     /// Creates an NCGRTiles in the given mode from a [Vec<Tile>], which
     /// should be generated from a static image (see [crate::img::tile_fixer])
-    fn from_tiles(mut tiles: Vec<Tile>, is_8_bit: bool, lineal_mode: bool) -> Self {
+    pub fn from_tiles(mut tiles: Vec<Tile>, is_8_bit: bool, lineal_mode: bool) -> Self {
         while tiles.len() % 32 != 0 {
             tiles.push(vec![0; 64]);
         }

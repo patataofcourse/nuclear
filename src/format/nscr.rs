@@ -177,8 +177,8 @@ impl NSCR {
         let (tiles, tile_refs, width, height) = tile_fixer::image_to_tiles(img)?;
 
         let (palette, tiles, map) = FixerTile::to_indexed_tiles(
-            &tiles,
-            &tile_refs,
+            tiles,
+            tile_refs,
             [width, height],
             is_8_bit,
             lineal_mode,

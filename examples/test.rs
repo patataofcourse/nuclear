@@ -88,6 +88,17 @@ fn main() -> nuclear::error::Result<()> {
             NAME.to_string(),
             ByteOrder::LittleEndian,
         )?;
+        // Re-export to image
+        let f_w = &mut File::create(format!(
+            "test_files/out/{}/{}_tiles.repeat.png",
+            FOLDER_NAME, NAME
+        ))?;
+        nuclear::img::png_util::export_tilesheet(f_w, &clr.palettes[&0], &cgr, 32, false)?;
+        let f_w = &mut File::create(format!(
+            "test_files/out/{}/{}.repeat.png",
+            FOLDER_NAME, NAME
+        ))?;
+        nuclear::img::png_util::export_tilemap(f_w, &clr, &cgr, &scr)?;
     }
 
     Ok(())
