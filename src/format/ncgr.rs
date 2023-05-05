@@ -237,9 +237,8 @@ impl NCGRTiles {
                     for j in 0..32 {
                         let mut tile = vec![];
                         for k in 0..8 {
-                            tile.extend(
-                                &imgdata[(i * 8 + k) * 256 + j * 8..(i * 8 + k) * 256 + j * 8 + 7],
-                            );
+                            let img_pos = (i * 8 + k) * 256 + j * 8;
+                            tile.extend(&imgdata[img_pos..img_pos + 7]);
                         }
                         tiles.push(tile);
                     }
@@ -256,7 +255,23 @@ impl NCGRTiles {
             tiles.push(vec![0; 64]);
         }
         if lineal_mode {
-            todo!("NCGRTiles::from_tiles in lineal mode");
+            Self::Lineal({
+                let img = Self::Horizontal(tiles).render(true, None, 32);
+                if is_8_bit {
+                    img
+                } else {
+                    let mut out = vec![];
+                    let mut cur_byte = 0;
+                    for (i, pixel) in img.iter().enumerate() {
+                        if i % 2 == 0 {
+                            cur_byte = *pixel;
+                        } else {
+                            out.push(cur_byte & (pixel << 4))
+                        }
+                    }
+                    out
+                }
+            })
         } else {
             Self::Horizontal(tiles)
         }

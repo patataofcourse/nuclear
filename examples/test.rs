@@ -2,7 +2,7 @@ use bytestream::ByteOrder;
 use nuclear::ndsfile::NDSFileType;
 use std::fs::File;
 
-const FOLDER_NAME: &str = "rocker";
+const FOLDER_NAME: &str = "ver5";
 const NAME: &str = "rocker_bg";
 const TILES_EXTENSION: &str = "NCGR";
 const NSCR: bool = true;
