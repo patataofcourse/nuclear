@@ -21,7 +21,7 @@ pub struct NCGR {
     pub ncbr_ff: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 /// Contains raw tile data (names extracted from Tinke)
 pub enum NCGRTiles {
     /// Format in which gfx data isn't split into tiles per se, instead being split into "scanlines"
@@ -180,6 +180,12 @@ impl NDSFileType for NCGR {
     }
 }
 
+impl NCGR {
+    pub fn is_lineal(&self) -> bool {
+        matches!(self.tiles, NCGRTiles::Lineal(_))
+    }
+}
+
 impl NCGRTiles {
     /// Parses NCGR tile data into an NCGRTiles
     pub fn from_tile_data(
@@ -240,6 +246,19 @@ impl NCGRTiles {
                 }
                 Some(tiles)
             }
+        }
+    }
+
+    /// Creates an NCGRTiles in the given mode from a [Vec<Tile>], which
+    /// should be generated from a static image (see [crate::img::tile_fixer])
+    fn from_tiles(mut tiles: Vec<Tile>, is_8_bit: bool, lineal_mode: bool) -> Self {
+        while tiles.len() % 32 != 0 {
+            tiles.push(vec![0; 64]);
+        }
+        if lineal_mode {
+            todo!("NCGRTiles::from_tiles in lineal mode");
+        } else {
+            Self::Horizontal(tiles)
         }
     }
 

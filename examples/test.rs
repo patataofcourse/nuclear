@@ -62,8 +62,13 @@ fn main() -> nuclear::error::Result<()> {
         nds.to_file(&mut f_w)?;
         // Re-import image
         let mut f = File::open(format!("test_files/out/{}/{}.png", FOLDER_NAME, NAME))?;
-        let (clr, cgr, scr) =
-            nuclear::format::nscr::NSCR::gritify(&mut f, cgr.is_8_bit, cgr.has_cpos, cgr.ncbr_ff)?;
+        let (clr, cgr, scr) = nuclear::format::nscr::NSCR::gritify(
+            &mut f,
+            cgr.is_8_bit,
+            cgr.is_lineal(),
+            cgr.has_cpos,
+            cgr.ncbr_ff,
+        )?;
         // Re-export image-imported files
         clr.to_file(
             &mut File::create(format!("test_files/out/{}/{}.png.nclr", FOLDER_NAME, NAME))?,

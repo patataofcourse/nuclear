@@ -85,6 +85,13 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                         app.project = Some(proj)
                     }
                 }
+                if ui.button("other test project").clicked() {
+                    let path = PathBuf::from("test_files/me when i");
+                    if app.close_project() {
+                        let proj = nuclear::proj::NuclearProject::load_from_file(path).unwrap();
+                        app.project = Some(proj)
+                    }
+                }
             });
 
             //TODO: where do i hide this easter egg?

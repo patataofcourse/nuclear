@@ -55,7 +55,9 @@ impl FixerTile {
     }
 }
 
-pub fn image_to_tiles<R: Read>(img: &mut R) -> Result<(Vec<FixerTile>, Vec<TileRef>)> {
+pub fn image_to_tiles<R: Read>(
+    img: &mut R,
+) -> Result<(Vec<FixerTile>, Vec<TileRef>, usize, usize)> {
     let img = ImgHelper::new(png::Decoder::new(img).read_info()?)?;
 
     if img.width % 8 != 0 || img.height % 8 != 0 {
@@ -120,23 +122,34 @@ pub fn image_to_tiles<R: Read>(img: &mut R) -> Result<(Vec<FixerTile>, Vec<TileR
         }
     }
 
-    Ok((tiles, tile_refs))
+    Ok((tiles, tile_refs, img.width, img.height))
 }
 
 impl FixerTile {
     pub fn to_indexed_tiles(
         ftiles: &[Self],
         tile_refs: &[TileRef],
+        size: [usize; 2],
         is_8_bit: bool,
+        lineal_mode: bool,
         has_cpos: bool,
         ncbr_ff: bool,
     ) -> Result<(NCLR, NCGR, NSCR)> {
         let mut palettes: BTreeMap<u16, Vec<ColorBGR555>> = BTreeMap::new();
-        for tile in ftiles {
+        let mut scr = NSCR {
+            width: size[0] as u16,
+            height: size[1] as u16,
+            tiles: tile_refs.to_vec(),
+        };
+        for (i, tile) in ftiles.iter().enumerate() {
             let colors = tile.colors();
             if is_8_bit {
                 match palettes.get_mut(&0) {
                     Some(c) => {
+                        let colors = colors
+                            .iter()
+                            .filter(|col| !c.contains(col))
+                            .collect::<Vec<_>>();
                         if colors.len() + c.len() >= 256 {
                             Err(Error::Generic("Image has too many colors!".to_string()))?
                         }
@@ -147,9 +160,66 @@ impl FixerTile {
                     }
                 }
             } else {
-                todo!("Manage 4-bit mode palettes");
+                let mut num = None;
+                for j in 0..16 {
+                    match palettes.get_mut(&j) {
+                        None => {
+                            palettes.insert(j, colors);
+                            num = Some(j);
+                            break;
+                        }
+                        Some(c) => {
+                            if c.len() > 16 {
+                                unreachable!("what")
+                            }
+                            if c.len() == 16 {
+                                continue;
+                            }
+                            println!("{:?}", colors);
+                            let colors = colors
+                                .iter()
+                                .filter(|col| !c.contains(col))
+                                .collect::<Vec<_>>();
+                            println!("{} {:?}", j, colors);
+                            println!("{}", c.len());
+                            if colors.len() + c.len() < 16 {
+                                c.extend(colors);
+                                num = Some(j);
+                                break;
+                            }
+                        }
+                    }
+                }
+                let Some(num) = num else {Err(Error::Generic("Image has too many colors!".to_string()))?};
+                for tile in &mut scr.tiles {
+                    if tile.tile == i as u16 {
+                        tile.palette = num as u8;
+                    }
+                }
             }
         }
+
+        let mut color_amt = 0u32;
+        for pal in &palettes {
+            if pal.1.len() > color_amt as usize {
+                color_amt = pal.1.len() as u32;
+            }
+        }
+
+        //TODO: remove this, it's just for testing!!!
+        let mut f = std::fs::File::create("test_files/test.nclr").unwrap();
+        use crate::ndsfile::NDSFileType;
+        NCLR {
+            palettes,
+            is_8_bit,
+            color_amt,
+        }
+        .to_file(
+            &mut f,
+            "test.nclr".into(),
+            bytestream::ByteOrder::LittleEndian,
+        )
+        .unwrap();
         todo!("Convert FixerTiles to tiles with palettes");
     }
 
@@ -165,7 +235,32 @@ impl FixerTile {
         colors
     }
 
-    pub fn apply_palette(&self, pal: &[ColorBGR555]) -> Tile {
-        todo!();
+    pub fn apply_palette(&self, pal: &[ColorBGR555], is_8_bit: bool) -> Tile {
+        let mut tile = vec![];
+        for row in self.pixels {
+            if is_8_bit {
+                for pixel in row {
+                    tile.push(
+                        pal.iter()
+                            .position(|c| c == &pixel)
+                            .expect("This should never happen!") as u8,
+                    )
+                }
+            } else {
+                let mut cur_byte = 0u8;
+                for (i, pixel) in row.iter().enumerate() {
+                    let color = pal
+                        .iter()
+                        .position(|c| c == pixel)
+                        .expect("This should never happen!") as u8;
+                    if i % 2 == 0 {
+                        cur_byte = color;
+                    } else {
+                        tile.push(cur_byte & (color << 4))
+                    }
+                }
+            }
+        }
+        tile
     }
 }

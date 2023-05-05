@@ -170,13 +170,21 @@ impl NSCR {
     pub fn gritify<R: Read>(
         img: &mut R,
         is_8_bit: bool,
+        lineal_mode: bool,
         has_cpos: bool,
         ncbr_ff: bool,
     ) -> Result<(NCLR, NCGR, Self)> {
-        let (tiles, tile_refs) = tile_fixer::image_to_tiles(img)?;
+        let (tiles, tile_refs, width, height) = tile_fixer::image_to_tiles(img)?;
 
-        let (palette, tiles, map) =
-            FixerTile::to_indexed_tiles(&tiles, &tile_refs, is_8_bit, has_cpos, ncbr_ff)?;
+        let (palette, tiles, map) = FixerTile::to_indexed_tiles(
+            &tiles,
+            &tile_refs,
+            [width, height],
+            is_8_bit,
+            lineal_mode,
+            has_cpos,
+            ncbr_ff,
+        )?;
 
         Ok((palette, tiles, map))
     }
