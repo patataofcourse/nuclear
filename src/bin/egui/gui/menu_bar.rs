@@ -4,6 +4,8 @@ use crate::{gui::NuclearApp, message};
 use eframe::egui::{menu, widgets, Align, Button, Context, Layout, TopBottomPanel};
 use nuclear::extend::FormatType;
 
+use super::popup::PopupState;
+
 pub enum MenuBarResponse {
     NewProj,
     OpenProj,
@@ -91,6 +93,13 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                         let proj = nuclear::proj::NuclearProject::load_from_file(path).unwrap();
                         app.project = Some(proj)
                     }
+                }
+                if ui.button("popup").clicked() {
+                    app.popups.push(PopupState::NameSelector {
+                        title: "test popup".to_string(),
+                        prompt: "write text here".to_string(),
+                        result: String::new(),
+                    })
                 }
             });
 

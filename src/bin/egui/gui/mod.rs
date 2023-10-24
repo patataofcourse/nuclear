@@ -10,10 +10,12 @@ use nuclear::{
 
 pub mod editor;
 pub mod menu_bar;
+pub mod popup;
 
 use self::{
     editor::{Editor, EditorResponse},
     menu_bar::MenuBarResponse,
+    popup::{PopupResponse, PopupState},
 };
 
 #[derive(Default)]
@@ -21,6 +23,7 @@ pub struct NuclearApp {
     pub project: Option<NuclearProject>,
     pub editors: Vec<Editor>,
     pub selected_tab: usize,
+    pub popups: Vec<PopupState>,
 }
 
 impl NuclearApp {
@@ -177,6 +180,13 @@ pub fn tab_bar(editors: &Vec<Editor>, ui: &mut Ui, selected_tab: usize) -> TabBa
 
 impl eframe::App for NuclearApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
+        for popup in &mut self.popups {
+            match popup.spawn(ctx) {
+                PopupResponse::Ok => todo!(),
+                PopupResponse::Cancel => todo!(),
+                PopupResponse::None => {}
+            }
+        }
         match menu_bar::menu_bar(self, ctx) {
             MenuBarResponse::NewProj => {
                 if self.close_project() {
