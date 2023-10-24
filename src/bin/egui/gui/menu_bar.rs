@@ -95,11 +95,15 @@ pub fn menu_bar(app: &mut NuclearApp, ctx: &Context) -> MenuBarResponse {
                     }
                 }
                 if ui.button("popup").clicked() {
-                    app.popups.push(PopupState::NameSelector {
-                        title: "test popup".to_string(),
-                        prompt: "write text here".to_string(),
-                        result: String::new(),
-                    })
+                    app.popups.insert(
+                        "test_popup".to_string(),
+                        PopupState::NameSelector {
+                            title: "test popup".to_string(),
+                            prompt: "write text here".to_string(),
+                            result: String::new(),
+                        },
+                    );
+                    app.locked_on = Some("test_popup".to_string());
                 }
             });
 

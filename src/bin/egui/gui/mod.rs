@@ -1,4 +1,4 @@
-use std::{fs::File, path::Path};
+use std::{collections::HashMap, fs::File, path::Path};
 
 use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
@@ -23,7 +23,8 @@ pub struct NuclearApp {
     pub project: Option<NuclearProject>,
     pub editors: Vec<Editor>,
     pub selected_tab: usize,
-    pub popups: Vec<PopupState>,
+    pub popups: HashMap<String, PopupState>,
+    pub locked_on: Option<String>,
 }
 
 impl NuclearApp {
@@ -180,13 +181,27 @@ pub fn tab_bar(editors: &Vec<Editor>, ui: &mut Ui, selected_tab: usize) -> TabBa
 
 impl eframe::App for NuclearApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        for popup in &mut self.popups {
-            match popup.spawn(ctx) {
-                PopupResponse::Ok => todo!(),
-                PopupResponse::Cancel => todo!(),
+        let mut popup_results = HashMap::new();
+        for (name, popup) in &mut self.popups {
+            let c = popup.spawn(ctx);
+            match c {
                 PopupResponse::None => {}
+                PopupResponse::Ok | PopupResponse::Cancel => {
+                    if let Some(lock) = &self.locked_on {
+                        if lock == name {
+                            self.locked_on = None;
+                        }
+                    }
+                    popup_results.insert(name.clone(), c);
+                }
             }
         }
+        for popup in popup_results.keys() {
+            self.popups.remove(popup);
+        }
+
+        //TODO: locked_on
+
         match menu_bar::menu_bar(self, ctx) {
             MenuBarResponse::NewProj => {
                 if self.close_project() {
