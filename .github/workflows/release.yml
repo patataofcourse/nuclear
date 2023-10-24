@@ -1,0 +1,52 @@
+name: Release builds
+
+on:
+  workflow_dispatch:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build --verbose --features gui --release
+    - name: Run tests
+      run: cargo test --verbose --features gui --release
+    - uses: actions/upload-artifact@v1
+      with:
+        name: nuclear-egui-linux
+        path: ${{runner.workspace}}/nuclear/target/release/nuclear-egui
+  windows:
+    name: Windows
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build --verbose --features gui --release
+    - name: Run tests
+      run: cargo test --verbose --features gui --release
+    - uses: actions/upload-artifact@v1
+      with:
+        name: nuclear-egui-windows
+        path: ${{runner.workspace}}/nuclear/target/release/nuclear-egui.exe
+  macos:
+    name: Mac
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build --verbose --features gui --release
+    - name: Run tests
+      run: cargo test --verbose --features gui --release
+    - uses: actions/upload-artifact@v1
+      with:
+        name: nuclear-egui-mac
+        path: ${{runner.workspace}}/nuclear/target/release/nuclear-egui
