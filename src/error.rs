@@ -99,6 +99,17 @@ impl From<png::EncodingError> for Error {
     }
 }
 
+impl From<png::DecodingError> for Error {
+    fn from(error: png::DecodingError) -> Self {
+        match error {
+            png::DecodingError::IoError(c) => Self::IOError(c),
+            png::DecodingError::Format(c) => Self::PngFormatError(c.to_string()),
+            png::DecodingError::Parameter(c) => Self::PngError(c),
+            png::DecodingError::LimitsExceeded => Self::PngLimitError,
+        }
+    }
+}
+
 impl From<serde_json::Error> for Error {
     fn from(error: serde_json::Error) -> Self {
         Self::SerdeError(error)

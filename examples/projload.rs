@@ -1,4 +1,4 @@
-use nuclear::{error::Result, img::export, proj::NuclearProject};
+use nuclear::{error::Result, img::png_util, proj::NuclearProject};
 use std::fs::File;
 
 fn main() -> Result<()> {
@@ -9,6 +9,6 @@ fn main() -> Result<()> {
     let nscr = proj.get_nscr("rocker_bg")?.unwrap();
 
     let mut f = File::create("test_files/a.png")?;
-    export::export_tilemap(&mut f, &nclr, &ncgr, &nscr)?;
+    png_util::export_tilemap(&mut f, &nclr, &ncgr, &nscr)?;
     Ok(())
 }

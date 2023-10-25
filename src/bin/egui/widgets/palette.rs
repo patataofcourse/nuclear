@@ -1,7 +1,7 @@
 use eframe::egui::{
     self, popup, Color32, Id, Painter, Response, RichText, Sense, TextStyle, Ui, Widget,
 };
-use nuclear::img::ColorBGR555;
+use nuclear::format::ColorBGR555;
 
 pub struct PalPreview<'a> {
     pub color_amt: u32,
@@ -105,7 +105,7 @@ impl Widget for PalPreview<'_> {
                 let row = pos.y / 17.0;
                 let column = pos.x / 17.0;
                 let hovered_color = row as usize * 16 + column as usize;
-                let hovered_color_data = self.palette[hovered_color].to_rgb888();
+                let hovered_color_data = self.palette[hovered_color].to_rgb8();
                 let hovered_color_hex = hovered_color_data[0] as u32 * 0x10000
                     + hovered_color_data[1] as u32 * 0x100
                     + hovered_color_data[2] as u32;
@@ -145,7 +145,7 @@ impl Widget for PalPreview<'_> {
                     if i == 0 && j == 0 && self.transparency {
                         transparency(painter, origin_pos, egui::vec2(color_size, color_size))
                     } else {
-                        let [r, g, b] = self.palette[i * 16 + j].to_rgb888();
+                        let [r, g, b] = self.palette[i * 16 + j].to_rgb8();
                         painter.rect(
                             [origin_pos, origin_pos + egui::vec2(color_size, color_size)].into(),
                             0.0,

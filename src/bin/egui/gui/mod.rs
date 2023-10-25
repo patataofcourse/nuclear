@@ -1,19 +1,21 @@
-use std::{fs::File, path::Path};
+use std::{collections::HashMap, fs::File, path::Path};
 
 use crate::{addon::NuclearResult, message, widgets::tab::Tab};
 use eframe::egui::{CentralPanel, Context, RichText, ScrollArea, SidePanel, Ui};
 use nuclear::{
     extend::{FileType, FormatType},
-    img::export,
+    img::png_util,
     proj::NuclearProject,
 };
 
 pub mod editor;
 pub mod menu_bar;
+pub mod popup;
 
 use self::{
     editor::{Editor, EditorResponse},
     menu_bar::MenuBarResponse,
+    popup::{PopupResponse, PopupState},
 };
 
 #[derive(Default)]
@@ -21,6 +23,8 @@ pub struct NuclearApp {
     pub project: Option<NuclearProject>,
     pub editors: Vec<Editor>,
     pub selected_tab: usize,
+    pub popups: HashMap<String, PopupState>,
+    pub locked_on: Option<String>,
 }
 
 impl NuclearApp {
@@ -177,6 +181,27 @@ pub fn tab_bar(editors: &Vec<Editor>, ui: &mut Ui, selected_tab: usize) -> TabBa
 
 impl eframe::App for NuclearApp {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
+        let mut popup_results = HashMap::new();
+        for (name, popup) in &mut self.popups {
+            let c = popup.spawn(ctx);
+            match c {
+                PopupResponse::None => {}
+                PopupResponse::Ok | PopupResponse::Cancel => {
+                    if let Some(lock) = &self.locked_on {
+                        if lock == name {
+                            self.locked_on = None;
+                        }
+                    }
+                    popup_results.insert(name.clone(), c);
+                }
+            }
+        }
+        for popup in popup_results.keys() {
+            self.popups.remove(popup);
+        }
+
+        //TODO: locked_on
+
         match menu_bar::menu_bar(self, ctx) {
             MenuBarResponse::NewProj => {
                 if self.close_project() {
@@ -361,7 +386,7 @@ impl eframe::App for NuclearApp {
                                     if let Some(path) = message::save_file("Choose path for exported PNG", Path::new("")) {
                                         if let Some(pixels) =
                                             Editor::render_tilemap_img(contents, self.project.as_ref().unwrap(), c, tileset_cache) {
-                                            export::export_image(
+                                            png_util::export_image(
                                                 &mut File::create(path).manage(),
                                                 &pixels,
                                                 contents.width as u32,

@@ -21,7 +21,7 @@ pub struct NCGR {
     pub ncbr_ff: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 /// Contains raw tile data (names extracted from Tinke)
 pub enum NCGRTiles {
     /// Format in which gfx data isn't split into tiles per se, instead being split into "scanlines"
@@ -180,6 +180,12 @@ impl NDSFileType for NCGR {
     }
 }
 
+impl NCGR {
+    pub fn is_lineal(&self) -> bool {
+        matches!(self.tiles, NCGRTiles::Lineal(_))
+    }
+}
+
 impl NCGRTiles {
     /// Parses NCGR tile data into an NCGRTiles
     pub fn from_tile_data(
@@ -231,15 +237,43 @@ impl NCGRTiles {
                     for j in 0..32 {
                         let mut tile = vec![];
                         for k in 0..8 {
-                            tile.extend(
-                                &imgdata[(i * 8 + k) * 256 + j * 8..(i * 8 + k) * 256 + j * 8 + 7],
-                            );
+                            let img_pos = (i * 8 + k) * 256 + j * 8;
+                            tile.extend(&imgdata[img_pos..img_pos + 7]);
                         }
                         tiles.push(tile);
                     }
                 }
                 Some(tiles)
             }
+        }
+    }
+
+    /// Creates an NCGRTiles in the given mode from a [Vec<Tile>], which
+    /// should be generated from a static image (see [crate::img::tile_fixer])
+    pub fn from_tiles(mut tiles: Vec<Tile>, is_8_bit: bool, lineal_mode: bool) -> Self {
+        while tiles.len() % 32 != 0 {
+            tiles.push(vec![0; 64]);
+        }
+        if lineal_mode {
+            Self::Lineal({
+                let img = Self::Horizontal(tiles).render(true, None, 32);
+                if is_8_bit {
+                    img
+                } else {
+                    let mut out = vec![];
+                    let mut cur_byte = 0;
+                    for (i, pixel) in img.iter().enumerate() {
+                        if i % 2 == 0 {
+                            cur_byte = *pixel;
+                        } else {
+                            out.push(cur_byte & (pixel << 4))
+                        }
+                    }
+                    out
+                }
+            })
+        } else {
+            Self::Horizontal(tiles)
         }
     }
 

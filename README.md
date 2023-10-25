@@ -54,6 +54,7 @@ Rust library and tool for opening various graphics-related Nintendo DS files
 
 ## Credits
 * Contributors: me! (patataofcourse)
+* PNG -> Tiled conversion based on ShaffySwitcher's R-IQ Tile Fixer program
 * Documentation on file formats:
     - [This](https://www.romhacking.net/documents/%5b469%5dnds_formats.htm) document in romhacking.net
     - [Tinke](https://www.github.com/pleonex/tinke) source code

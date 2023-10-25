@@ -1,12 +1,13 @@
 use crate::{addon::NuclearResult, message, widgets::palette::PalPreview};
 use eframe::{
-    egui::{containers::Frame, text::LayoutJob, ComboBox, ScrollArea, Slider, TextFormat, Ui},
-    epaint::{ColorImage, Stroke},
+    egui::{
+        containers::Frame, text::LayoutJob, ComboBox, Context, ScrollArea, Slider, TextFormat, Ui,
+    },
+    epaint::{ColorImage, Stroke, TextureHandle},
 };
-use egui_extras::image::RetainedImage;
 use nuclear::{
     error::Error,
-    img::{ncgr::NCGRTiles, NCGR, NCLR, NSCR},
+    format::{ncgr::NCGRTiles, NCGR, NCLR, NSCR},
     proj::NuclearProject,
 };
 
@@ -20,7 +21,7 @@ pub enum Editor {
         name: String,
         contents: NCGR,
         palette: Option<String>,
-        image: Option<RetainedImage>,
+        image: Option<TextureHandle>,
         view: TilesetViewOptions,
     },
     Tilemap {
@@ -28,7 +29,7 @@ pub enum Editor {
         contents: NSCR,
         tileset: Option<String>,
         tileset_cache: Option<NCGR>,
-        image: Option<RetainedImage>,
+        image: Option<TextureHandle>,
         is_first_frame: bool,
     },
     Frames {
@@ -234,7 +235,7 @@ impl Editor {
         contents: &NCGR,
         palette: &mut Option<String>,
         view: &mut TilesetViewOptions,
-        image: &mut Option<RetainedImage>,
+        image: &mut Option<TextureHandle>,
     ) -> EditorResponse {
         let mut response = EditorResponse::None;
         let mut update_img = false;
@@ -283,12 +284,9 @@ impl Editor {
         ui.horizontal(|ui| {
             Frame::group(ui.style()).show(ui, |ui| {
                 if let Some(img) = image {
-                    ui.set_min_height(img.height().min(512) as f32);
+                    ui.set_min_height(img.size()[1].min(512) as f32);
                     ScrollArea::new([false, true]).show(ui, |ui| {
-                        ui.image(
-                            img.texture_id(ui.ctx()),
-                            [img.width() as f32, img.height() as f32],
-                        );
+                        ui.image(&*img);
                     });
                 } else {
                     ui.set_height(100.0);
@@ -374,17 +372,18 @@ impl Editor {
         }
 
         if update_img {
-            Self::update_tileset_img(contents, project, palette, image, view);
+            Self::update_tileset_img(ui.ctx(), contents, project, palette, image, view);
         }
 
         response
     }
 
     fn update_tileset_img(
+        ctx: &Context,
         ncgr: &NCGR,
         project: &NuclearProject,
         palette: &Option<String>,
-        image: &mut Option<RetainedImage>,
+        image: &mut Option<TextureHandle>,
         view: &TilesetViewOptions,
     ) {
         if let Some(c) = palette {
@@ -411,9 +410,8 @@ impl Editor {
                                 file: "{current tileset}".to_string(),
                             })
                             .manage()
-                            .to_rgb888(),
+                            .to_rgba8(),
                     );
-                    rgba.push(255);
                 }
 
                 while rgba.len() % (view.width * 4) != 0 {
@@ -426,9 +424,10 @@ impl Editor {
                     img.len() / view.width + 1
                 };
 
-                *image = Some(RetainedImage::from_color_image(
+                *image = Some(ctx.load_texture(
                     "texture",
                     ColorImage::from_rgba_unmultiplied([view.width, height], &rgba),
+                    Default::default(),
                 ));
             } else {
                 *image = None
@@ -444,7 +443,7 @@ impl Editor {
         contents: &mut NSCR,
         tileset: &mut Option<String>,
         tileset_cache: &mut Option<NCGR>,
-        image: &mut Option<RetainedImage>,
+        image: &mut Option<TextureHandle>,
         is_first_frame: &mut bool,
     ) -> EditorResponse {
         let mut response = EditorResponse::None;
@@ -484,12 +483,9 @@ impl Editor {
         ui.horizontal(|ui| {
             Frame::group(ui.style()).show(ui, |ui| {
                 if let Some(img) = image {
-                    ui.set_min_height(img.height().min(512) as f32);
+                    ui.set_min_height(img.size()[1].min(512) as f32);
                     ScrollArea::new([false, true]).show(ui, |ui| {
-                        ui.image(
-                            img.texture_id(ui.ctx()),
-                            [img.width() as f32, img.height() as f32],
-                        );
+                        ui.image(&*img);
                     });
                 } else {
                     ui.set_height(100.0);
@@ -502,18 +498,19 @@ impl Editor {
         }
 
         if update_img {
-            Self::update_tilemap_img(contents, project, tileset, tileset_cache, image)
+            Self::update_tilemap_img(ui.ctx(), contents, project, tileset, tileset_cache, image)
         }
 
         response
     }
 
     fn update_tilemap_img(
+        ctx: &Context,
         nscr: &NSCR,
         project: &NuclearProject,
         tileset: &Option<String>,
         tileset_cache: &mut Option<NCGR>,
-        image: &mut Option<RetainedImage>,
+        image: &mut Option<TextureHandle>,
     ) {
         if let Some(c) = tileset {
             let Some(pixels) = Self::render_tilemap_img(nscr, project, c, tileset_cache) else {
@@ -521,12 +518,13 @@ impl Editor {
                 return;
             };
 
-            *image = Some(RetainedImage::from_color_image(
+            *image = Some(ctx.load_texture(
                 "texture",
                 ColorImage::from_rgba_unmultiplied(
                     [nscr.width.into(), nscr.height.into()],
                     &pixels,
                 ),
+                Default::default(),
             ))
         } else {
             *image = None;
