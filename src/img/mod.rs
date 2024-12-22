@@ -5,8 +5,8 @@ pub mod ncgr;
 pub mod nclr;
 pub mod nscr;
 
-//pub mod nanr;
-//pub mod ncer;
+pub mod nanr;
+pub mod ncer;
 
 /// Only kept for the examples, renders different formats to .png
 pub mod export;
