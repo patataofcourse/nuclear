@@ -43,6 +43,10 @@ pub enum Error {
     #[error("Error when reading {0}: {1}")]
     FileFormatWrong(PathBuf, String),
 
+    /// Unimplemented feature
+    #[error("Unimplemented feature: {0}")]
+    UnimplementedFeature(String),
+
     //
     // Wrappers
     //

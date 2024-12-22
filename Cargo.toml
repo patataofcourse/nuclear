@@ -30,3 +30,6 @@ name = "projtest"
 
 [[example]]
 name = "projload"
+
+[[example]]
+name = "animtest"
